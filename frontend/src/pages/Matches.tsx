@@ -100,7 +100,7 @@ export default function Matches() {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="animate-spin">
-          <div className="h-8 w-8 border-2 border-nepal-red border-t-transparent rounded-full" />
+          <div className="h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
         </div>
       </div>
     );

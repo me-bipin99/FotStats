@@ -76,7 +76,7 @@ export default function Teams() {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="animate-spin">
-          <div className="h-8 w-8 border-2 border-nepal-red border-t-transparent rounded-full" />
+          <div className="h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
         </div>
       </div>
     );
@@ -98,7 +98,7 @@ export default function Teams() {
               key={team._id}
               onClick={() => handleTeamSelect(team)}
               className={`card cursor-pointer transition-all ${
-                selectedTeam?._id === team._id ? 'border-nepal-red bg-dark-tertiary' : 'hover:border-nepal-blue'
+                selectedTeam?._id === team._id ? 'border-emerald-500 bg-[#1a1b1f]' : 'hover:border-emerald-500/50'
               }`}
             >
               <h3 className="text-lg font-semibold text-text-primary mb-2">{team.name}</h3>
@@ -119,7 +119,7 @@ export default function Teams() {
             {loadingSquad ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin">
-                  <div className="h-6 w-6 border-2 border-nepal-red border-t-transparent rounded-full" />
+                  <div className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full" />
                 </div>
               </div>
             ) : squadPlayers.length > 0 ? (

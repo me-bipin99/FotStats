@@ -13,13 +13,13 @@ const config: Config = {
           blue: '#003893',
           'blue-dark': '#001F4D',
         },
-        // Neutral Palette
+        // Neutral Palette (UI Model enhanced)
         dark: {
-          base: '#0F172A',
-          secondary: '#1A2332',
+          base: '#0c0d10',
+          secondary: '#151619',
           tertiary: '#2D3E52',
-          hover: '#3A4B63',
-          border: '#334155',
+          hover: '#1a1b1f',
+          border: '#202124',
         },
         text: {
           primary: '#F1F5F9',
@@ -32,35 +32,27 @@ const config: Config = {
           loss: '#EF4444',
           draw: '#FCD34D',
           good: '#10B981',
+          interactive: '#10B981',
           info: '#003893',
           warning: '#F97316',
         },
       },
       backgroundColor: {
-        'dark-primary': '#0F172A',
-        'dark-secondary': '#1A2332',
+        'dark-primary': '#0c0d10',
+        'dark-secondary': '#151619',
         'dark-tertiary': '#2D3E52',
       },
       borderColor: {
-        'dark-border': '#334155',
+        'dark-border': '#202124',
       },
       textColor: {
         'text-primary': '#F1F5F9',
         'text-secondary': '#94A3B8',
       },
-      spacing: {
-        '4': '4px',
-        '8': '8px',
-        '12': '12px',
-        '16': '16px',
-        '24': '24px',
-        '32': '32px',
-        '48': '48px',
-      },
       borderRadius: {
-        'sm': '4px',
-        'md': '6px',
-        'lg': '8px',
+        'sm': '6px',
+        'md': '12px',
+        'lg': '16px',
       },
       fontSize: {
         'xs': ['12px', { lineHeight: '16px', letterSpacing: '0.25px' }],

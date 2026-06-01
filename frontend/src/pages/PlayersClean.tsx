@@ -60,18 +60,39 @@ export default function PlayersClean() {
   if (loading && players.length === 0) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-slate-400">Loading players...</div>
+        <div className="animate-spin">
+          <div className="h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
+        </div>
       </div>
     );
   }
 
+  const getPositionColor = (position: string): string => {
+    switch (position?.toUpperCase()) {
+      case 'GOALKEEPER':
+      case 'GK':
+        return '#64748B';
+      case 'DEFENDER':
+      case 'DEF':
+        return '#10B981';
+      case 'MIDFIELDER':
+      case 'MID':
+        return '#003893';
+      case 'FORWARD':
+      case 'FWD':
+        return '#C8102E';
+      default:
+        return '#94A3B8';
+    }
+  };
+
   return (
-    <div className="bg-slate-900 min-h-screen p-8">
+    <main className="bg-[#0c0d10] min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-100 mb-2">Players</h1>
-          <p className="text-slate-400">Nepali National Team Squad</p>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-slate-100 mb-2">Players</h1>
+          <p className="text-slate-500 text-sm">Nepali National Team Squad</p>
         </div>
 
         {/* Position Filter */}
@@ -79,7 +100,7 @@ export default function PlayersClean() {
           <select
             value={positionFilter}
             onChange={(e) => handlePositionFilter(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded px-4 py-2 text-slate-100"
+            className="input"
           >
             {positions.map(pos => (
               <option key={pos} value={pos}>{pos}</option>
@@ -88,33 +109,40 @@ export default function PlayersClean() {
         </div>
 
         {/* Table */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+        <div className="card overflow-hidden">
           <table className="w-full">
-            <thead>
-              <tr className="bg-slate-700 border-b border-slate-600">
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Name</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Pos</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Caps</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Goals</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">ELO</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Role</th>
+            <thead className="table-head">
+              <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Caps</th>
+                <th>Goals</th>
+                <th>ELO Rating</th>
+                <th>Role</th>
               </tr>
             </thead>
             <tbody>
               {filteredPlayers.length > 0 ? (
                 filteredPlayers.map(player => (
-                  <tr key={player._id} className="border-b border-slate-700 hover:bg-slate-700">
-                    <td className="px-6 py-4 text-sm text-slate-100">{player.name}</td>
-                    <td className="px-6 py-4 text-sm text-slate-300">{player.position}</td>
-                    <td className="px-6 py-4 text-sm text-slate-300">{player.caps}</td>
-                    <td className="px-6 py-4 text-sm text-red-400">{player.goals}</td>
-                    <td className="px-6 py-4 text-sm text-slate-300">{player.eloRating}</td>
-                    <td className="px-6 py-4 text-sm text-blue-400">{player.roleClassification?.primaryRole}</td>
+                  <tr key={player._id} className="table-row">
+                    <td className="table-body">{player.name}</td>
+                    <td className="table-body">
+                      <span
+                        style={{ color: getPositionColor(player.position) }}
+                        className="font-semibold"
+                      >
+                        {player.position}
+                      </span>
+                    </td>
+                    <td className="table-body">{player.caps}</td>
+                    <td className="table-body font-mono text-red-400">{player.goals}</td>
+                    <td className="table-body font-mono text-emerald-400">{player.eloRating.toFixed(1)}</td>
+                    <td className="table-body text-slate-400">{player.roleClassification?.primaryRole || '—'}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
                     No players found
                   </td>
                 </tr>
@@ -128,20 +156,20 @@ export default function PlayersClean() {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 bg-slate-700 text-slate-300 rounded disabled:opacity-50"
+            className="btn btn-secondary btn-sm"
           >
             ← Prev
           </button>
-          <span className="text-slate-400">Page {page} of {totalPages}</span>
+          <span className="text-slate-400 text-sm">Page {page} of {totalPages}</span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 bg-slate-700 text-slate-300 rounded disabled:opacity-50"
+            className="btn btn-secondary btn-sm"
           >
             Next →
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

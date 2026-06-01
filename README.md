@@ -1,82 +1,34 @@
-# 🎉 FotNep - Nepali Football Analytics
+# FotNep - Nepali Football Analytics
 
-**Status: ✅ FULLY OPERATIONAL**
+A full-stack platform for analyzing Nepali football players with advanced ML algorithms.
 
-Everything is configured, seeded, and ready to use.
-
----
-
-## 🚀 START THE APP
+## Quick Start
 
 ```bash
-bash /home/abee/Music/fotnep/START.sh
-```
-
-Then open: **http://localhost:3001**
-
----
-
-## 🔐 LOGIN
-
-```
-Email:    admin@fotnep.com
-Password: fotnep2025
-```
-
----
-
-## 📊 WHAT'S INCLUDED
-
-✅ **102 Real Nepali Players**
-- Names, positions, ages, stats
-- ELO ratings, clubs & teams
-
-✅ **4 Pages**
-- Dashboard (stats & charts)
-- Players (table, analytics, filtering)
-- Teams (squad, formations, synergies)
-- Matches (predictions)
-
-✅ **Features**
-- Dark mode (Nepal red & blue)
-- Responsive design
-- Real-time data
-- JWT authentication
-
----
-
-## 📍 PORTS
-
-```
-Frontend: http://localhost:3001
-Backend:  http://localhost:3000
-```
-
----
-
-## ✅ QUICK START
-
-1. `bash START.sh`
-2. Open http://localhost:3001
-3. Login with admin@fotnep.com / fotnep2025
-4. Done!
-
----
-
-## ❌ TROUBLESHOOTING
-
-Kill old processes:
-```bash
-pkill -9 node
 bash START.sh
 ```
 
-Check logs:
-```bash
-tail -f /tmp/fotnep-backend.log
-tail -f /tmp/fotnep-frontend.log
-```
+Then open http://localhost:3003 and login with:
+- **Email:** admin@fotnep.com
+- **Password:** fotnep2025
 
----
+## What's Inside
+
+- **102 Nepali Players** — Real data with stats, ELO ratings, clustering
+- **4 Pages** — Dashboard, Players, Teams, Matches
+- **5 ML Algorithms** — KNN, K-Means, Naive Bayes, ELO, Genetic Algorithm
+- **Dark Mode UI** — Professional analytics design
+- **Real-time Voting** — Match prediction with reputation system
+
+## Stack
+
+- Frontend: React 18 + Tailwind CSS
+- Backend: Express.js + MongoDB
+- ML: FastAPI + Python (scikit-learn)
+
+## Documentation
+
+See `CLAUDE.md` for full context (for future Claude sessions).
+See `DESIGN_SYSTEM.md` for design guidelines.
 
 Built with ❤️ for Nepali Football

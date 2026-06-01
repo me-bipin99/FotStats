@@ -92,7 +92,7 @@ export default function Dashboard() {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="animate-spin">
-          <div className="h-8 w-8 border-2 border-nepal-red border-t-transparent rounded-full" />
+          <div className="h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
         </div>
       </div>
     );
@@ -114,31 +114,31 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="bg-dark-primary min-h-screen p-8">
+    <main className="bg-[#0c0d10] min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-text-primary mb-2">Dashboard</h1>
-          <p className="text-text-secondary text-sm">Nepali National Team Analytics</p>
+          <h1 className="text-2xl font-bold text-slate-100 mb-2">Dashboard</h1>
+          <p className="text-slate-500 text-sm">Nepali National Team Analytics</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="card-compact">
-            <p className="text-text-secondary text-xs uppercase tracking-wider mb-2">Total Players</p>
-            <p className="text-stat text-nepal-red">{stats.totalPlayers}</p>
+            <p className="text-slate-500 text-xs uppercase tracking-wider mb-2">Total Players</p>
+            <p className="text-stat text-[#C8102E]">{stats.totalPlayers}</p>
           </div>
           <div className="card-compact">
-            <p className="text-text-secondary text-xs uppercase tracking-wider mb-2">Teams</p>
-            <p className="text-stat text-nepal-blue">{stats.totalTeams}</p>
+            <p className="text-slate-500 text-xs uppercase tracking-wider mb-2">Teams</p>
+            <p className="text-stat text-blue-400">{stats.totalTeams}</p>
           </div>
           <div className="card-compact">
-            <p className="text-text-secondary text-xs uppercase tracking-wider mb-2">Matches</p>
-            <p className="text-stat">{stats.totalMatches}</p>
+            <p className="text-slate-500 text-xs uppercase tracking-wider mb-2">Matches</p>
+            <p className="text-stat text-slate-300">{stats.totalMatches}</p>
           </div>
           <div className="card-compact">
-            <p className="text-text-secondary text-xs uppercase tracking-wider mb-2">Prediction Accuracy</p>
-            <p className="text-stat">{stats.predictionAccuracy}%</p>
+            <p className="text-slate-500 text-xs uppercase tracking-wider mb-2">Prediction Accuracy</p>
+            <p className="text-stat text-emerald-400">{stats.predictionAccuracy}%</p>
           </div>
         </div>
 
@@ -146,7 +146,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Top Scorers Chart */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">Top 10 Goal Scorers</h2>
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">Top 10 Goal Scorers</h2>
             {topScorers.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={topScorers}>
@@ -167,7 +167,7 @@ export default function Dashboard() {
 
           {/* Position Distribution Chart */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">Player Distribution by Position</h2>
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">Player Distribution by Position</h2>
             {positionDist.some(p => p.count > 0) ? (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -199,12 +199,12 @@ export default function Dashboard() {
 
         {/* Algorithms Section */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-text-primary mb-6">ML Algorithms (5 Total)</h2>
+          <h2 className="text-lg font-semibold text-slate-100 mb-6">ML Algorithms (5 Total)</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {algorithms.map((algo, idx) => (
-              <div key={idx} className="bg-dark-tertiary border border-dark-border rounded p-4 text-center">
-                <p className="text-nepal-red font-semibold mb-1">{algo.name}</p>
-                <p className="text-xs text-text-secondary">{algo.desc}</p>
+              <div key={idx} className="bg-[#0c0d10] border border-[#202124] rounded-lg p-4 text-center hover:border-emerald-500/30 transition-all duration-150">
+                <p className="text-emerald-400 font-semibold mb-1">{algo.name}</p>
+                <p className="text-xs text-slate-500">{algo.desc}</p>
               </div>
             ))}
           </div>
