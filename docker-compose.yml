@@ -62,6 +62,7 @@ services:
       MONGODB_URI: mongodb://root:password@mongodb:27017/fotnep
       ML_SERVICE_PORT: 8000
       LOG_LEVEL: info
+      PYTHONUNBUFFERED: 1
     ports:
       - "8000:8000"
     depends_on:
@@ -70,6 +71,11 @@ services:
       - ./services/ml-service:/app
       - ./data:/data
       - ml_models:/app/saved_models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/docs')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     image: node:20-alpine

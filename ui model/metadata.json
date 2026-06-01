@@ -1,0 +1,6 @@
+{
+  "name": "FotNep",
+  "description": "Nepalese football hub with match lineups, upcoming fixtures, past recent games, interactive lineups, win/draw/loss crowd predictions, and historical player comparisons.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

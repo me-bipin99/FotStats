@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authAPI } from '@services/api';
 
 interface User {
   userId: string;
   email: string;
-  name: string;
+  role?: string;
 }
 
 interface AuthStore {
@@ -26,10 +27,16 @@ export const useAuthStore = create<AuthStore>()(
 
       login: async (email: string, password: string) => {
         try {
-          // TODO: Call login endpoint
-          // const response = await fetch('/api/v1/auth/login', {...})
-          // const data = await response.json()
-          // set({ token: data.token, user: data.user, isAuthenticated: true })
+          const response = await authAPI.login(email, password);
+          const { token, data } = response.data;
+
+          const user: User = {
+            userId: data.userId,
+            email: data.email,
+            role: data.role,
+          };
+
+          set({ token, user, isAuthenticated: true });
         } catch (error) {
           console.error('Login failed:', error);
           throw error;

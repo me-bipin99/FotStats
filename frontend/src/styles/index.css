@@ -2,51 +2,188 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary: #1e3a8a;
-  --secondary: #0f766e;
-  --accent: #06b6d4;
-  --danger: #dc2626;
-  --warning: #f59e0b;
-  --success: #10b981;
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-slate-900 text-slate-100;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  code {
+    @apply font-mono text-sm;
+  }
+
+  h1 {
+    @apply text-2xl font-bold text-slate-100;
+  }
+
+  h2 {
+    @apply text-xl font-semibold text-slate-100;
+  }
+
+  h3 {
+    @apply text-lg font-semibold text-slate-100;
+  }
+
+  p {
+    @apply text-sm text-slate-400;
+  }
+
+  label {
+    @apply text-xs font-semibold text-slate-400 uppercase tracking-wider;
+  }
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer components {
+  /* Card Components */
+  .card {
+    @apply bg-slate-800 border border-slate-700 rounded-md p-6;
+  }
+
+  .card-compact {
+    @apply bg-slate-800 border border-slate-700 rounded-md p-4;
+  }
+
+  .card-sm {
+    @apply bg-slate-800 border border-slate-700 rounded-md p-3;
+  }
+
+  /* Button Base */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-red-700 text-white hover:bg-red-800 active:bg-red-900;
+  }
+
+  .btn-secondary {
+    @apply btn bg-slate-700 text-slate-100 border border-slate-600 hover:bg-slate-600;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-slate-100 hover:bg-slate-700;
+  }
+
+  .btn-sm {
+    @apply btn px-2 py-1 text-xs;
+  }
+
+  .btn-lg {
+    @apply btn px-6 py-3 text-base;
+  }
+
+  /* Input & Form */
+  .input {
+    @apply w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-blue-600 transition-colors;
+  }
+
+  .input:focus {
+    @apply border-blue-600;
+  }
+
+  /* Badge/Pill */
+  .badge {
+    @apply inline-flex items-center px-2 py-1 rounded text-xs font-semibold;
+  }
+
+  .badge-fwd {
+    @apply badge bg-red-700 text-white;
+  }
+
+  .badge-mid {
+    @apply badge bg-blue-700 text-white;
+  }
+
+  .badge-def {
+    @apply badge bg-green-700 text-white;
+  }
+
+  .badge-gk {
+    @apply badge bg-gray-600 text-white;
+  }
+
+  .badge-win {
+    @apply badge bg-red-700 text-white;
+  }
+
+  .badge-draw {
+    @apply badge bg-yellow-600 text-white;
+  }
+
+  .badge-loss {
+    @apply badge bg-gray-700 text-white;
+  }
+
+  /* Table Styles */
+  .table-head {
+    @apply bg-slate-700 border-b border-slate-600;
+  }
+
+  .table-head th {
+    @apply text-left text-xs font-semibold text-slate-300 px-4 py-3;
+  }
+
+  .table-body td {
+    @apply px-4 py-3 text-sm border-b border-slate-700;
+  }
+
+  .table-row:hover {
+    @apply bg-slate-700 cursor-pointer;
+  }
+
+  /* Grid Utilities */
+  .grid-cols-responsive {
+    @apply grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3;
+  }
+
+  /* Text Utilities */
+  .text-stat {
+    @apply text-2xl font-bold text-slate-100;
+  }
+
+  .text-stat-secondary {
+    @apply text-lg font-bold text-slate-400;
+  }
+
+  .text-muted {
+    @apply text-xs text-slate-500;
+  }
+
+  /* Loading State */
+  .skeleton {
+    @apply animate-pulse bg-slate-700 rounded;
+  }
+
+  .skeleton-text {
+    @apply skeleton h-4 w-full;
+  }
+
+  .skeleton-avatar {
+    @apply skeleton h-10 w-10 rounded-full;
+  }
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: #f3f4f6;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-/* Custom scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  @apply w-2 h-2;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  @apply bg-slate-800;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  @apply bg-slate-700 rounded hover:bg-slate-600;
 }
 
 /* Animations */
@@ -70,10 +207,10 @@ code {
   }
 }
 
-.fade-in {
+.animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
 
-.slide-up {
+.animate-slide-up {
   animation: slideUp 0.3s ease-in-out;
 }

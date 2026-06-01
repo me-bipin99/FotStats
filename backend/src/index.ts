@@ -14,7 +14,8 @@ import { insightRoutes } from '@routes/insights';
 import { predictionRoutes } from '@routes/predictions';
 import { logger } from '@utils/logger';
 
-dotenv.config();
+// Load .env.local from current working directory (backend root)
+dotenv.config({ path: '.env.local' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,19 +49,25 @@ app.use(errorHandler);
 // Initialize services and start server
 async function bootstrap() {
   try {
+    console.log('Bootstrap starting...');
     // Connect to MongoDB
     await connectDatabase();
     logger.info('MongoDB connected');
+    console.log('After MongoDB connection');
 
     // Initialize Redis
     await initializeRedis();
-    logger.info('Redis connected');
+    logger.info('Redis initialized');
+    console.log('After Redis init');
 
     // Start server
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
+      console.log(`✓ Server listening on port ${PORT}`);
       logger.info(`Server running on port ${PORT}`);
     });
+    console.log('listen() called');
   } catch (error) {
+    console.error('Bootstrap error:', error);
     logger.error('Failed to start server', error);
     process.exit(1);
   }

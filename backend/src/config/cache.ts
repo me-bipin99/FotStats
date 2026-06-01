@@ -9,15 +9,23 @@ export async function initializeRedis(): Promise<void> {
 
     redisClient = createClient({
       url: redisUrl,
+      socket: {
+        connectTimeout: 2000,
+        reconnectStrategy: () => false, // Don't reconnect if fails
+      },
     });
 
     redisClient.on('error', (err) => logger.error('Redis error:', err));
     redisClient.on('connect', () => logger.info('Redis connected'));
 
-    await redisClient.connect();
+    // Set a timeout for connection
+    await Promise.race([
+      redisClient.connect(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 2500))
+    ]);
   } catch (error) {
-    logger.error('Redis connection failed', error);
-    throw error;
+    logger.warn('Redis unavailable - caching disabled');
+    redisClient = null;
   }
 }
 

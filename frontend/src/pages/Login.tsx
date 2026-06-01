@@ -1,56 +1,102 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@context/authContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('admin@fotnep.com');
+  const [password, setPassword] = useState('fotnep2025');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { login } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+
     try {
       await login(email, password);
-    } catch (error) {
-      console.error('Login failed:', error);
+      navigate('/dashboard');
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Login failed. Please try again.';
+      setError(message);
+      console.error('Login failed:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-8 text-center">FotNep ⚽</h1>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              required
-            />
+    <div className="bg-dark-primary min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="card">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-text-primary mb-2">FotNep</h1>
+            <p className="text-text-secondary text-sm">Nepali Football Analytics</p>
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              required
-            />
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-semantic-loss/10 border border-semantic-loss text-semantic-loss rounded p-3 mb-6 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-text-secondary text-xs uppercase tracking-wider mb-2">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input w-full"
+                placeholder="admin@fotnep.com"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-text-secondary text-xs uppercase tracking-wider mb-2">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input w-full"
+                placeholder="••••••••"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn-primary w-full mt-6">
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+
+          {/* Demo Credentials */}
+          <div className="mt-6 pt-6 border-t border-dark-border">
+            <p className="text-text-secondary text-xs mb-3">Demo Credentials</p>
+            <div className="space-y-2 text-sm text-text-muted">
+              <div>
+                <p className="text-text-secondary text-xs">Email</p>
+                <p className="font-mono">admin@fotnep.com</p>
+              </div>
+              <div>
+                <p className="text-text-secondary text-xs">Password</p>
+                <p className="font-mono">fotnep2025</p>
+              </div>
+            </div>
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <p className="text-text-muted text-xs">Nepali National Football Team Analytics Platform</p>
+        </div>
       </div>
     </div>
   );

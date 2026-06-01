@@ -69,6 +69,7 @@ def read_nepali_squad():
                 "marketValue": row["Market Value (€)"],
                 "currentClub": row["Current Club"],
                 "nslTeam": row["NSL Team"],
+                "gender": "Male",  # Squad is male by default
             })
     return squad
 
@@ -181,11 +182,41 @@ def train_and_assign_clusters(all_players):
 
         print(f"✓ Trained K-Means on European data and assigned clusters")
     except Exception as e:
-        print(f"⚠ K-Means clustering failed: {e}. Using default cluster 1.")
+        print(f"⚠ K-Means clustering failed: {e}. Assigning roles by position.")
+        # Map position to role
+        position_to_role = {
+            'goalkeeper': 'Goalkeeper',
+            'gk': 'Goalkeeper',
+            'defender': 'Defender',
+            'centre-back': 'Defender',
+            'centre back': 'Defender',
+            'back': 'Defender',
+            'fullback': 'Defender',
+            'left-back': 'Defender',
+            'right-back': 'Defender',
+            'midfielder': 'Midfielder',
+            'central midfield': 'Midfielder',
+            'defensive midfield': 'Midfielder',
+            'attacking midfield': 'Midfielder',
+            'midfield': 'Midfielder',
+            'winger': 'Winger',
+            'forward': 'Forward',
+            'striker': 'Forward',
+            'centre-forward': 'Forward',
+        }
+
         for player in all_players:
+            pos = player.get("position", "").lower()
+            # Find matching role
+            role = "Midfielder"  # default
+            for pos_key, role_val in position_to_role.items():
+                if pos_key in pos:
+                    role = role_val
+                    break
+
             player["roleClassification"] = {
                 "cluster": 1,
-                "primaryRole": "Midfielder"
+                "primaryRole": role
             }
 
 def seed_players(all_players):
@@ -203,37 +234,131 @@ def seed_players(all_players):
 
     return insert_count
 
-def seed_team(squad_playerids):
-    """Seed Nepal National Team"""
-    db.teams.delete_many({"teamId": "nepal_national"})
+def seed_team(all_players):
+    """Seed Male and Female Nepal National Teams with top performers"""
+    db.teams.delete_many({})
 
-    team_doc = {
-        "teamId": "nepal_national",
-        "name": "Nepal National Team",
-        "squad": squad_playerids,
-        "averageElo": sum(db.players.find_one({"playerId": pid})["eloRating"] for pid in squad_playerids) / len(squad_playerids),
+    # Separate players by gender
+    male_players = [p for p in all_players if p.get("gender", "Male").lower() == "male"]
+    female_players = [p for p in all_players if p.get("gender", "Male").lower() == "female"]
+
+    # Sort by performance: ELO > Goals > Caps
+    def performance_score(p):
+        return (
+            p.get("eloRating", 1500) * 10 +
+            p.get("goals", 0) * 100 +
+            p.get("caps", 0) * 5
+        )
+
+    male_players_sorted = sorted(male_players, key=performance_score, reverse=True)
+    female_players_sorted = sorted(female_players, key=performance_score, reverse=True)
+
+    # Select top 11 performers from each team (Starting XI)
+    male_top_11 = male_players_sorted[:11]
+    female_top_11 = female_players_sorted[:11]
+
+    male_active_ids = [p["playerId"] for p in male_top_11]
+    female_active_ids = [p["playerId"] for p in female_top_11]
+
+    # Calculate average ELO
+    male_elo = sum(p["eloRating"] for p in male_top_11) / len(male_top_11) if male_top_11 else 1500
+    female_elo = sum(p["eloRating"] for p in female_top_11) / len(female_top_11) if female_top_11 else 1500
+
+    # Create Male National Team
+    male_team = {
+        "teamId": "nepal_male",
+        "name": "Nepal Male National Team",
+        "gender": "Male",
+        "squad": male_active_ids,
+        "averageElo": male_elo,
+        "totalPlayers": len(male_players),
+        "activeCount": len(male_active_ids),
+        "formation": "4-3-3",
         "createdAt": datetime.utcnow(),
     }
+    db.teams.insert_one(male_team)
 
-    db.teams.insert_one(team_doc)
-    return 1
+    # Create Female National Team
+    female_team = {
+        "teamId": "nepal_female",
+        "name": "Nepal Female National Team",
+        "gender": "Female",
+        "squad": female_active_ids,
+        "averageElo": female_elo,
+        "totalPlayers": len(female_players),
+        "activeCount": len(female_active_ids),
+        "formation": "4-2-3-1",
+        "createdAt": datetime.utcnow(),
+    }
+    db.teams.insert_one(female_team)
+
+    print(f"✓ Created Male Team with top 11 performers (avg ELO: {male_elo:.0f})")
+    print(f"✓ Created Female Team with top 11 performers (avg ELO: {female_elo:.0f})")
+
+    return 2
 
 def seed_match(home_team_id):
-    """Seed one upcoming match (Nepal vs Bangladesh)"""
-    db.matches.delete_many({"matchId": "nep_ban_2025"})
+    """Seed Nepal vs India matches (Male and Female) with predictions"""
+    db.matches.delete_many({})
 
-    match_doc = {
-        "matchId": "nep_ban_2025",
-        "homeTeam": home_team_id,
-        "awayTeam": "bangladesh",
+    # Male Match: Nepal vs India
+    male_match = {
+        "matchId": "nepal_male_india_male_2025",
+        "homeTeam": "nepal_male",
+        "awayTeam": "india_male",
+        "homeTeamName": "Nepal",
+        "awayTeamName": "India",
+        "gender": "Male",
         "status": "scheduled",
-        "date": "2025-08-15",
+        "date": "2025-09-10",
         "venue": "Tribhuvan Army Stadium, Kathmandu",
+        "formation": {
+            "home": "4-3-3",
+            "away": "4-2-3-1"
+        },
+        "prediction": {
+            "homeWinProbability": 0.25,
+            "drawProbability": 0.30,
+            "awayWinProbability": 0.45,
+            "expectedGoalsHome": 1.2,
+            "expectedGoalsAway": 1.8,
+            "predictedResult": "0-1"
+        },
         "createdAt": datetime.utcnow(),
     }
+    db.matches.insert_one(male_match)
 
-    db.matches.insert_one(match_doc)
-    return 1
+    # Female Match: Nepal vs India
+    female_match = {
+        "matchId": "nepal_female_india_female_2025",
+        "homeTeam": "nepal_female",
+        "awayTeam": "india_female",
+        "homeTeamName": "Nepal",
+        "awayTeamName": "India",
+        "gender": "Female",
+        "status": "scheduled",
+        "date": "2025-09-12",
+        "venue": "Nepal Police Stadium, Kathmandu",
+        "formation": {
+            "home": "4-2-3-1",
+            "away": "4-3-3"
+        },
+        "prediction": {
+            "homeWinProbability": 0.20,
+            "drawProbability": 0.25,
+            "awayWinProbability": 0.55,
+            "expectedGoalsHome": 0.9,
+            "expectedGoalsAway": 2.1,
+            "predictedResult": "0-2"
+        },
+        "createdAt": datetime.utcnow(),
+    }
+    db.matches.insert_one(female_match)
+
+    print(f"✓ Created Male Match: Nepal vs India (09-10-2025)")
+    print(f"✓ Created Female Match: Nepal vs India (09-12-2025)")
+
+    return 2
 
 def seed_user():
     """Seed admin user for authentication"""
@@ -278,14 +403,13 @@ def main():
 
     print("6️⃣  Seeding MongoDB...")
     player_count = seed_players(all_players)
-    squad_ids = [p["playerId"] for p in squad]
-    team_count = seed_team(squad_ids)
-    match_count = seed_match("nepal_national")
+    team_count = seed_team(all_players)
+    match_count = seed_match("nepal_male")
     user_count = seed_user()
 
     print(f"   ✓ Seeded {player_count} players")
-    print(f"   ✓ Seeded {team_count} team")
-    print(f"   ✓ Seeded {match_count} match")
+    print(f"   ✓ Seeded {team_count} teams")
+    print(f"   ✓ Seeded {match_count} matches")
     print(f"   ✓ Seeded {user_count} admin user")
 
     print(f"\n✅ Database seeded successfully!")

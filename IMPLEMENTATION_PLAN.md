@@ -408,6 +408,107 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ---
 
+### Session 3b — Voting System & Predictions (1–2 hrs) **NEW**
+
+**Objective:** Add weighted voting system + match prediction accuracy tracking.
+
+**Background:** UI model folder contains reference implementation (MatchDetails.tsx). Port core algorithm to backend.
+
+**Voting Algorithm (from MatchDetails.tsx lines 85-138):**
+
+1. **User Reputation Weight:** `userWeight = max(1, round(1 + reputation/5))`
+   - Reputation = cumulative points from correct predictions
+   - Each correct prediction: +3 points
+   - Each wrong prediction: -1 point
+   - Initial reputation for new users: 0
+
+2. **Expert Predictions (hardcoded):**
+   ```
+   Experts = [
+     { username: 'Gorkhali_Expert', weight: 7 },
+     { username: 'Nepali_Madridista', weight: 6 },
+     { username: 'Cheli_Power', weight: 5 },
+     { username: 'football_guy_97', weight: 3 }
+   ]
+   Expert choices: deterministic based on matchId hash
+   ```
+
+3. **Hybrid Forecast Formula:**
+   ```
+   Final Probability = 35% * crowd_simple_votes + 65% * expert_weighted_votes
+   ```
+   Where:
+   - Crowd votes = unweighted count (1, X, 2)
+   - Expert votes = weighted sum
+
+4. **Match Resolution:**
+   - When match finishes, evaluate user prediction vs actual result
+   - Determine actual result: homeGoals > awayGoals → '1', draw → 'X', etc.
+   - Update user reputation based on accuracy
+   - Store prediction record for accuracy tracking
+
+**Files to Create/Modify:**
+
+`backend/src/models/Vote.ts`:
+```typescript
+interface Vote {
+  _id: ObjectId;
+  matchId: string;
+  userId: string;
+  choice: '1' | 'X' | '2';
+  userWeightAtTime: number; // reputation-based weight
+  timestamp: Date;
+  pointsAwarded?: number; // filled after match resolves
+  isCorrect?: boolean;
+}
+```
+
+`backend/src/models/User.ts` (add fields):
+```typescript
+interface User {
+  // ... existing fields
+  reputation: number; // cumulative points
+  predictions: { correct: number; wrong: number };
+  isExpert: boolean; // for leaderboard filtering
+}
+```
+
+`backend/src/routes/predictions.ts` (new endpoints):
+```
+POST /api/v1/matches/:matchId/vote
+  Input: { choice: '1' | 'X' | '2', userId: string }
+  Output: { registered: true, currentForecast: {home: 52%, draw: 27%, away: 21%} }
+
+GET /api/v1/matches/:matchId/forecast
+  Output: { home: 52, draw: 27, away: 21, narrative: "..." }
+
+GET /api/v1/users/:userId/reputation
+  Output: { reputation: 45, correct: 15, wrong: 5, rank: 3 }
+
+POST /api/v1/matches/:matchId/resolve
+  Input: { homeGoals: 2, awayGoals: 1 }
+  Logic: Evaluate all votes, update user reputations, archive predictions
+```
+
+**Verify:**
+```bash
+# Register vote
+curl -X POST http://localhost:3000/api/v1/matches/nep_ban/vote \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"choice": "1"}'
+
+# Check forecast
+curl http://localhost:3000/api/v1/matches/nep_ban/forecast
+# Expected: { home: 52, draw: 27, away: 21, ... }
+
+# Check user reputation
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:3000/api/v1/users/admin@fotnep.com/reputation
+```
+
+---
+
 ### Session 4 — Frontend Core Pages (2–3 hrs)
 
 **Objective:** Dashboard, Players, Teams, Matches all functional with real data.
