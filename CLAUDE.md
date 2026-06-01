@@ -1,12 +1,120 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working in this repository.
+This file provides guidance to Claude Code when working in the FotNep repository.
+
+---
 
 ## Project: FotNep - Nepali Football Analytics Platform
 
-**What:** Full-stack analytics app for Nepali football players with 5 ML algorithms  
-**Tech Stack:** React 18 + Express.js + MongoDB + FastAPI (Python)  
-**Status:** MVP built, Session 3+ in progress (UI refinement)
+**What:** Full-stack analytics app for Nepali football with 3 core ML algorithms  
+**Status:** Starting Fresh - Session 5+  
+**Tech Stack:** React 18 + TypeScript + Express.js + MongoDB + FastAPI (Python)
+
+---
+
+## The 3 Algorithms
+
+### 1. Crowd Consensus Prediction
+- **Purpose:** Community-driven match outcome forecasting with reputation-weighted voting
+- **Input:** Match ID, user votes (Home/Draw/Away), user reputation scores
+- **Output:** Predicted winner probability, community confidence (0-100%), vote breakdown
+- **Endpoint:** POST /api/v1/predict-match
+- **Logic:** Higher reputation users have more voting weight; final prediction = weighted average
+
+### 2. Player Performance Estimator
+- **Purpose:** Compare player statistics predicted by ML from available training data
+- **Input:** Player A ID, Player B ID, historical stats
+- **Output:** Similarity score (0-100%), attribute breakdown (pace, shooting, passing, dribbling, defending, physical), tactical recommendations
+- **Endpoint:** POST /api/v1/compare-players
+- **Logic:** ML predicts missing stats; enables fair comparison across different career histories
+
+### 3. Optimal Squad Generator
+- **Purpose:** Predict ideal match lineups based on historical performance and player availability
+- **Input:** Available players, opponent (optional), formation preference, constraints (injuries/suspensions)
+- **Output:** Predicted starting XI, bench recommendations, formation, confidence score, tactical insights
+- **Endpoint:** POST /api/v1/optimize-squad
+- **Logic:** Analyzes past lineups/outcomes, learns winning combinations, respects player chemistry & constraints
+
+---
+
+## Architecture
+
+### Frontend (React 18 + TypeScript + Tailwind)
+**Location:** `/frontend/src/`
+
+**Pages:**
+- Dashboard.tsx — Overview, key stats, algorithm summaries
+- Players.tsx — Player database, search, filter by position
+- Teams.tsx — Team listings and management
+- Matches.tsx — Match fixtures, voting interface, predictions
+- Login.tsx — Authentication page
+
+**Components:**
+- Header.tsx — Navigation navbar
+- PlayerComparison.tsx — Algorithm 2: Compare two players
+- LineupBuilder.tsx — Algorithm 3: Squad optimization UI
+- MatchFeed.tsx — Match list sidebar with filters
+- MatchDetails.tsx — Match info and prediction controls
+- PlayerStats.tsx — Individual player stats display
+- ErrorBoundary.tsx — Error handling wrapper
+
+**Services:**
+- api.ts — REST client for backend API calls (JWT auth)
+- comparisonEngine.ts — Algorithm 2 logic/calculations
+- types.ts — TypeScript interfaces
+
+**State Management:**
+- context/authContext.ts — JWT token & user auth state (Context API)
+
+**Styling:**
+- index.css — Component utilities (.card, .btn-primary, .input, .badge-*, .table-*)
+- tailwind.config.ts — Tailwind theme tokens
+- **Theme:** Light mode only (white bg, black text, gray borders)
+- **Accents:** Emerald (#10B981) for interactive, Nepal red (#C8102E) for wins only
+
+### Backend (Express.js + TypeScript + MongoDB)
+**Location:** `/backend/src/`
+
+**Controllers:** authController.ts, playerController.ts, teamController.ts, matchController.ts, predictionController.ts, insightController.ts
+
+**Models:** User.ts, Player.ts, Team.ts, Match.ts, Prediction.ts
+
+**Routes:**
+- /api/v1/auth/* — login, register, validate
+- /api/v1/players/* — CRUD operations
+- /api/v1/teams/* — Team management
+- /api/v1/matches/* — Match fixtures
+- /api/v1/predict-match — Algorithm 1
+- /api/v1/compare-players — Algorithm 2
+- /api/v1/optimize-squad — Algorithm 3
+
+**Database:** MongoDB (Atlas or local)  
+**Auth:** JWT + bcrypt
+
+### ML Service (FastAPI + Python)
+**Location:** `/services/ml-service/`
+
+**Endpoints:**
+- POST /predict-match — Algorithm 1
+- POST /compare-players — Algorithm 2
+- POST /optimize-squad — Algorithm 3
+
+**Models:** consensus.py, player_estimator.py, squad_optimizer.py
+
+---
+
+## Seeded Data
+
+**Admin Account:**
+- Email: admin@fotnep.com
+- Password: fotnep2025
+
+**Players:**
+- 102 Nepali players (name, position, stats, ELO rating)
+- 2780 European players (comparison dataset)
+
+**Matches:**
+- Demo fixtures with lineups, venues, competitions
 
 ---
 
@@ -16,191 +124,71 @@ This file provides guidance to Claude Code when working in this repository.
 # Start everything
 bash START.sh
 
-# Or individually:
-cd backend && npm run dev           # Express.js on :3000
-cd frontend && npm run dev          # Vite on :3003
-cd services/ml-service && python -m uvicorn main:app --reload  # FastAPI on :8000
+# Or manually:
+cd backend && npm run dev           # :3000
+cd frontend && npm run dev          # :3001
+cd services/ml-service && python -m uvicorn main:app --reload  # :8000
 
 # Build
 cd backend && npm run build
 cd frontend && npm run build
-
-# Test
-cd backend && npm test
-cd frontend && npm test
 ```
-
----
-
-## Key Directories
-
-- `backend/src/` — Express controllers, routes, models, middleware
-- `frontend/src/` — React pages, components, services, context
-- `services/ml-service/` — Python FastAPI + ML algorithms
-- `data/` — CSV datasets (102 Nepali players, 2780 European players)
-
----
-
-## Architecture
-
-### Frontend
-- **Pages:** Dashboard, Players, Teams, Matches (4 core pages)
-- **State:** Zustand (auth context) + Context API
-- **Styles:** Tailwind CSS (dark mode only)
-- **Charts:** Recharts
-- **Auth:** JWT tokens in localStorage
-
-### Backend
-- **Database:** MongoDB Atlas (102 players seeded)
-- **Auth:** JWT + bcrypt
-- **API:** RESTful (/api/v1/)
-- **Cache:** Redis (optional, graceful fallback)
-
-### ML Service
-- **5 Algorithms:**
-  1. KNN — Player similarity + xG estimation
-  2. K-Means — Role clustering
-  3. Naive Bayes — Match prediction
-  4. ELO — Player ratings
-  5. Genetic Algorithm — Squad optimization
 
 ---
 
 ## Design System
 
-**Colors (dark theme only, no light mode):**
-- Dark base: `#0c0d10`
-- Card bg: `#151619`
-- Border: `#202124`
-- Text primary: `#F1F5F9`
-- Interactive accent: `#10B981` (emerald)
-- Nepal red: `#C8102E` (wins/CTAs only)
+**Colors (Light Theme Only):**
+- Background: #ffffff
+- Cards: #ffffff with border #e5e5e5
+- Text primary: #000000 (black)
+- Text secondary: #64748b (gray)
+- Interactive: #10b981 (emerald)
+- Win/Critical CTA: #c8102e (Nepal red)
+- Borders: #e5e5e5 (gray)
+
+**Spacing:** Tailwind standard (4/8/12/16/24/32/48px)  
+**Radius:** rounded-lg = 8px, rounded-xl = 12px  
+**Fonts:** System UI stack + monospace for numbers  
+**Shadows:** shadow-sm, shadow-md, shadow-lg for depth
 
 **Component Classes:**
-- `.card` — Standard card with border
-- `.btn-primary` — Emerald CTA button
-- `.btn-secondary` — Secondary action
-- `.input` — Form input with emerald focus
-- `.table-head`, `.table-row` — Table styling
-- `.badge-fwd`, `.badge-mid`, `.badge-def`, `.badge-gk` — Position badges
-- `.text-stat` — Bold monospace for numbers
-
-**Spacing:** Standard Tailwind (4/8/12/16/24/32/48px)  
-**Radius:** `rounded-lg` = 8px, `rounded-xl` = 12px  
-**Fonts:** System UI stack (-apple-system, Segoe UI, etc) + mono for numbers
+- .card — Card with border, shadow
+- .btn-primary — Emerald button
+- .btn-secondary — Gray secondary button
+- .input — Text input with emerald focus
+- .table-head, .table-row — Table styling
+- .badge-fwd, .badge-mid, .badge-def, .badge-gk — Position badges
+- .text-stat — Bold monospace for stats
 
 ---
 
-## Data
+## Important Rules
 
-**Players:** 102 Nepali (seeded in MongoDB)
-- Name, position, stats, ELO rating, cluster assignment
-- Used by: Dashboard, Players page, Teams page
-
-**Matches:** 1 demo match (Nepal vs Bangladesh)
-- Used by: Matches page, voting system
-
-**Users:** Admin account seeded
-- Email: admin@fotnep.com
-- Password: fotnep2025
+1. **Light mode only** — No dark mode toggle anywhere
+2. **Emerald for interactive** — All buttons, focus states, active elements
+3. **Nepal red sparingly** — Wins, critical CTAs only
+4. **Professional design** — Clean, readable, no harsh gradients
+5. **No AI slop** — Professional dark theme typography, proper contrast
+6. **Dense information** — Tables and lists are compact
+7. **System fonts only** — No Google Fonts
+8. **All context in CLAUDE.md** — No external memory, version-controlled only
 
 ---
 
-## Sessions Completed
+## What NOT to do
 
-- **Session 1** ✅ Data seeding, cleanup, ELO ratings
-- **Session 2** ✅ ML routes, model integration
-- **Session 3** 🚧 Backend controllers, voting system
-- **Session 3b** 🚧 Voting endpoints, reputation tracking
-- **Session 4** 🚧 Frontend pages refinement
-
----
-
-## Recent Changes (Session 3+)
-
-### UI Refactor Completed
-- ✅ Updated Tailwind config: dark tokens (#0c0d10, #151619, #202124)
-- ✅ Rewrote CSS component layer (.card, .btn-*, .input, .table-*)
-- ✅ Changed primary interactive from red to emerald (#10B981)
-- ✅ Removed broken spacing override
-- ✅ Deleted UI model reference folder (patterns ported)
-
-### Files Deleted (Cleanup)
-- 13 redundant MD files (IMPLEMENTATION_PLAN, SESSION_PLAN, etc)
-- UI model folder (design patterns now in main frontend)
+- Don't add dark mode toggle
+- Don't use harsh colors or decorative gradients
+- Don't use Google Fonts
+- Don't create redundant MD files
+- Don't mock API data (integrate with backend)
+- Don't over-engineer components
+- Don't add features beyond the 3 algorithms
+- Don't save context to memory (use CLAUDE.md)
 
 ---
 
-## Current Focus
-
-**Next:** Complete remaining page refactors (PlayersClean, Navbar) and test visual design.
-
-**Files to Update:**
-- `frontend/src/pages/PlayersClean.tsx` — Migrate to new token system
-- `frontend/src/pages/Teams.tsx` — Update badge colors
-- `frontend/src/pages/Matches.tsx` — Update spinner, styling
-- `frontend/src/pages/Login.tsx` — Auto-update from CSS layer
-- `frontend/src/components/Navbar.tsx` — Rewrite with clean header
-
----
-
-## Important Notes
-
-1. **Dark mode only** — No light mode toggle anywhere
-2. **Emerald for interactive** — All buttons, focus states, active states use `#10B981`
-3. **Nepal red sparingly** — Only for wins and critical CTAs (`#C8102E`)
-4. **No AI slop** — Professional dark theme, no harsh gradients or decorative elements
-5. **Dense information** — Tables, lists, grids are compact and readable
-6. **System fonts only** — No Google Fonts, uses system UI stack + monospace for numbers
-
----
-
-## Commonly Used Patterns
-
-### Stat Card
-```jsx
-<div className="card-compact">
-  <p className="text-slate-500 text-xs uppercase tracking-wider mb-2">Label</p>
-  <p className="text-stat">42</p>
-</div>
-```
-
-### Button Primary
-```jsx
-<button className="btn-primary">Action</button>
-```
-
-### Table with Hover
-```jsx
-<table>
-  <thead className="table-head">
-    <tr><th>Col</th></tr>
-  </thead>
-  <tbody>
-    <tr className="table-row hover:bg-[#1a1b1f]">
-      <td>Data</td>
-    </tr>
-  </tbody>
-</table>
-```
-
-### Filter Input
-```jsx
-<input className="input" placeholder="Search..." />
-```
-
----
-
-## Quick Help
-
-- **Brand colors:** Nepal red `#C8102E`, blue `#003893`
-- **Text colors:** Use Tailwind `text-slate-*` classes (500=muted, 200=bright)
-- **Component reuse:** Check `frontend/src/components/` before creating new
-- **API endpoints:** Base URL is `/api/v1/` on port 3000
-- **ML service:** Calls to `/api/v1/estimate-stats`, `/api/v1/predict-match`, etc.
-- **Auth:** All endpoints except `/auth/login` and `/auth/register` require JWT
-
----
-
-**Last Updated:** Session 3+ (Cleanup & UI Refactor)  
-**Ready for:** Session 4 Frontend Page Completion
+**Last Updated:** 2026-06-01  
+**Status:** Starting Fresh Implementation  
+**Maintainer:** Claude Code
