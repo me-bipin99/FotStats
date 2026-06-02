@@ -15,6 +15,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [MASTER_PLAN.md](./MASTER_PLAN.md) — 5-session roadmap with detailed status
 - [ALGORITHMS.md](./ALGORITHMS.md) — Algorithm specifications
 - [SETUP.md](./SETUP.md) — Setup and deployment guide
+- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) — Data logic, formulas, schemas
+- [LLM_DEVELOPER_CHECKLIST.md](./LLM_DEVELOPER_CHECKLIST.md) — Step-by-step build guide
+
+---
+
+## ⚠️ CRITICAL: Demo Data vs Real Data
+
+### Development Phase (Current)
+- **Use:** Demo/sample data from seeding script (`services/ml-service/scripts/seed_db.py`)
+- **Scope:** 102 Nepali players, 2-3 sample teams, 5-10 sample matches, 5 sample users
+- **Purpose:** Fast iteration, testing all 3 algorithms, UI development, integration testing
+- **Data Source:** `/data/raw/nepali_players.csv` + `/data/raw/nepalisquad.csv`
+- **Admin Credentials:** email: `admin@fotnep.com`, password: `fotnep2025` (demo only, change in production)
+
+### Production Phase (After Finalization)
+- **Requirement:** Migrate ALL endpoints to use REAL Nepali Football League data
+- **What Changes:**
+  - ✅ Real players with actual stats (not seeded/synthetic)
+  - ✅ Real matches from competitions (not sample fixtures)
+  - ✅ Real teams and squads
+  - ✅ Real user accounts (no demo admin account)
+- **Checklist Before Launch:**
+  - [ ] Remove demo user seeding from seed_db.py or create separate dev/prod seeds
+  - [ ] Verify all endpoints pull from real MongoDB data (not hardcoded)
+  - [ ] Update login credentials (remove demo creds)
+  - [ ] Test with production database
+  - [ ] Verify no console.log or debug data in production build
+  - [ ] Ensure API rate limiting & auth is enabled
+- **How:** When ready, replace demo data with real data in MongoDB directly (user import script, manual seeding, etc.)
 
 ---
 
@@ -219,7 +248,8 @@ python -m black .                                     # Format code
 python -m flake8 .                                    # Lint check
 
 # Database
-python scripts/seed_db.py                             # Seed players, teams, matches to MongoDB
+python scripts/seed_db.py                             # Seed DEMO data only (development use)
+# NOTE: For production, create separate import script for real data
 ```
 
 ### Environment Setup
@@ -288,6 +318,47 @@ EOF
 
 ---
 
+## Data Flow Architecture
+
+### How Data Moves Through the System
+
+```
+MongoDB (Single Source of Truth)
+    ↓
+Backend Controllers (Query/Transform)
+    ↓
+REST API Endpoints
+    ↓
+Frontend (Display)
+    ↓
+ML Service (Optional - Algorithms on demand)
+    ↓
+Backend (Store results)
+    ↓
+MongoDB (Predictions/Votes)
+```
+
+### Critical Rule: Endpoints MUST Always Query MongoDB
+
+- **Never hardcode data** in controllers or routes
+- **Never return synthetic data** after development is complete
+- **All GET endpoints** must fetch from MongoDB with proper filtering
+- **All POST/PUT endpoints** must persist to MongoDB
+- **ML algorithms** receive real player data from MongoDB, return results stored back to MongoDB
+
+### Ensuring Real Data Flow
+
+When switching from demo to production:
+
+1. **Backend:** All controllers already query MongoDB (no changes needed if built correctly)
+2. **ML Service:** Already loads players from MongoDB for algorithm calculations
+3. **Frontend:** Already calls backend API which queries MongoDB
+4. **Database:** Replace demo records with real data, keep schema intact
+
+**No code changes needed if you build it right the first time** — data flows from DB → API → Frontend automatically.
+
+---
+
 ## Development Workflow
 
 1. **Scaffold the directories** (if not present):
@@ -336,6 +407,50 @@ EOF
 - Don't save context to memory — use CLAUDE.md (version-controlled)
 - Don't skip linting/tests before committing — quality gate required
 - Don't commit .env files or sensitive data — update .gitignore if needed
+- **Don't hardcode demo data in code** — keep all data in MongoDB, always query DB
+- **Don't return synthetic data after MVP** — all endpoints must return real data from database
+- **Don't mix demo credentials in production** — remove admin@fotnep.com / fotnep2025 before launch
+
+---
+
+---
+
+## Database Initialization & Data Management
+
+### Development Phase (Current)
+- Run `python scripts/seed_db.py` to populate demo data
+- Demo data includes: 102 Nepali players, 2-3 teams, 5-10 matches, 5 users
+- Used for testing algorithms, UI development, integration testing
+- **Important:** All endpoints should still query MongoDB (not hardcode data)
+
+### Production Readiness
+Before deploying to production:
+
+1. **Verify All Endpoints Are Dynamic**
+   - [ ] No hardcoded player IDs, team IDs, or match data
+   - [ ] All GET endpoints use MongoDB queries with filters
+   - [ ] All POST/PUT endpoints persist to MongoDB
+   - [ ] No console.log with sensitive data
+
+2. **Replace Demo Data**
+   - [ ] Create production data import script (replace seed_db.py)
+   - [ ] Load real Nepali Football League data
+   - [ ] Keep MongoDB schema identical (just different data)
+   - [ ] Test with production database
+
+3. **Credentials & Secrets**
+   - [ ] Remove demo user (admin@fotnep.com / fotnep2025)
+   - [ ] Create real user accounts for production
+   - [ ] Update JWT_SECRET in .env (production)
+   - [ ] Enable API rate limiting
+
+4. **Testing**
+   - [ ] Run end-to-end tests with production data
+   - [ ] Verify all 3 algorithms work with real data
+   - [ ] Check performance with full dataset
+   - [ ] Load test with realistic user volume
+
+**Key Principle:** Code is data-agnostic. Swap demo data with real data, everything still works.
 
 ---
 
