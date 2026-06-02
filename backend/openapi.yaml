@@ -1,0 +1,1099 @@
+openapi: 3.0.0
+info:
+  title: FotNep API
+  description: Nepali Football Analytics Platform API
+  version: 1.0.0
+  contact:
+    name: FotNep Team
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.fotnep.com/api/v1
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User login and token management
+  - name: Players
+    description: Player database and analytics
+  - name: Teams
+    description: Team management and lineups
+  - name: Matches
+    description: Match fixtures and results
+  - name: Predictions
+    description: Algorithm 1 - Crowd Consensus Predictions
+  - name: Comparisons
+    description: Algorithm 2 - Player Performance Comparison
+  - name: Squad Optimization
+    description: Algorithm 3 - Optimal Lineup Generator
+  - name: User Votes
+    description: Voting and reputation management
+
+paths:
+  # ===== AUTHENTICATION =====
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user with email and password, returns JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@fotnep.com
+                password:
+                  type: string
+                  example: fotnep2025
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for subsequent requests
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: User registration
+      description: Create new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                name:
+                  type: string
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/validate:
+    get:
+      tags:
+        - Authentication
+      summary: Validate token
+      description: Verify JWT token is valid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid or expired token
+
+  # ===== PLAYERS =====
+  /players:
+    get:
+      tags:
+        - Players
+      summary: List players
+      description: Get paginated list of players, optionally filtered by position or search term
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: position
+          in: query
+          schema:
+            type: string
+            enum: [FW, MF, DF, GK]
+          description: Filter by position
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [eloRating, appearances, goals, assists]
+            default: eloRating
+          description: Sort field (top priority by default)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Results per page
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Pagination offset
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  players:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Player'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /players/{id}:
+    get:
+      tags:
+        - Players
+      summary: Get player details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '404':
+          description: Player not found
+
+  /players/stats/{id}:
+    get:
+      tags:
+        - Players
+      summary: Get detailed player statistics
+      description: Returns predicted stats based on available data and ML benchmarks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  player:
+                    $ref: '#/components/schemas/Player'
+                  stats:
+                    $ref: '#/components/schemas/PlayerStats'
+                  predictions:
+                    type: object
+                    description: ML-predicted stats filled in from benchmarks
+
+  # ===== TEAMS =====
+  /teams:
+    get:
+      tags:
+        - Teams
+      summary: List teams
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+
+  /teams/{id}:
+    get:
+      tags:
+        - Teams
+      summary: Get team details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+
+  /teams/{id}/lineup:
+    get:
+      tags:
+        - Teams
+      summary: Get team current lineup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  teamId:
+                    type: string
+                  lineup:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LineupPosition'
+                  formation:
+                    type: string
+                    example: "4-3-3"
+
+  # ===== MATCHES =====
+  /matches:
+    get:
+      tags:
+        - Matches
+      summary: List matches
+      description: Get matches, optionally filtered by status (upcoming, completed, live)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [upcoming, live, completed]
+          description: Filter by match status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Match'
+
+  /matches/{id}:
+    get:
+      tags:
+        - Matches
+      summary: Get match details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Match'
+
+  /matches/{id}/lineups:
+    get:
+      tags:
+        - Matches
+      summary: Get match lineups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matchId:
+                    type: string
+                  homeLineup:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LineupPosition'
+                  awayLineup:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LineupPosition'
+                  homeFormation:
+                    type: string
+                  awayFormation:
+                    type: string
+
+  # ===== ALGORITHM 1: CROWD CONSENSUS PREDICTION =====
+  /predict-match:
+    post:
+      tags:
+        - Predictions
+      summary: Predict match outcome (Algorithm 1)
+      description: |
+        Crowd Consensus Prediction using reputation-weighted voting.
+        Accepts live votes and calculates weighted average prediction.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - matchId
+                - votes
+              properties:
+                matchId:
+                  type: string
+                  description: ID of match to predict
+                votes:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - userId
+                      - outcome
+                      - reputation
+                    properties:
+                      userId:
+                        type: string
+                      outcome:
+                        type: string
+                        enum: [home_win, draw, away_win]
+                      reputation:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                        description: User reputation score
+      responses:
+        '200':
+          description: Prediction calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchPrediction'
+        '400':
+          description: Invalid match or votes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /predict-match/{matchId}:
+    get:
+      tags:
+        - Predictions
+      summary: Get match prediction history
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matchId:
+                    type: string
+                  predictions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MatchPrediction'
+                  accuracy:
+                    type: number
+                    description: Historical accuracy of this prediction (after match resolves)
+
+  # ===== ALGORITHM 2: PLAYER COMPARISON =====
+  /compare-players:
+    post:
+      tags:
+        - Comparisons
+      summary: Compare two players (Algorithm 2)
+      description: |
+        Player Performance Estimator. Compares players with ML-predicted stats
+        filled in from benchmarks. Returns similarity score and attribute breakdown.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - playerAId
+                - playerBId
+              properties:
+                playerAId:
+                  type: string
+                playerBId:
+                  type: string
+      responses:
+        '200':
+          description: Comparison calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerComparison'
+        '400':
+          description: Invalid player IDs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ===== ALGORITHM 3: SQUAD OPTIMIZATION =====
+  /optimize-squad:
+    post:
+      tags:
+        - Squad Optimization
+      summary: Generate optimal squad (Algorithm 3)
+      description: |
+        Optimal Squad Generator. Predicts ideal XI based on available players,
+        formation preference, and constraints (injuries, suspensions).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - teamId
+                - availablePlayerIds
+              properties:
+                teamId:
+                  type: string
+                availablePlayerIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Pool of available players (excluding injured/suspended)
+                opponentId:
+                  type: string
+                  description: Optional opponent team ID for tactical adjustments
+                formationPreference:
+                  type: string
+                  enum: [4-3-3, 4-2-3-1, 3-5-2, 5-4-1, 5-3-2, 4-1-4-1]
+                  description: Preferred formation (if not provided, best is suggested)
+                constraints:
+                  type: object
+                  properties:
+                    injured:
+                      type: array
+                      items:
+                        type: string
+                      description: Player IDs to exclude (injured)
+                    suspended:
+                      type: array
+                      items:
+                        type: string
+                      description: Player IDs to exclude (suspended)
+      responses:
+        '200':
+          description: Squad optimization calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SquadOptimization'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ===== USER VOTES =====
+  /votes:
+    post:
+      tags:
+        - User Votes
+      summary: Submit vote on match prediction
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - matchId
+                - outcome
+              properties:
+                matchId:
+                  type: string
+                outcome:
+                  type: string
+                  enum: [home_win, draw, away_win]
+      responses:
+        '201':
+          description: Vote recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vote'
+
+  /votes/{matchId}:
+    get:
+      tags:
+        - User Votes
+      summary: Get votes for a match
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matchId:
+                    type: string
+                  votes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vote'
+
+  /leaderboard:
+    get:
+      tags:
+        - User Votes
+      summary: Get user reputation leaderboard
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Top N users
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    rank:
+                      type: integer
+                    userId:
+                      type: string
+                    name:
+                      type: string
+                    reputation:
+                      type: number
+                    predictionsCorrect:
+                      type: integer
+                    predictionsTotal:
+                      type: integer
+                    accuracy:
+                      type: number
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - name
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        reputation:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: User reputation score based on voting accuracy
+        predictionsCorrect:
+          type: integer
+          description: Number of correct predictions
+        predictionsTotal:
+          type: integer
+          description: Total predictions made
+        createdAt:
+          type: string
+          format: date-time
+
+    PlayerStats:
+      type: object
+      description: 6-attribute player statistics (0-100 scale)
+      properties:
+        pace:
+          type: number
+          minimum: 0
+          maximum: 100
+        shooting:
+          type: number
+          minimum: 0
+          maximum: 100
+        passing:
+          type: number
+          minimum: 0
+          maximum: 100
+        dribbling:
+          type: number
+          minimum: 0
+          maximum: 100
+        defending:
+          type: number
+          minimum: 0
+          maximum: 100
+        physical:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    Player:
+      type: object
+      required:
+        - id
+        - name
+        - position
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        position:
+          type: string
+          enum: [FW, MF, DF, GK]
+        age:
+          type: integer
+        nationality:
+          type: string
+        team:
+          type: string
+          description: Current team ID
+        height:
+          type: number
+          description: Height in cm
+        weight:
+          type: number
+          description: Weight in kg
+        marketValue:
+          type: number
+          description: Market value in millions
+        eloRating:
+          type: number
+          description: ELO rating (higher = better)
+        stats:
+          $ref: '#/components/schemas/PlayerStats'
+        careerStats:
+          type: object
+          properties:
+            appearances:
+              type: integer
+            goals:
+              type: integer
+            assists:
+              type: integer
+            yellowCards:
+              type: integer
+            redCards:
+              type: integer
+        source:
+          type: string
+          enum: [nepali, european]
+          description: Data source (for comparison dataset distinction)
+        rawDataPath:
+          type: string
+          description: Path to raw CSV data in /data/raw (if Nepali player)
+
+    Team:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        country:
+          type: string
+        founded:
+          type: integer
+        color:
+          type: string
+          description: Primary team color (hex)
+        stadium:
+          type: string
+        coach:
+          type: string
+        players:
+          type: array
+          items:
+            type: string
+            description: Player IDs
+        formation:
+          type: string
+          example: "4-3-3"
+
+    Match:
+      type: object
+      required:
+        - id
+        - homeTeam
+        - awayTeam
+        - date
+      properties:
+        id:
+          type: string
+        homeTeam:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+        awayTeam:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+        date:
+          type: string
+          format: date-time
+        competition:
+          type: string
+          description: League or tournament name
+        status:
+          type: string
+          enum: [upcoming, live, completed]
+        venue:
+          type: string
+        result:
+          type: object
+          description: Only present if match is completed
+          properties:
+            homeScore:
+              type: integer
+            awayScore:
+              type: integer
+
+    LineupPosition:
+      type: object
+      properties:
+        playerId:
+          type: string
+        playerName:
+          type: string
+        position:
+          type: string
+          enum: [GK, DF, MF, FW]
+        shirtNumber:
+          type: integer
+        bench:
+          type: boolean
+          description: True if on bench, false if starting XI
+
+    MatchPrediction:
+      type: object
+      properties:
+        matchId:
+          type: string
+        prediction:
+          type: object
+          required:
+            - homeWinProb
+            - drawProb
+            - awayWinProb
+          properties:
+            homeWinProb:
+              type: number
+              minimum: 0
+              maximum: 1
+            drawProb:
+              type: number
+              minimum: 0
+              maximum: 1
+            awayWinProb:
+              type: number
+              minimum: 0
+              maximum: 1
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Community confidence (based on vote distribution variance)
+        voteBreakdown:
+          type: object
+          properties:
+            homeWin:
+              type: integer
+            draw:
+              type: integer
+            awayWin:
+              type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    PlayerComparison:
+      type: object
+      properties:
+        playerA:
+          $ref: '#/components/schemas/Player'
+        playerB:
+          $ref: '#/components/schemas/Player'
+        similarityScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Overall similarity (0-100)
+        attributeComparison:
+          type: object
+          properties:
+            pace:
+              type: object
+              properties:
+                playerA:
+                  type: number
+                playerB:
+                  type: number
+            shooting:
+              type: object
+              properties:
+                playerA:
+                  type: number
+                playerB:
+                  type: number
+            passing:
+              type: object
+              properties:
+                playerA:
+                  type: number
+                playerB:
+                  type: number
+            dribbling:
+              type: object
+              properties:
+                playerA:
+                  type: number
+                playerB:
+                  type: number
+            defending:
+              type: object
+              properties:
+                playerA:
+                  type: number
+                playerB:
+                  type: number
+            physical:
+              type: object
+              properties:
+                playerA:
+                  type: number
+                playerB:
+                  type: number
+        tacticalPairing:
+          type: string
+          description: Recommended tactical insights for playing together
+        strengths:
+          type: object
+          properties:
+            playerA:
+              type: array
+              items:
+                type: string
+            playerB:
+              type: array
+              items:
+                type: string
+
+    SquadOptimization:
+      type: object
+      properties:
+        teamId:
+          type: string
+        startingXI:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineupPosition'
+          minItems: 11
+          maxItems: 11
+        bench:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineupPosition'
+        formation:
+          type: string
+          example: "4-3-3"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Confidence in this lineup based on historical data
+        tacticalInsights:
+          type: array
+          items:
+            type: string
+          description: Key tactical recommendations (e.g., "Player X and Y have strong chemistry")
+        keyMissingPlayers:
+          type: array
+          items:
+            type: object
+            properties:
+              playerId:
+                type: string
+              playerName:
+                type: string
+              reason:
+                type: string
+                enum: [injured, suspended, unavailable]
+
+    Vote:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        matchId:
+          type: string
+        outcome:
+          type: string
+          enum: [home_win, draw, away_win]
+        timestamp:
+          type: string
+          format: date-time
+        correct:
+          type: boolean
+          description: True if vote matched final result (only set after match resolves)
