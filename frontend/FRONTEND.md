@@ -1,360 +1,136 @@
 # Frontend Service Documentation
 
 **Location:** `/frontend/`  
-**Port:** 3001  
-**Framework:** React 18 + TypeScript + Vite + Tailwind CSS
+**Port:** 3000 (dev server)  
+**Framework:** React 19 + TypeScript + Vite + Tailwind CSS v4
 
 ## Quick Start
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev      # Starts on :3000
 ```
+
+## Current Implementation State
+
+The frontend is a **dark-themed SPA** with tab-based navigation (no React Router). It currently uses mock data from `src/data/mockData.ts` and has no backend connection yet.
+
+**Active tabs:**
+- `home` — Match center: MatchFeed sidebar + MatchDetails main panel
+- `compare` — PlayerComparison (Algorithm 2 UI)
+- `stats` — PlayerStats (Algorithm 3 UI)
+- `lineups` — LineupBuilder (Algorithm 3 UI)
 
 ## Architecture
 
 ```
 src/
-├── pages/                 # Page components (full page layouts)
-│   ├── Dashboard.tsx      # Overview, stats, algorithm previews
-│   ├── Players.tsx        # Player list, search, details panel
-│   ├── Teams.tsx          # Team cards, squad management
-│   ├── Matches.tsx        # Match list, voting, predictions
-│   ├── Login.tsx          # Auth page
-│   └── NotFound.tsx       # 404 page
-├── components/            # Reusable UI components
-│   ├── Layout/
-│   │   ├── Header.tsx     # Navigation navbar
-│   │   └── Sidebar.tsx    # Match feed sidebar
-│   ├── Player/
-│   │   ├── PlayerCard.tsx
-│   │   ├── PlayerStats.tsx
-│   │   ├── PlayerComparison.tsx  # Algorithm 2 UI
-│   │   └── PlayerTable.tsx
-│   ├── Team/
-│   │   ├── TeamCard.tsx
-│   │   └── LineupBuilder.tsx     # Algorithm 3 UI
-│   ├── Match/
-│   │   ├── MatchCard.tsx
-│   │   ├── MatchDetails.tsx
-│   │   └── MatchVoting.tsx       # Algorithm 1 voting UI
-│   ├── Forms/
-│   │   ├── LoginForm.tsx
-│   │   ├── SearchBar.tsx
-│   │   └── FilterPanel.tsx
-│   ├── Common/
-│   │   ├── LoadingSpinner.tsx
-│   │   ├── ErrorMessage.tsx
-│   │   ├── ConfirmDialog.tsx
-│   │   └── ErrorBoundary.tsx
-│   └── Charts/
-│       ├── StatsChart.tsx
-│       └── PredictionChart.tsx
-├── services/              # API client & helpers
-│   ├── api.ts            # HTTP client with JWT auth
-│   ├── comparisonEngine.ts
-│   ├── squadOptimizer.ts
-│   └── utils.ts
-├── types/                # TypeScript interfaces
-│   ├── index.ts         # Generated from OpenAPI (heyapi)
-│   └── custom.ts        # App-specific types
-├── context/              # Global state (Context API)
-│   ├── authContext.ts   # JWT token, user auth
-│   └── dataContext.ts   # Shared data (players, teams, matches)
-├── styles/               # CSS & Tailwind
-│   ├── index.css        # Global utilities
-│   └── tailwind.config.ts
-├── hooks/                # Custom React hooks
-│   ├── useAuth.ts       # Authentication
-│   ├── usePlayer.ts     # Player data fetching
-│   ├── useMatch.ts      # Match data fetching
-│   └── useApi.ts        # Generic API hook
-├── App.tsx              # Root component with routing
-├── main.tsx             # Vite entry point
-└── vite-env.d.ts        # Vite type definitions
+├── components/            # All UI components (flat, not nested)
+│   ├── Header.tsx         # Navigation + auth (localStorage-based)
+│   ├── MatchFeed.tsx      # Match list sidebar with category filter
+│   ├── MatchDetails.tsx   # Match scoreboard, prediction, pitch view
+│   ├── PlayerComparison.tsx  # Algorithm 2: Side-by-side player compare
+│   ├── PlayerStats.tsx    # Player stats display
+│   └── LineupBuilder.tsx  # Algorithm 3: Squad optimizer UI
+├── data/
+│   └── mockData.ts        # Mock teams, players, matches (replace with API)
+├── App.tsx                # Root component, tab state, layout grid
+├── types.ts               # TypeScript interfaces (Team, Player, Match, etc.)
+├── index.css              # Tailwind v4 import + custom animations + scrollbar
+└── main.tsx               # Vite entry point
 ```
 
-## Generated Types (from OpenAPI)
+## Design System (Dark Theme)
 
-Run before development to generate API types:
+**Colors:**
+- Background: `#0d0e10` (near-black)
+- Card surfaces: `#151619`
+- Text primary: `#cbd5e1` (slate-200)
+- Text secondary: `#64748b` (slate-500)
+- Interactive: `#10b981` (emerald-500)
+- Critical/Win: `#dc2626` (Nepal red)
+- Borders: `#1e293b` (slate-800)
+
+**Typography (Google Fonts — loaded in index.css):**
+- Body: `Open Sans`
+- Display/headings: `Space Grotesk`
+- Monospace/stats: `JetBrains Mono`
+
+**Animation:** Uses `motion/react` (Framer Motion) for transitions.
+
+**Tailwind v4:** Configured via `@tailwindcss/vite` plugin (no `tailwind.config.ts`). Theme tokens set inside `@theme {}` in `index.css`.
+
+## Navigation & State
+
+`App.tsx` manages all top-level state:
+```typescript
+const [activeTab, setActiveTab] = useState<'home' | 'compare' | 'stats' | 'lineups'>('home');
+const [selectedMatchId, setSelectedMatchId] = useState<string>('m1');
+const [comparisonPlayers, setComparisonPlayers] = useState<Player[]>([...]);
+```
+
+No React Router — tab switching is done via `setActiveTab`.
+
+## Auth (Current Implementation)
+
+Auth state lives in `Header.tsx` using `localStorage`:
+- `FOTNEP_LOGGED_IN` — stores logged-in username
+- `FOTNEP_USERS` — stores user list JSON
+
+This is demo auth. Replace with JWT + `authContext.ts` when backend is ready.
+
+## Types (src/types.ts)
+
+Key interfaces:
+```typescript
+Player      // id, name, number, position, rating, attributes (pace/shooting/passing/dribbling/defending/physical)
+Team        // id, name, shorthand, color, fifaRank, coach, stadium
+Match       // id, category, status, homeTeam, awayTeam, homeLineup, predictionVotes
+LineupPosition  // player, x, y (pitch coordinates as %)
+MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
+```
+
+## Switching from Mock Data to Backend API
+
+When backend is ready:
+1. Create `src/services/api.ts` — HTTP client with JWT auth header
+2. Replace `mockData.ts` imports in components with `useEffect` + API calls
+3. Move auth from `Header.tsx` localStorage to `authContext.ts` + JWT
+4. Add `VITE_API_BASE_URL=http://localhost:3000/api/v1` to `.env.local`
+
+## Available Scripts
 
 ```bash
-npm run gen:api
+npm run dev        # Vite dev server on :3000 with HMR
+npm run build      # Production build to /dist
+npm run preview    # Preview production build locally
+npm run lint       # TypeScript check (tsc --noEmit)
+npm run clean      # Remove dist/ and server.js
 ```
 
-This generates `/src/gen/` with auto-generated:
-- `types.ts` — All request/response types (Player, Match, Prediction, etc.)
-- `services/` — API client methods with proper typing
+> **Note:** No test runner is configured yet. Add Vitest when needed.
 
-## Page Components
-
-### Dashboard.tsx
-- Display overall stats (total players, teams, matches)
-- Show 3 algorithm overview cards
-- Recent predictions and votes
-- Top voted players
-
-### Players.tsx
-- Table/card list of all players
-- Filters: position (FW, MF, DF, GK), search by name
-- Sort by: eloRating (top priority), appearances, goals, assists
-- Click to show player detail panel with full stats
-
-### Teams.tsx
-- Cards for each team
-- Show team players count
-- Current formation
-- Click to see full squad with lineup builder (Algorithm 3)
-
-### Matches.tsx
-- Upcoming matches at top
-- Live matches in middle
-- Completed matches below
-- Each match card shows:
-  - Teams, date, venue
-  - Prediction badge (if Algorithm 1 run)
-  - Voting widget (Algorithm 1 input)
-  - Current vote breakdown
-
-### Login.tsx
-- Simple form: email + password
-- Submit → JWT token stored in localStorage
-- Redirect to Dashboard on success
-
-## Component Details
-
-### MatchVoting.tsx (Algorithm 1 Interface)
-```
-Input: matchId
-Output: User selects home_win/draw/away_win
-Displays:
-  - Current vote breakdown (pie chart or bars)
-  - Current prediction (if available)
-  - User's own vote
-  - Confidence score
-```
-
-### PlayerComparison.tsx (Algorithm 2 Interface)
-```
-Input: Pick 2 players (dropdown or search)
-Output: Side-by-side comparison
-Displays:
-  - Player stats (6 attributes)
-  - Similarity score (0-100%)
-  - Tactical pairing insights
-  - Strengths/weaknesses
-```
-
-### LineupBuilder.tsx (Algorithm 3 Interface)
-```
-Input: Team + available players + formation preference
-Output: Recommended starting XI
-Displays:
-  - Formation diagram (visual pitch)
-  - 11 starting positions
-  - Bench recommendations
-  - Confidence score
-  - Tactical insights
-  - Ability to rerun with different formations
-```
-
-## Services
-
-### api.ts
-HTTP client with:
-- Automatic JWT auth header (`Authorization: Bearer <token>`)
-- Error handling & token refresh
-- Base URL from `VITE_API_BASE_URL` env var
-
-```typescript
-// Usage
-const players = await api.get('/players', { position: 'FW' });
-const prediction = await api.post('/predict-match', { matchId, votes });
-```
-
-### comparisonEngine.ts
-Client-side helper for Algorithm 2:
-- Format player data for display
-- Calculate visual differences
-- Generate comparison narratives
-
-### squadOptimizer.ts
-Client-side helper for Algorithm 3:
-- Format formation diagrams
-- Highlight starting XI
-- Manage constraint inputs
-
-## State Management (Context API)
-
-### authContext.ts
-```typescript
-interface AuthContext {
-  user: User | null
-  token: string | null
-  login(email, password): Promise<void>
-  logout(): void
-  isLoading: boolean
-  error: string | null
-}
-```
-
-### dataContext.ts
-```typescript
-interface DataContext {
-  players: Player[]
-  teams: Team[]
-  matches: Match[]
-  loadPlayers(filters): Promise<void>
-  loadMatches(status): Promise<void>
-  // etc.
-}
-```
-
-## Environment Variables (.env.local)
+## Environment Variables (.env.local — not committed)
 
 ```
 VITE_API_BASE_URL=http://localhost:3000/api/v1
 VITE_AUTH_TOKEN_KEY=fotnep_token
+GEMINI_API_KEY=your_key_here        # If using @google/genai features
 ```
 
-## Design System
+## Key Implementation Patterns
 
-**Colors (Light Mode Only):**
-- Background: #ffffff
-- Text primary: #000000
-- Text secondary: #64748b
-- Interactive: #10b981 (emerald)
-- Critical: #c8102e (Nepal red, wins only)
-- Borders: #e5e5e5
-- Cards: #ffffff with #e5e5e5 border
+### Pitch coordinate system (MatchDetails, LineupBuilder)
+Players positioned with `x, y` as percentage of pitch dimensions (0–100). Home team occupies top half, away team bottom half.
 
-**Component Classes (in index.css):**
-- `.card` — Card with border, shadow
-- `.btn-primary` — Emerald button
-- `.btn-secondary` — Gray button
-- `.input` — Text input with emerald focus
-- `.badge-fwd`, `.badge-mid`, `.badge-def`, `.badge-gk` — Position badges
-- `.table-head`, `.table-row` — Table styling
-- `.text-stat` — Bold monospace for stats
+### Category filtering
+Matches have `category: 'MEN' | 'WOMEN' | 'DOMESTIC'`. MatchFeed filters by selected category, auto-selects first match of category.
 
-## Common Development Tasks
-
-### Generate API types from OpenAPI spec
-```bash
-npm run gen:api
-```
-
-### Run dev server
-```bash
-npm run dev
-```
-
-### Build for production
-```bash
-npm run build
-npm run preview  # Test build locally
-```
-
-### Type checking
-```bash
-npm run type-check
-```
-
-### Lint
-```bash
-npm run lint
-npm run lint:fix
-```
-
-### Testing
-```bash
-npm test
-npm test -- --watch
-```
-
-## Testing
-
-- Use **Vitest** for unit tests
-- Use **React Testing Library** for component tests
-- Use `/verify` skill for manual E2E testing in browser
-
-Example test:
-```typescript
-describe('PlayerCard', () => {
-  it('displays player name and position', () => {
-    const { getByText } = render(<PlayerCard player={mockPlayer} />);
-    expect(getByText('Ronaldo')).toBeInTheDocument();
-    expect(getByText('FW')).toBeInTheDocument();
-  });
-});
-```
-
-## Routing
-
-```typescript
-// src/App.tsx
-Routes:
-  /login → Login.tsx
-  /dashboard → Dashboard.tsx
-  /players → Players.tsx
-  /teams → Teams.tsx
-  /matches → Matches.tsx
-  /* → NotFound.tsx
-```
-
-Redirect `/` → `/dashboard` if authenticated, else → `/login`
-
-## Key Flows
-
-### 1. Login Flow
-1. User enters email/password on Login.tsx
-2. `useAuth().login()` calls `api.post('/auth/login')`
-3. Backend returns JWT token + User object
-4. Store token in localStorage & authContext
-5. Redirect to Dashboard
-
-### 2. View Players
-1. Players.tsx renders with filters
-2. `usePlayer()` hook fetches from `/players?position=FW&search=...&sortBy=eloRating`
-3. Display table/cards
-4. Click player → show detail panel with full stats
-
-### 3. Algorithm 1: Predict Match
-1. User on Matches.tsx sees match card
-2. MatchVoting.tsx shows current votes
-3. User selects outcome (home_win/draw/away_win)
-4. Submit → `api.post('/votes', { matchId, outcome })`
-5. Frontend calls `/predict-match` with live votes from backend
-6. Display prediction + confidence
-
-### 4. Algorithm 2: Compare Players
-1. User navigates to PlayerComparison component
-2. Selects 2 players via dropdowns
-3. Submit → `api.post('/compare-players', { playerAId, playerBId })`
-4. Backend calls ML service
-5. Display side-by-side comparison with similarity score
-
-### 5. Algorithm 3: Optimize Squad
-1. User on Teams.tsx → click team → LineupBuilder
-2. Select formation preference (dropdown)
-3. Mark injured/suspended players
-4. Submit → `api.post('/optimize-squad', { teamId, availablePlayerIds, formation, constraints })`
-5. Backend calls ML service
-6. Display recommended XI with tactical insights
-
-## Production Checklist
-
-- [ ] All env vars set correctly
-- [ ] Backend running on :3000
-- [ ] ML service running on :8000
-- [ ] npm run build passes
-- [ ] npm run type-check passes
-- [ ] npm run lint passes
-- [ ] Manual E2E testing complete (use `/verify` skill)
-- [ ] No console errors in browser
+### Prediction votes
+`Match.predictionVotes: { home, draw, away }` stores vote counts. MatchDetails renders bar charts from these numbers.
 
 ---
 
-**Status:** To be implemented  
-**Priority:** Medium-High (implement after backend scaffold)
+**Status:** Core UI implemented (dark theme, mock data)  
+**Next:** Connect to backend API, replace localStorage auth with JWT
