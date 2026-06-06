@@ -211,6 +211,10 @@ export async function apiRegister(email: string, password: string, name: string)
   return request('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) });
 }
 
+export async function getMe(): Promise<AuthUser> {
+  return request<AuthUser>('/auth/me');
+}
+
 // ─── Players ─────────────────────────────────────────────────────────────────
 
 export async function getPlayers(params?: {
@@ -279,6 +283,33 @@ export async function getMatch(id: string): Promise<Match> {
 
 export async function getRawMatch(id: string): Promise<ApiMatch> {
   return request<ApiMatch>(`/matches/${id}`);
+}
+
+export async function createMatch(data: {
+  homeTeam: string;
+  awayTeam: string;
+  date: string;
+  competition: string;
+  venue?: string;
+  homeFormation?: string;
+  awayFormation?: string;
+}): Promise<{ match: ApiMatch }> {
+  return request('/matches', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function updateMatch(
+  id: string,
+  updates: Partial<{
+    date: string;
+    competition: string;
+    venue: string;
+    status: 'upcoming' | 'live' | 'completed';
+    homeFormation: string;
+    awayFormation: string;
+    result: { homeScore: number; awayScore: number };
+  }>
+): Promise<{ match: ApiMatch }> {
+  return request(`/matches/${id}`, { method: 'PATCH', body: JSON.stringify(updates) });
 }
 
 // ─── Votes ────────────────────────────────────────────────────────────────────

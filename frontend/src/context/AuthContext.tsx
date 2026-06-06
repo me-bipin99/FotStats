@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { apiLogin, apiRegister, setToken, clearToken, type AuthUser } from '../services/api';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { apiLogin, apiRegister, getMe, setToken, clearToken, type AuthUser } from '../services/api';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -13,6 +13,15 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('FOTNEP_TOKEN');
+    if (!token) return;
+    setToken(token);
+    getMe()
+      .then(setUser)
+      .catch(() => { clearToken(); setUser(null); });
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const { token, user: u } = await apiLogin(email, password);

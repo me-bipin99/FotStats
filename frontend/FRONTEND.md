@@ -74,11 +74,12 @@ No React Router — tab switching is done via `setActiveTab`.
 
 ## Auth (Current Implementation)
 
-Auth state lives in `Header.tsx` using `localStorage`:
-- `FOTNEP_LOGGED_IN` — stores logged-in username
-- `FOTNEP_USERS` — stores user list JSON
+Auth state lives in `src/context/AuthContext.tsx` using real JWT:
 
-This is demo auth. Replace with JWT + `authContext.ts` when backend is ready.
+- `AuthProvider` wraps the app in `main.tsx`
+- On mount, reads `FOTNEP_TOKEN` from `localStorage`, calls `GET /auth/me`, and restores the user — session survives page refresh
+- `useAuth()` hook exposes `{ user, isLoggedIn, login, register, logout }`
+- `FOTNEP_LOGGED_IN` in localStorage stores the display name (legacy; still written on login)
 
 ## Types (src/types.ts)
 
