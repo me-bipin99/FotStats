@@ -4,456 +4,272 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Project: FotNep - Nepali Football Analytics Platform
+## Project: FotNep — Nepali Football Analytics Platform
 
-**What:** Full-stack analytics app for Nepali football with 3 core ML algorithms  
-**Status:** Early MVP - Session 5+, Documentation & Planning Phase  
-**Tech Stack:** React 18 + TypeScript + Express.js + MongoDB + FastAPI (Python)
+Full-stack analytics app for Nepali football with 3 core ML algorithms.
 
-**Current State:** Documentation complete, data seeded. Code scaffolding needed (backend/, frontend/, services/).  
-**Key References:** 
-- [MASTER_PLAN.md](./MASTER_PLAN.md) — 5-session roadmap with detailed status
-- [ALGORITHMS.md](./ALGORITHMS.md) — Algorithm specifications
-- [SETUP.md](./SETUP.md) — Setup and deployment guide
-- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) — Data logic, formulas, schemas
-- [LLM_DEVELOPER_CHECKLIST.md](./LLM_DEVELOPER_CHECKLIST.md) — Step-by-step build guide
+**Tech Stack:**
 
----
+- Frontend: React 19 + TypeScript + Vite + Tailwind CSS v4
+- Backend: Express.js + TypeScript + MongoDB (Mongoose)
+- ML Service: FastAPI + Python + scikit-learn
 
-## ⚠️ CRITICAL: Demo Data vs Real Data
+**Service ports:** Frontend :3000 (dev) · Backend :3000 · ML Service :8000
 
-### Development Phase (Current)
-- **Use:** Demo/sample data from seeding script (`services/ml-service/scripts/seed_db.py`)
-- **Scope:** 102 Nepali players, 2-3 sample teams, 5-10 sample matches, 5 sample users
-- **Purpose:** Fast iteration, testing all 3 algorithms, UI development, integration testing
-- **Data Source:** `/data/raw/nepali_players.csv` + `/data/raw/nepalisquad.csv`
-- **Admin Credentials:** email: `admin@fotnep.com`, password: `fotnep2025` (demo only, change in production)
-
-### Production Phase (After Finalization)
-- **Requirement:** Migrate ALL endpoints to use REAL Nepali Football League data
-- **What Changes:**
-  - ✅ Real players with actual stats (not seeded/synthetic)
-  - ✅ Real matches from competitions (not sample fixtures)
-  - ✅ Real teams and squads
-  - ✅ Real user accounts (no demo admin account)
-- **Checklist Before Launch:**
-  - [ ] Remove demo user seeding from seed_db.py or create separate dev/prod seeds
-  - [ ] Verify all endpoints pull from real MongoDB data (not hardcoded)
-  - [ ] Update login credentials (remove demo creds)
-  - [ ] Test with production database
-  - [ ] Verify no console.log or debug data in production build
-  - [ ] Ensure API rate limiting & auth is enabled
-- **How:** When ready, replace demo data with real data in MongoDB directly (user import script, manual seeding, etc.)
+> During development run frontend via Vite and backend on a different port (e.g. change `PORT=3001` in `backend/.env`) to avoid collision.
 
 ---
 
-## The 3 Algorithms
+## Current Implementation State
 
-### 1. Crowd Consensus Prediction
-- **Purpose:** Community-driven match outcome forecasting with reputation-weighted voting
-- **Input:** Match ID, user votes (Home/Draw/Away), user reputation scores
-- **Output:** Predicted winner probability, community confidence (0-100%), vote breakdown
-- **Endpoint:** POST /api/v1/predict-match
-- **Logic:** Higher reputation users have more voting weight; final prediction = weighted average
-
-### 2. Player Performance Estimator
-- **Purpose:** Compare player statistics predicted by ML from available training data
-- **Input:** Player A ID, Player B ID, historical stats
-- **Output:** Similarity score (0-100%), attribute breakdown (pace, shooting, passing, dribbling, defending, physical), tactical recommendations
-- **Endpoint:** POST /api/v1/compare-players
-- **Logic:** ML predicts missing stats; enables fair comparison across different career histories
-
-### 3. Optimal Squad Generator
-- **Purpose:** Predict ideal match lineups based on historical performance and player availability
-- **Input:** Available players, opponent (optional), formation preference, constraints (injuries/suspensions)
-- **Output:** Predicted starting XI, bench recommendations, formation, confidence score, tactical insights
-- **Endpoint:** POST /api/v1/optimize-squad
-- **Logic:** Analyzes past lineups/outcomes, learns winning combinations, respects player chemistry & constraints
-
----
-
-## Architecture
-
-### Data Layer
-**Location:** `/data/`
-- `players_data-2025_2026.csv` — 2780 European players (comparison dataset)
-- `raw/` — Raw datasets for ML training
-- `processed/` — Cleaned datasets post-processing
-- `statsbomb/` — StatsBomb event data for advanced analytics
-
-**Seeding:** `services/ml-service/scripts/seed_db.py` populates MongoDB with:
-- 102 Nepali players (with ELO ratings, positions, stats)
-- Matches, teams, users, votes
-
-### Frontend (React 18 + TypeScript + Tailwind)
-**Location:** `/frontend/src/` (to be created)
-
-**Pages (Design Complete - Implementation Needed):**
-- `pages/Dashboard.tsx` — Overview, key stats, algorithm summaries
-- `pages/Players.tsx` — Player database, search, filter by position
-- `pages/Teams.tsx` — Team listings and management
-- `pages/Matches.tsx` — Match fixtures, voting interface, predictions
-- `pages/Login.tsx` — Authentication page
-
-**Components (Design Complete):**
-- `components/Header.tsx` — Navigation navbar
-- `components/PlayerComparison.tsx` — Algorithm 2: Compare two players
-- `components/LineupBuilder.tsx` — Algorithm 3: Squad optimization UI
-- `components/MatchFeed.tsx` — Match list sidebar with filters
-- `components/MatchDetails.tsx` — Match info and prediction controls
-- `components/PlayerStats.tsx` — Individual player stats display
-- `components/ErrorBoundary.tsx` — Error handling wrapper
-
-**Services (to be created):**
-- `services/api.ts` — REST client for backend API calls (JWT auth)
-- `services/comparisonEngine.ts` — Algorithm 2 client-side logic
-- `types/index.ts` — TypeScript interfaces
-
-**State Management:**
-- `context/authContext.ts` — JWT token & user auth state (Context API)
-
-**Styling:**
-- `index.css` — Component utilities (.card, .btn-primary, .input, .badge-*, .table-*)
-- `tailwind.config.ts` — Tailwind theme tokens
-- **Theme:** Light mode only (white bg, black text, gray borders)
-- **Accents:** Emerald (#10B981) for interactive, Nepal red (#C8102E) for wins only
-
-### Backend (Express.js + TypeScript + MongoDB)
-**Location:** `/backend/src/` (to be created)
-
-**Controllers (to be implemented):**
-- `authController.ts` — Login, register, JWT validation
-- `playerController.ts` — CRUD operations, analytics
-- `teamController.ts` — Team management, squad synergy
-- `matchController.ts` — Match fixtures, lineup management
-- `predictionController.ts` — Prediction accuracy tracking
-- `insightController.ts` — ML algorithm integration
-
-**Models (MongoDB schemas to be created):**
-- `User.ts` — Users, reputation scores, voting history
-- `Player.ts` — Player stats, positions, ELO ratings
-- `Team.ts` — Team data, formations, lineups
-- `Match.ts` — Match fixtures, results, lineups
-- `Prediction.ts` — Predictions from algorithms
-- `Vote.ts` — Voting records, reputation weighting
-
-**API Routes:**
-- `/api/v1/auth/*` — login, register, validate
-- `/api/v1/players/*` — CRUD operations
-- `/api/v1/teams/*` — Team management
-- `/api/v1/matches/*` — Match fixtures
-- `/api/v1/predict-match` — Algorithm 1 (Crowd Consensus)
-- `/api/v1/compare-players` — Algorithm 2 (Player Estimator)
-- `/api/v1/optimize-squad` — Algorithm 3 (Squad Generator)
-
-**Database:** MongoDB (Atlas or local)  
-**Auth:** JWT + bcrypt  
-**Testing:** Jest for unit/integration tests
-
-### ML Service (FastAPI + Python)
-**Location:** `/services/ml-service/` (to be created)
-
-**Algorithm Endpoints:**
-- `POST /predict-match` — Crowd Consensus Prediction (Algorithm 1)
-- `POST /compare-players` — Player Performance Estimator (Algorithm 2)
-- `POST /optimize-squad` — Optimal Squad Generator (Algorithm 3)
-
-**ML Models (to be implemented):**
-- `models/consensus.py` — Reputation-weighted voting aggregation
-- `models/player_estimator.py` — KNN-based player comparison
-- `models/squad_optimizer.py` — Genetic algorithm for lineup optimization
-
-**Utilities (to be created):**
-- `scripts/seed_db.py` — Database seeding script
-- `model_loader.py` — Singleton model caching
-- `config.py` — Environment and model configuration
-
----
-
-## Seeded Data
-
-**Admin Account:**
-- Email: admin@fotnep.com
-- Password: fotnep2025
-
-**Players:**
-- 102 Nepali players (name, position, stats, ELO rating)
-- 2780 European players (comparison dataset)
-
-**Matches:**
-- Demo fixtures with lineups, venues, competitions
+| Layer | Status |
+| --- | --- |
+| Frontend | ✅ Implemented (dark theme, mock data — not yet API-connected) |
+| Backend | 🔧 Scaffolded (models + middleware defined — controllers need completion) |
+| ML Service | 🔧 Scaffolded (Algorithm 1 ready, 2 & 3 need DB wiring) |
+| Database | ✅ Schema defined, seed script ready |
 
 ---
 
 ## Commands
 
-### Project-Level
+### Frontend
+
 ```bash
-# Start all services (when directories exist)
-bash START.sh
+cd frontend
+npm install
+npm run dev          # Vite dev server on :3000
+npm run build        # Production build to /dist
+npm run preview      # Test production build locally
+npm run lint         # TypeScript check (tsc --noEmit)
+npm run clean        # Remove dist/ and server.js
 ```
 
 ### Backend (Express.js + TypeScript)
+
 ```bash
 cd backend
-
-# Development
-npm install                 # First-time setup
-npm run dev                 # Dev server with hot-reload (:3000)
-npm run build              # Build for production
-npm run build:watch       # Build with file watching
-npm test                   # Run test suite
-npm run lint              # ESLint check
-npm run lint:fix          # Auto-fix linting issues
-
-# Production
-npm start                  # Run built version
-NODE_ENV=production npm run build
-```
-
-### Frontend (React 18 + Vite + Tailwind)
-```bash
-cd frontend
-
-# Development
-npm install                 # First-time setup
-npm run dev                 # Vite dev server (:3001)
-npm run build              # Production build
-npm run preview            # Preview production bundle locally
-npm test                   # Run test suite
-npm run lint              # ESLint check
-
-# Type checking
-npm run type-check        # TypeScript check
+npm install
+npm run dev          # tsx watch — hot reload
+npm run build        # tsc → dist/
+npm start            # Run compiled dist/index.js
+npm run type-check   # TypeScript check without emitting
+npm run lint         # ESLint
+npm run lint:fix     # ESLint auto-fix
+npm test             # Jest
+npm run test:watch   # Jest watch mode
+npm test -- auth     # Single test file (e.g. auth)
 ```
 
 ### ML Service (FastAPI + Python)
+
 ```bash
 cd services/ml-service
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python -m uvicorn main:app --reload --port 8000
+# Swagger UI: http://localhost:8000/docs
 
-# Setup
-python -m venv venv                                    # Create virtual environment
-source venv/bin/activate                              # Activate (Windows: venv\Scripts\activate)
-pip install -r requirements.txt                       # Install dependencies
-
-# Development
-python -m uvicorn main:app --reload --port 8000      # Dev server (:8000) with auto-reload
-python -m uvicorn main:app --reload --host 0.0.0.0   # For external access
-
-# Testing & Quality
-python -m pytest                                       # Run test suite
-python -m pytest -v                                   # Verbose output
-python -m pytest --cov                                # Coverage report
-python -m black .                                     # Format code
-python -m flake8 .                                    # Lint check
-
-# Database
-python scripts/seed_db.py                             # Seed DEMO data only (development use)
-# NOTE: For production, create separate import script for real data
+python scripts/seed_db.py       # Seed demo data (development only)
+python -m pytest                 # All tests
+python -m pytest tests/test_consensus.py  # Single test file
+python -m pytest --cov=models   # Coverage
+python -m black .                # Format
+python -m flake8 .               # Lint
 ```
 
 ### Environment Setup
+
 ```bash
-# Backend .env
-cat > backend/.env << 'EOF'
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/fotnep
-JWT_SECRET=your-secret-key-change-in-production
-NODE_ENV=development
-REDIS_URL=redis://localhost:6379  # Optional
-PORT=3000
-EOF
-
-# Frontend .env.local
-cat > frontend/.env.local << 'EOF'
-VITE_API_BASE_URL=http://localhost:3000/api/v1
-VITE_AUTH_TOKEN_KEY=fotnep_token
-EOF
-
-# ML Service .env
-cat > services/ml-service/.env << 'EOF'
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/fotnep
-PYTHONUNBUFFERED=1
-EOF
+cp backend/.env.example backend/.env
+cp services/ml-service/.env.example services/ml-service/.env
+# Fill in MONGO_URI and JWT_SECRET
 ```
 
 ---
 
-## Design System
+## The 3 Algorithms
 
-**Colors (Light Theme Only):**
-- Background: #ffffff
-- Cards: #ffffff with border #e5e5e5
-- Text primary: #000000 (black)
-- Text secondary: #64748b (gray)
-- Interactive: #10b981 (emerald)
-- Win/Critical CTA: #c8102e (Nepal red)
-- Borders: #e5e5e5 (gray)
+### Algorithm 1: Crowd Consensus Prediction
 
-**Spacing:** Tailwind standard (4/8/12/16/24/32/48px)  
-**Radius:** rounded-lg = 8px, rounded-xl = 12px  
-**Fonts:** System UI stack + monospace for numbers  
-**Shadows:** shadow-sm, shadow-md, shadow-lg for depth
+- **Endpoint:** `POST /predict-match` (ML service)
+- **Logic:** Reputation-weighted vote aggregation. `homeWinProb = sum(reputation of home_win voters) / total_rep`. Confidence = `(1 - variance_of_probs) * 100`.
+- **Implemented in:** `services/ml-service/models/consensus.py`
 
-**Component Classes:**
-- .card — Card with border, shadow
-- .btn-primary — Emerald button
-- .btn-secondary — Gray secondary button
-- .input — Text input with emerald focus
-- .table-head, .table-row — Table styling
-- .badge-fwd, .badge-mid, .badge-def, .badge-gk — Position badges
-- .text-stat — Bold monospace for stats
+### Algorithm 2: Player Performance Estimator
+
+- **Endpoint:** `POST /compare-players` (ML service)
+- **Logic:** Fetches two players from MongoDB → normalizes 6 stats (pace/shooting/passing/dribbling/defending/physical) → cosine similarity score 0–100.
+- **Implemented in:** `services/ml-service/models/player_estimator.py`
+
+### Algorithm 3: Optimal Squad Generator
+
+- **Endpoint:** `POST /optimize-squad` (ML service)
+- **Logic:** Filters unavailable players → groups by position → selects top players by ELO per formation slot. Full genetic algorithm optimization planned after training phase.
+- **Implemented in:** `services/ml-service/models/squad_optimizer.py`
 
 ---
 
-## Important Rules
+## Architecture & Data Flow
 
-1. **Light mode only** — No dark mode toggle anywhere
-2. **Emerald for interactive** — All buttons, focus states, active elements
-3. **Nepal red sparingly** — Wins, critical CTAs only
-4. **Professional design** — Clean, readable, no harsh gradients
-5. **No AI slop** — Professional dark theme typography, proper contrast
-6. **Dense information** — Tables and lists are compact
-7. **System fonts only** — No Google Fonts
-8. **All context in CLAUDE.md** — No external memory, version-controlled only
-
----
-
-## Data Flow Architecture
-
-### How Data Moves Through the System
-
-```
-MongoDB (Single Source of Truth)
-    ↓
-Backend Controllers (Query/Transform)
-    ↓
-REST API Endpoints
-    ↓
-Frontend (Display)
-    ↓
-ML Service (Optional - Algorithms on demand)
-    ↓
-Backend (Store results)
-    ↓
-MongoDB (Predictions/Votes)
+```text
+MongoDB (single source of truth)
+    ↓ Mongoose models
+Backend (Express :3000) — /api/v1/*
+    ↓ JWT-authenticated REST
+Frontend (React Vite dev :3000)
+    ↓ POST /api/v1/predict-match etc.
+Backend → HTTP call → ML Service (FastAPI :8000)
+    ↓ result stored back to MongoDB (Prediction collection)
 ```
 
-### Critical Rule: Endpoints MUST Always Query MongoDB
-
-- **Never hardcode data** in controllers or routes
-- **Never return synthetic data** after development is complete
-- **All GET endpoints** must fetch from MongoDB with proper filtering
-- **All POST/PUT endpoints** must persist to MongoDB
-- **ML algorithms** receive real player data from MongoDB, return results stored back to MongoDB
-
-### Ensuring Real Data Flow
-
-When switching from demo to production:
-
-1. **Backend:** All controllers already query MongoDB (no changes needed if built correctly)
-2. **ML Service:** Already loads players from MongoDB for algorithm calculations
-3. **Frontend:** Already calls backend API which queries MongoDB
-4. **Database:** Replace demo records with real data, keep schema intact
-
-**No code changes needed if you build it right the first time** — data flows from DB → API → Frontend automatically.
+**Rule:** All GET endpoints query MongoDB. Never hardcode player/match data in controllers.
 
 ---
 
-## Development Workflow
+## Frontend Architecture
 
-1. **Scaffold the directories** (if not present):
-   ```bash
-   mkdir -p backend/src/{controllers,models,routes,middleware,services}
-   mkdir -p frontend/src/{pages,components,services,types,context,styles}
-   mkdir -p services/ml-service/{models,scripts}
-   ```
+The frontend is a **dark-themed SPA** with tab navigation (no React Router).
 
-2. **Setup environment files** before running services
-3. **Seed database** once backend is running: `python scripts/seed_db.py`
-4. **Run services in parallel** for full-stack development
-5. **Test in browser** before marking features complete (use `/verify` skill)
+```text
+frontend/src/
+├── App.tsx              # Root: tab state, layout grid, player comparison state
+├── types.ts             # Team, Player, Match, LineupPosition, MatchStats interfaces
+├── index.css            # Tailwind v4 @theme tokens + Google Fonts + animations
+├── components/          # Flat structure (not nested subdirectories)
+│   ├── Header.tsx       # Navbar + auth (localStorage, temporary)
+│   ├── MatchFeed.tsx    # Sidebar: match list with MEN/WOMEN/DOMESTIC filter
+│   ├── MatchDetails.tsx # Main panel: scoreboard, pitch, vote prediction
+│   ├── PlayerComparison.tsx  # Algorithm 2 UI
+│   ├── PlayerStats.tsx  # Player stat tables
+│   └── LineupBuilder.tsx     # Algorithm 3 UI
+└── data/
+    └── mockData.ts      # Mock teams/players/matches — replace with API calls
+```
 
-## Testing Strategy
+**Tab navigation:** `activeTab: 'home' | 'compare' | 'stats' | 'lineups'` in `App.tsx`.
 
-- **Unit Tests:** Implement for utility functions and services
-- **Integration Tests:** Test API endpoints with real DB (use test database)
-- **E2E Tests:** Manual verification via browser (use `/verify` skill)
-- **Run tests before committing:** `npm test` in backend/frontend, `pytest` in ML service
+**Design system (dark):**
+- Backgrounds: `#0d0e10` (page), `#151619` (cards)
+- Text: `#cbd5e1` (primary), `#64748b` (secondary)
+- Accents: `#10b981` emerald (interactive), `#dc2626` Nepal red (wins only)
+- Fonts via Google Fonts in `index.css`: Open Sans (body), Space Grotesk (display), JetBrains Mono (stats)
+- Animations via `motion/react` (Framer Motion API)
+- Tailwind v4 configured with `@tailwindcss/vite` plugin; theme tokens in `@theme {}` block in `index.css` — no `tailwind.config.ts`
 
-## Code Quality
-
-- **Linting:** Run `npm run lint:fix` and `black .` before committing
-- **Type Safety:** Ensure `npm run type-check` passes in frontend
-- **No console errors:** Check browser console in `/verify`
-- **Commit messages:** Reference session number and feature (e.g., "Session 5: Implement player search")
-
-## Important Context
-
-- **Session-based development:** Each session builds incrementally (see MASTER_PLAN.md)
-- **College requirements:** Minimum 3 algorithms (we have 3), documented ML models
-- **Data already seeded:** 102 Nepali + 2780 European players available in MongoDB
-- **Admin credentials:** Use email: `admin@fotnep.com`, password: `fotnep2025`
-- **Reputation system:** Voting accuracy feeds into user reputation weighting for predictions
-
-## What NOT to do
-
-- Don't add dark mode toggle — light mode only
-- Don't use harsh colors or decorative gradients — professional design
-- Don't use Google Fonts — system UI stack only
-- Don't create redundant MD files — all context in CLAUDE.md + MASTER_PLAN.md
-- Don't mock API data — integrate with actual backend once running
-- Don't over-engineer components — follow provided designs, keep simple
-- Don't add features beyond the 3 algorithms — scope-locked
-- Don't save context to memory — use CLAUDE.md (version-controlled)
-- Don't skip linting/tests before committing — quality gate required
-- Don't commit .env files or sensitive data — update .gitignore if needed
-- **Don't hardcode demo data in code** — keep all data in MongoDB, always query DB
-- **Don't return synthetic data after MVP** — all endpoints must return real data from database
-- **Don't mix demo credentials in production** — remove admin@fotnep.com / fotnep2025 before launch
+**Migrating from mock data to backend:**
+1. Create `src/services/api.ts` — HTTP client with `Authorization: Bearer <token>` header
+2. Replace `import { mockX } from './data/mockData'` with `useEffect` + API calls
+3. Move auth state from `Header.tsx` localStorage to a proper `authContext.ts`
+4. Add `VITE_API_BASE_URL=http://localhost:3000/api/v1` to `frontend/.env.local`
 
 ---
 
----
+## Backend Architecture
 
-## Database Initialization & Data Management
+```text
+backend/src/
+├── index.ts             # Express app entry, middleware, route mounting
+├── config/
+│   └── database.ts      # Mongoose connectDB() — reads MONGO_URI
+├── models/              # Mongoose schemas: User, Player, Team, Match, Vote, Prediction
+├── controllers/
+│   ├── authController.ts   # login(), register()
+│   └── playerController.ts # listPlayers(), getPlayer()
+├── routes/
+│   ├── auth.ts          # POST /login, POST /register
+│   └── players.ts       # GET /players, GET /players/:id
+├── middleware/
+│   ├── authMiddleware.ts # requireAuth() — JWT verify → req.userId
+│   └── errorHandler.ts  # Standard { error, message } response
+└── services/
+    └── mlIntegration.ts  # predictMatch(), comparePlayers(), optimizeSquad() → HTTP to :8000
+```
 
-### Development Phase (Current)
-- Run `python scripts/seed_db.py` to populate demo data
-- Demo data includes: 102 Nepali players, 2-3 teams, 5-10 matches, 5 users
-- Used for testing algorithms, UI development, integration testing
-- **Important:** All endpoints should still query MongoDB (not hardcode data)
+**Error response format:** `{ "error": "ERROR_CODE", "message": "Human readable" }`
 
-### Production Readiness
-Before deploying to production:
+**Auth:** `POST /api/v1/auth/login` → `{ token, user }`. Use `Authorization: Bearer <token>` for protected routes. `requireAuth` middleware validates JWT and sets `req.userId`.
 
-1. **Verify All Endpoints Are Dynamic**
-   - [ ] No hardcoded player IDs, team IDs, or match data
-   - [ ] All GET endpoints use MongoDB queries with filters
-   - [ ] All POST/PUT endpoints persist to MongoDB
-   - [ ] No console.log with sensitive data
+**Key model fields:**
 
-2. **Replace Demo Data**
-   - [ ] Create production data import script (replace seed_db.py)
-   - [ ] Load real Nepali Football League data
-   - [ ] Keep MongoDB schema identical (just different data)
-   - [ ] Test with production database
-
-3. **Credentials & Secrets**
-   - [ ] Remove demo user (admin@fotnep.com / fotnep2025)
-   - [ ] Create real user accounts for production
-   - [ ] Update JWT_SECRET in .env (production)
-   - [ ] Enable API rate limiting
-
-4. **Testing**
-   - [ ] Run end-to-end tests with production data
-   - [ ] Verify all 3 algorithms work with real data
-   - [ ] Check performance with full dataset
-   - [ ] Load test with realistic user volume
-
-**Key Principle:** Code is data-agnostic. Swap demo data with real data, everything still works.
+- `Player.eloRating` — default 1600, higher = better
+- `Player.source` — `'nepali' | 'european'` (comparison dataset distinction)
+- `Vote` — unique compound index on `(userId, matchId)`
+- `User.reputation` — 0–100, updated after match resolution
 
 ---
 
-**Last Updated:** 2026-06-02  
-**Status:** MVP Phase - Session 5+, Scaffolding & Implementation  
-**Maintainer:** Claude Code
+## ML Service Architecture
+
+```text
+services/ml-service/
+├── main.py              # FastAPI app, CORS, router registration
+├── models/
+│   ├── consensus.py     # Algorithm 1 — fully implemented
+│   ├── player_estimator.py  # Algorithm 2 — needs real DB connection
+│   └── squad_optimizer.py   # Algorithm 3 — needs real DB + GA training
+├── config/
+│   ├── database.py      # pymongo singleton — get_db()
+│   └── model_loader.py  # Pickle model loader singleton (trained_models/*.pkl)
+├── scripts/
+│   └── seed_db.py       # Demo data seeder — development only
+└── tests/
+    └── test_consensus.py
+```
+
+**Adding a new algorithm:** Create `models/new_algo.py` with `router = APIRouter()`, then uncomment its import and `app.include_router()` call in `main.py`.
+
+**Trained models** are stored as pickle files in `trained_models/` (not yet generated). `ModelLoader` auto-loads all `.pkl` files from that directory on first use.
+
+---
+
+## Database (MongoDB)
+
+**Collections:** `users` · `players` · `teams` · `matches` · `votes` · `predictions`
+
+**Seeding (development only):**
+
+```bash
+cd services/ml-service && source venv/bin/activate
+python scripts/seed_db.py
+```
+
+Loads Nepali players from `/data/raw/nepali player stats with role and gender.csv`, creates demo teams/matches/users.
+
+**Demo credentials (dev only — remove before production):**
+
+- `admin@fotnep.com` / `fotnep2025`
+
+**Player data:**
+
+- `/data/raw/nepali player stats with role and gender.csv` — 102 Nepali players
+- `/data/players_data-2025_2026.csv` — 2780 European players (Algorithm 2 comparison dataset)
+
+---
+
+## ⚠️ Production Checklist
+
+- [ ] Remove demo credentials from seed script and database
+- [ ] Replace all `mockData.ts` imports with real API calls
+- [ ] Set strong `JWT_SECRET` (not the example value)
+- [ ] Enable rate limiting (`express-rate-limit` is already installed)
+- [ ] `npm run build` passes in both `frontend/` and `backend/`
+- [ ] `npm run type-check` passes in `backend/`
+- [ ] `pytest` passes in `services/ml-service/`
+- [ ] No hardcoded data in any controller — all queries hit MongoDB
+
+---
+
+## Key Reference Files
+
+- [ALGORITHMS.md](./ALGORITHMS.md) — Detailed algorithm math
+- [backend/BACKEND.md](./backend/BACKEND.md) — Full controller/model API reference
+- [frontend/FRONTEND.md](./frontend/FRONTEND.md) — Component and flow reference
+- [services/ml-service/ML_SERVICE.md](./services/ml-service/ML_SERVICE.md) — Algorithm implementation detail
+- [backend/openapi.yaml](./backend/openapi.yaml) — Full REST API specification
+
+---
+
+**Last Updated:** 2026-06-06  
+**Status:** Frontend UI complete (dark theme, mock data). Backend + ML service scaffolded, ready for implementation.
