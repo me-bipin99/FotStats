@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Player } from '../types';
-import { mockPlayers, fillerPlayers } from '../data/mockData';
-import { Plus, X, Search } from 'lucide-react';
+import { getPlayers, comparePlayers as apiComparePlayers, type CompareResult } from '../services/api';
+import { Plus, Search } from 'lucide-react';
 
 interface PlayerComparisonProps {
   selectedPlayers: Player[];
@@ -146,7 +146,7 @@ const DummyPlayerAvatar = ({ className = "w-13 h-13", gender = "male" }: { class
       <path d="M 72 35 C 72 38, 70 40, 70 35" stroke="#F4DFC8" strokeWidth="2" strokeLinecap="round" />
 
       {/* Smooth matching swept brown hair precisely conforming to the original attachment shape */}
-      <path d="M 29 33 
+      <path d="M 29 33 P
                C 28 21, 35 12, 50 11 
                C 65 10, 71 21, 71 30 
                C 70 24, 66 18, 58 18 
@@ -378,24 +378,35 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
   const [slotAPickerOpen, setSlotAPickerOpen] = useState(false);
   const [slotBPickerOpen, setSlotBPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  const allAvailablePlayers = [
-    ...Object.values(mockPlayers),
-    ...Object.values(fillerPlayers),
-  ];
+  const [allAvailablePlayers, setAllAvailablePlayers] = useState<Player[]>([]);
+  const [compareResult, setCompareResult] = useState<CompareResult | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const playerA = selectedPlayers[0] || null;
   const playerB = selectedPlayers[1] || null;
 
-  const filteredPlayers = allAvailablePlayers.filter(p => {
+  // Load players for pickers (debounced search)
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      getPlayers({ search: searchQuery || undefined, limit: 50 })
+        .then(({ players }) => setAllAvailablePlayers(players))
+        .catch(() => {});
+    }, 250);
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+  }, [searchQuery]);
+
+  // Call Algorithm 2 when both players selected
+  useEffect(() => {
+    if (!playerA || !playerB) { setCompareResult(null); return; }
+    apiComparePlayers(playerA.id, playerB.id)
+      .then(setCompareResult)
+      .catch(() => setCompareResult(null));
+  }, [playerA?.id, playerB?.id]);
+
+  const filteredPlayers = allAvailablePlayers.filter((p: Player) => {
     if (playerA && playerA.id === p.id) return false;
     if (playerB && playerB.id === p.id) return false;
-    
-    if (searchQuery.trim() !== '') {
-      return p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-             p.positionDetail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             p.club.toLowerCase().includes(searchQuery.toLowerCase());
-    }
     return true;
   });
 
@@ -656,6 +667,26 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
         </div>
 
       </div>
+
+      {/* ML Similarity Score Banner */}
+      {compareResult && (
+        <div className="bg-[#151619] border border-emerald-800/40 rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-slate-400 uppercase tracking-wider font-bold">Algorithm 2 · Cosine Similarity</span>
+            <span className="font-mono font-black text-emerald-400 text-lg">{compareResult.similarityScore.toFixed(1)}%</span>
+          </div>
+          <div className="flex gap-6">
+            <div>
+              <span className="text-[9px] uppercase text-slate-500 font-bold block mb-1">{compareResult.playerA.name} strengths</span>
+              <span className="text-emerald-400 font-semibold capitalize">{compareResult.strengths.playerA.join(', ') || '—'}</span>
+            </div>
+            <div>
+              <span className="text-[9px] uppercase text-slate-500 font-bold block mb-1">{compareResult.playerB.name} strengths</span>
+              <span className="text-slate-300 font-semibold capitalize">{compareResult.strengths.playerB.join(', ') || '—'}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SECTION 3: CORE STATS COMPARATIVE LAYOUT (Match performance + Core Attributes + Intelligence + Radar Chart Overlay) */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_390px] gap-8 items-start">

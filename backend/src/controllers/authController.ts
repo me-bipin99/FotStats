@@ -11,7 +11,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRY || '7d',
+    expiresIn: (process.env.JWT_EXPIRY || '7d') as unknown as number,
   });
   res.json({ token, user: { id: user._id, email: user.email, name: user.name, reputation: user.reputation } });
 }
@@ -26,7 +26,7 @@ export async function register(req: Request, res: Response): Promise<void> {
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await User.create({ email, passwordHash, name });
   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRY || '7d',
+    expiresIn: (process.env.JWT_EXPIRY || '7d') as unknown as number,
   });
   res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, reputation: user.reputation } });
 }

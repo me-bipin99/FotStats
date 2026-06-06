@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Match, Player, TeamLineup } from '../types';
-import { 
-  Shield, MapPin, Users, Calendar, AlertCircle, Info,
-  CheckCircle2, Award, Flame, User, BarChart2, CornerDownRight,
-  Trophy, LogIn, LogOut, RefreshCw, Sparkles, Star, Check
+import { useState, useEffect } from 'react';
+import { Match, Player } from '../types';
+import {
+  MapPin, Users, Calendar, AlertCircle, Info,
+  CheckCircle2, Award, Flame, Check
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { castVote, getMatchVotes, getPrediction, PredictionResult } from '../services/api';
 
 interface MatchDetailsProps {
   match: Match;
@@ -13,268 +14,51 @@ interface MatchDetailsProps {
 }
 
 export default function MatchDetails({ match, selectedPlayers, onSelectPlayerForComparison }: MatchDetailsProps) {
+  const auth = useAuth();
+  const loggedInUser = auth.user?.name ?? null;
+
   const [activeTab, setActiveTab] = useState<'lineup' | 'stats' | 'info'>('lineup');
   const [hoveredPlayer, setHoveredPlayer] = useState<Player | null>(null);
+  const [voteOutcome, setVoteOutcome] = useState<'home_win' | 'draw' | 'away_win' | null>(null);
+  const [voteCounts, setVoteCounts] = useState({ home_win: 0, draw: 0, away_win: 0 });
+  const [predResult, setPredResult] = useState<PredictionResult | null>(null);
+  const [voting, setVoting] = useState(false);
 
-  // 1. Unified Reputation & Weighted Prediction States loaded from LocalStorage
-  const [loggedInUser, setLoggedInUser] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('FOTNEP_LOGGED_IN') || null;
-  });
+  useEffect(() => {
+    setVoteOutcome(null);
+    getMatchVotes(match.id)
+      .then(counts => setVoteCounts(counts))
+      .catch(() => {});
+    getPrediction(match.id)
+      .then(result => { if (result) setPredResult(result); })
+      .catch(() => {});
+  }, [match.id]);
 
-  const [usersList, setUsersList] = useState<any[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const saved = localStorage.getItem('FOTNEP_USERS');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return [
-      { username: 'Gorkhali_Expert', reputation: 32, correct: 12, wrong: 4, isExpert: true },
-      { username: 'Nepali_Madridista', reputation: 25, correct: 10, wrong: 5, isExpert: true },
-      { username: 'Cheli_Power', reputation: 18, correct: 8, wrong: 6, isExpert: true },
-      { username: 'football_guy_97', reputation: 9, correct: 5, wrong: 6, isExpert: false },
-    ];
-  });
+  const userVote: '1' | 'X' | '2' | null =
+    voteOutcome === 'home_win' ? '1' : voteOutcome === 'draw' ? 'X' : voteOutcome === 'away_win' ? '2' : null;
 
-  // Keep state hydrated in sync across siblings in real-time
-  React.useEffect(() => {
-    const handleAuthChange = () => {
-      setLoggedInUser(localStorage.getItem('FOTNEP_LOGGED_IN') || null);
-      const savedUsers = localStorage.getItem('FOTNEP_USERS');
-      if (savedUsers) {
-        try { setUsersList(JSON.parse(savedUsers)); } catch (e) {}
-      }
-    };
-    window.addEventListener('fotnep-auth-change', handleAuthChange);
-    return () => window.removeEventListener('fotnep-auth-change', handleAuthChange);
-  }, []);
-
-  const [predictionsByMatch, setPredictionsByMatch] = useState<Record<string, '1' | 'X' | '2'>>(() => {
-    const saved = localStorage.getItem('FOTNEP_PREDICTIONS');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return {};
-  });
-
-  // Keep track of match result overrides (Simulate fast-forward results)
-  const [matchOverrides, setMatchOverrides] = useState<Record<string, { status: 'FINISHED', homeScore: number, awayScore: number }>>(() => {
-    const saved = localStorage.getItem('FOTNEP_MATCH_OVERRIDES');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return {};
-  });
-
-  const [customUsername, setCustomUsername] = useState('');
-  const [activePredictTab, setActivePredictTab] = useState<'predict' | 'leaderboard'>('predict');
-  const [simulatingResult, setSimulatingResult] = useState(false);
-  const [settleMessage, setSettleMessage] = useState<{ text: string, type: 'success' | 'info' | 'error' } | null>(null);
-
-  // Derive current match status details based on simulated overrides
-  const isMatchOverridden = !!matchOverrides[match.id];
-  const currentMatchStatus = isMatchOverridden ? 'FINISHED' : match.status;
-  const currentHomeScore = isMatchOverridden ? matchOverrides[match.id].homeScore : match.homeScore;
-  const currentAwayScore = isMatchOverridden ? matchOverrides[match.id].awayScore : match.awayScore;
-
-  // The active vote for this match
-  const userVote = predictionsByMatch[match.id] || null;
-
-  // Get current user profile details
-  const currentUserObj = usersList.find(u => u.username === loggedInUser);
-  const userRep = currentUserObj ? currentUserObj.reputation : 0;
-  
-  // Power multiplier: each point represents reliability. Max(1, rounded 1 + rep/5)
-  const userWeight = currentUserObj 
-    ? Math.max(1, Math.round(1 + currentUserObj.reputation / 5)) 
-    : 1;
-
-  // Static expert choices based on matchId hash to simulate a competitive environment
-  const getExpertChoices = (matchId: string) => {
-    const sumChars = matchId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return [
-      { username: 'Gorkhali_Expert', choice: sumChars % 3 === 0 ? 'X' : (sumChars % 2 === 0 ? '1' : '2'), weight: 7 },
-      { username: 'Nepali_Madridista', choice: sumChars % 2 === 0 ? '1' : 'X', weight: 6 },
-      { username: 'Cheli_Power', choice: sumChars % 5 === 0 ? '2' : '1', weight: 5 },
-      { username: 'football_guy_97', choice: sumChars % 4 === 0 ? 'X' : '1', weight: 3 }
-    ] as const;
-  };
-
-  // Vote calculation & aggregation
-  // 1. Unweighted crowd scores
-  const baseV1 = match.predictionVotes.home;
-  const baseVX = match.predictionVotes.draw;
-  const baseV2 = match.predictionVotes.away;
-  const baseSum = baseV1 + baseVX + baseV2;
-
-  const totalCrowdVotes = baseSum + (userVote ? 1 : 0);
-  const cv1 = baseV1 + (userVote === '1' ? 1 : 0);
-  const cvX = baseVX + (userVote === 'X' ? 1 : 0);
-  const cv2 = baseV2 + (userVote === '2' ? 1 : 0);
-
+  const cv1 = voteCounts.home_win;
+  const cvX = voteCounts.draw;
+  const cv2 = voteCounts.away_win;
+  const totalCrowdVotes = Math.max(1, cv1 + cvX + cv2);
   const pc1 = Math.round((cv1 / totalCrowdVotes) * 100);
   const pcX = Math.round((cvX / totalCrowdVotes) * 100);
-  const pc2 = Math.round((cv2 / totalCrowdVotes) * 100);
+  const pc2 = 100 - pc1 - pcX;
 
-  // 2. Weighted Expert statistical distributions
-  const expertChoices = getExpertChoices(match.id);
-  const expHomeWeight = expertChoices.filter(e => e.choice === '1').reduce((acc, curr) => acc + curr.weight, 0);
-  const expDrawWeight = expertChoices.filter(e => e.choice === 'X').reduce((acc, curr) => acc + curr.weight, 0);
-  const expAwayWeight = expertChoices.filter(e => e.choice === '2').reduce((acc, curr) => acc + curr.weight, 0);
-
-  const userWeightedChoice = userVote ? userWeight : 0;
-  const wHomeSum = expHomeWeight + (userVote === '1' ? userWeightedChoice : 0);
-  const wDrawSum = expDrawWeight + (userVote === 'X' ? userWeightedChoice : 0);
-  const wAwaySum = expAwayWeight + (userVote === '2' ? userWeightedChoice : 0);
-  const wTotalExp = wHomeSum + wDrawSum + wAwaySum;
-
-  const pExp1 = wTotalExp > 0 ? Math.round((wHomeSum / wTotalExp) * 100) : 34;
-  const pExpX = wTotalExp > 0 ? Math.round((wDrawSum / wTotalExp) * 100) : 33;
-  const pExp2 = wTotalExp > 0 ? Math.round((wAwaySum / wTotalExp) * 100) : 33;
-
-  // 3. Combined weighted forecast: 35% crowd standard inputs + 65% expert weighted reliability
-  const weightedH = Math.round(0.35 * pc1 + 0.65 * pExp1);
-  const weightedX = Math.round(0.35 * pcX + 0.65 * pExpX);
-  const weightedA = Math.max(0, 100 - weightedH - weightedX); // maintain precise mathematical bounds
-
-  // Save predictions
-  const handleVoteChoice = (choice: '1' | 'X' | '2') => {
-    if (!loggedInUser) return;
-    if (userVote) return;
-
-    const nextPredictions = { ...predictionsByMatch, [match.id]: choice };
-    setPredictionsByMatch(nextPredictions);
-    localStorage.setItem('FOTNEP_PREDICTIONS', JSON.stringify(nextPredictions));
-    setSettleMessage(null);
-
-    // If match finished, evaluate score instantly
-    if (currentMatchStatus === 'FINISHED') {
-      evaluatePrediction(choice, currentHomeScore ?? 0, currentAwayScore ?? 0);
+  const handleVoteChoice = async (choice: '1' | 'X' | '2') => {
+    if (!loggedInUser || voteOutcome || voting) return;
+    const outcomeMap = { '1': 'home_win', 'X': 'draw', '2': 'away_win' } as const;
+    setVoting(true);
+    try {
+      await castVote(match.id, outcomeMap[choice]);
+      setVoteOutcome(outcomeMap[choice]);
+      const counts = await getMatchVotes(match.id);
+      setVoteCounts(counts);
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setVoting(false);
     }
-  };
-
-  // Helper to evaluate a vote outcome and alter users points
-  const evaluatePrediction = (prediction: '1' | 'X' | '2', homeScr: number, awayScr: number) => {
-    if (!localStorage.getItem('FOTNEP_LOGGED_IN')) return; // safe check
-    const currentUsername = localStorage.getItem('FOTNEP_LOGGED_IN');
-
-    let actualResult: '1' | 'X' | '2' = 'X';
-    if (homeScr > awayScr) actualResult = '1';
-    else if (awayScr > homeScr) actualResult = '2';
-
-    const isCorrect = prediction === actualResult;
-    const pointsAwarded = isCorrect ? 3 : -1;
-
-    setUsersList(prev => {
-      const updated = prev.map(u => {
-        if (u.username === currentUsername) {
-          const nextRep = u.reputation + pointsAwarded;
-          return {
-            ...u,
-            reputation: nextRep,
-            correct: u.correct + (isCorrect ? 1 : 0),
-            wrong: u.wrong + (isCorrect ? 0 : 1)
-          };
-        }
-        return u;
-      });
-      localStorage.setItem('FOTNEP_USERS', JSON.stringify(updated));
-      return updated;
-    });
-
-    if (isCorrect) {
-      setSettleMessage({
-        text: `🎉 Correct guess! Nepal finished ${homeScr}-${awayScr}. You earned +3 Reputation points.`,
-        type: 'success'
-      });
-    } else {
-      setSettleMessage({
-        text: `💔 Wrong prediction. Nepal finished ${homeScr}-${awayScr}. You lost -1 Reputation point.`,
-        type: 'error'
-      });
-    }
-  };
-
-  // Fast-forward simulation of upcoming matches
-  const handleSimulateFinish = () => {
-    if (!userVote) return;
-    setSimulatingResult(true);
-    setSettleMessage(null);
-
-    setTimeout(() => {
-      // Simulate goals based on relative quality
-      const homeStrength = match.homeTeam.rating + 0.3; // home crowd boost
-      const awayStrength = match.awayTeam.rating;
-
-      let homeScr = 0;
-      let awayScr = 0;
-      const rnd = Math.random();
-
-      if (homeStrength > awayStrength) {
-        if (rnd < 0.55) {
-          homeScr = Math.floor(Math.random() * 3) + 1;
-          awayScr = Math.floor(Math.random() * homeScr);
-        } else if (rnd < 0.8) {
-          homeScr = awayScr = Math.floor(Math.random() * 3);
-        } else {
-          awayScr = Math.floor(Math.random() * 2) + 1;
-          homeScr = Math.floor(Math.random() * awayScr);
-        }
-      } else {
-        if (rnd < 0.45) {
-          homeScr = Math.floor(Math.random() * 2) + 1;
-          awayScr = Math.floor(Math.random() * homeScr);
-        } else if (rnd < 0.75) {
-          homeScr = awayScr = Math.floor(Math.random() * 3);
-        } else {
-          awayScr = Math.floor(Math.random() * 3) + 1;
-          homeScr = Math.floor(Math.random() * awayScr);
-        }
-      }
-
-      const overrides = {
-        ...matchOverrides,
-        [match.id]: { status: 'FINISHED' as const, homeScore: homeScr, awayScore: awayScr }
-      };
-      setMatchOverrides(overrides);
-      localStorage.setItem('FOTNEP_MATCH_OVERRIDES', JSON.stringify(overrides));
-      setSimulatingResult(false);
-
-      // Determine outcome and award points
-      evaluatePrediction(userVote, homeScr, awayScr);
-    }, 1200);
-  };
-
-  const handleLogin = (username: string) => {
-    setLoggedInUser(username);
-    localStorage.setItem('FOTNEP_LOGGED_IN', username);
-    setSettleMessage(null);
-    window.dispatchEvent(new Event('fotnep-auth-change'));
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanName = customUsername.trim().replace(/[^a-zA-Z0-9_]/g, '');
-    if (!cleanName) return;
-
-    const exists = usersList.find(u => u.username.toLowerCase() === cleanName.toLowerCase());
-    if (exists) {
-      handleLogin(exists.username);
-    } else {
-      const newUser = { username: cleanName, reputation: 0, correct: 0, wrong: 0, isExpert: false };
-      const updatedList = [...usersList, newUser];
-      setUsersList(updatedList);
-      localStorage.setItem('FOTNEP_USERS', JSON.stringify(updatedList));
-      handleLogin(cleanName);
-    }
-    setCustomUsername('');
-  };
-
-  const handleLogout = () => {
-    setLoggedInUser(null);
-    localStorage.removeItem('FOTNEP_LOGGED_IN');
-    setSettleMessage(null);
-    window.dispatchEvent(new Event('fotnep-auth-change'));
   };
 
   // Function to define color based on player rating
@@ -322,18 +106,18 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
           {/* Current Score / V / Live details */}
           <div className="flex flex-col items-center justify-center">
-            {currentMatchStatus === 'LIVE' || currentMatchStatus === 'FINISHED' ? (
+            {match.status === 'LIVE' || match.status === 'FINISHED' ? (
               <div className="flex flex-col items-center">
                 <div className="flex items-center gap-3 md:gap-5">
                   <span className="text-4xl md:text-5xl font-mono font-black text-white tracking-tighter animate-fadeIn">
-                    {currentHomeScore}
+                    {match.homeScore ?? 0}
                   </span>
                   <span className="text-xl text-slate-600 font-semibold">:</span>
                   <span className="text-4xl md:text-5xl font-mono font-black text-white tracking-tighter animate-fadeIn">
-                    {currentAwayScore}
+                    {match.awayScore ?? 0}
                   </span>
                 </div>
-                {currentMatchStatus === 'LIVE' ? (
+                {match.status === 'LIVE' ? (
                   <span className="mt-3 flex items-center gap-1 bg-emerald-500 text-black text-[11px] font-extrabold px-2.5 py-1 rounded-full animate-pulse shadow-md shadow-emerald-500/20">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -403,7 +187,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
           </span>
         </h5>
 
-        {currentMatchStatus === 'FINISHED' ? (
+        {match.status === 'FINISHED' ? (
           /* Finished Matches: Displays past votes and their prediction directly */
           <div className="space-y-4">
             <div className="p-3 bg-[#0c0d10] border border-slate-850 rounded-xl space-y-3.5">
@@ -446,7 +230,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               </div>
 
               <div className="bg-slate-900/60 border border-slate-800/80 px-2.5 py-1.5 rounded-lg text-[10.5px] text-slate-400 leading-normal">
-                Final Result: <strong className="text-white">{currentHomeScore} - {currentAwayScore}</strong> &bull; Crowd majority predicted <strong className="text-emerald-400">{pc1 > pc2 && pc1 > pcX ? match.homeTeam.shorthand : pc2 > pc1 && pc2 > pcX ? match.awayTeam.shorthand : 'Draw'}</strong>. (Voting inactive for completed matches).
+                Final Result: <strong className="text-white">{match.homeScore ?? 0} - {match.awayScore ?? 0}</strong> &bull; Crowd majority predicted <strong className="text-emerald-400">{pc1 > pc2 && pc1 > pcX ? match.homeTeam.shorthand : pc2 > pc1 && pc2 > pcX ? match.awayTeam.shorthand : 'Draw'}</strong>. (Voting inactive for completed matches).
               </div>
             </div>
           </div>
@@ -495,6 +279,17 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               <div className="bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 rounded-lg text-[10.5px] text-slate-300">
                 You predicted <strong>{userVote === '1' ? match.homeTeam.name : userVote === '2' ? match.awayTeam.name : 'Draw'}</strong> to win. Accuracy weight applied.
               </div>
+              {predResult && (
+                <div className="flex items-center justify-between text-[10px] text-slate-500 px-1">
+                  <span className="font-bold uppercase tracking-wider text-emerald-600">Algorithm 1 · ML Consensus</span>
+                  <span className="font-mono">
+                    H <span className="text-emerald-400 font-bold">{Math.round(predResult.prediction.homeWinProb * 100)}%</span>
+                    &nbsp;· D <span className="text-slate-400 font-bold">{Math.round(predResult.prediction.drawProb * 100)}%</span>
+                    &nbsp;· A <span className="text-rose-400 font-bold">{Math.round(predResult.prediction.awayWinProb * 100)}%</span>
+                    &nbsp;· conf <span className="text-amber-400 font-bold">{predResult.confidence.toFixed(0)}%</span>
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -511,7 +306,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               {/* Home win */}
               <button
                 onClick={() => handleVoteChoice('1')}
-                disabled={!loggedInUser}
+                disabled={!loggedInUser || !!voting}
                 className="bg-emerald-500/5 border border-emerald-500/15 hover:border-emerald-500/40 disabled:opacity-40 disabled:hover:border-emerald-500/15 p-3.5 rounded-xl hover:bg-emerald-500/10 text-center transition-all cursor-pointer group active:scale-95"
               >
                 <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-1 font-bold">Win (1)</div>
@@ -523,7 +318,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               {/* Draw */}
               <button
                 onClick={() => handleVoteChoice('X')}
-                disabled={!loggedInUser}
+                disabled={!loggedInUser || !!voting}
                 className="bg-slate-900 border border-slate-800 hover:border-slate-700 disabled:opacity-40 disabled:hover:border-slate-800 p-3.5 rounded-xl hover:bg-slate-850 text-center transition-all cursor-pointer group active:scale-95"
               >
                 <div className="text-[10px] font-mono text-slate-500 group-hover:text-slate-350 uppercase tracking-widest mb-1 font-bold">Draw (X)</div>
@@ -535,7 +330,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               {/* Away win */}
               <button
                 onClick={() => handleVoteChoice('2')}
-                disabled={!loggedInUser}
+                disabled={!loggedInUser || !!voting}
                 className="bg-[#1c1214] border border-rose-500/15 hover:border-rose-500/40 disabled:opacity-40 disabled:hover:border-rose-500/15 p-3.5 rounded-xl hover:bg-rose-500/10 text-center transition-all cursor-pointer group active:scale-95"
               >
                 <div className="text-[10px] font-mono text-rose-400 uppercase tracking-widest mb-1 font-bold font-mono">Loss (2)</div>
@@ -721,7 +516,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   })}
 
                   {/* Predicted Lineup Indicator centered at the bottom of the pitch container */}
-                  {currentMatchStatus !== 'FINISHED' && (
+                  {match.status !== 'FINISHED' && (
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       Predicted Lineup by Machine

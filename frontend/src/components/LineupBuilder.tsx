@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { mockPlayers } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
 import { Player } from '../types';
+import { getPlayers, optimizeSquad } from '../services/api';
 import { Sparkles, RefreshCw, Layers, Plus, X, Search, ShieldAlert, BadgeCheck, Save, Clipboard, ChevronDown, Award, Users, Info } from 'lucide-react';
 
 // Helper to identify female players in our Nepali and SAFF dataset
@@ -236,8 +236,16 @@ export default function LineupBuilder() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotification, setShowNotification] = useState<string | null>(null);
 
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  const [autoFilling, setAutoFilling] = useState(false);
+
   const activeSlots = FORMATIONS[activeFormation];
-  const allPlayers = Object.values(mockPlayers);
+
+  useEffect(() => {
+    getPlayers({ limit: 150 })
+      .then(({ players }) => setAllPlayers(players))
+      .catch(() => {});
+  }, []);
 
   const handleSelectSlot = (slotId: number) => {
     setSelectedSlotId(slotId);
@@ -271,45 +279,34 @@ export default function LineupBuilder() {
     setSelectedSlotId(null);
   };
 
-  // Pre-fill default popular ones so it's not totally blank initially
-  const handleLoadDefaults = () => {
-    const defaults: Record<number, Player> = {};
-    const guys = [
-      mockPlayers.kiran, // id: 1 (GK)
-      mockPlayers.sanisch, // id: 2 (LB)
-      mockPlayers.ananta, // id: 3 (LCB)
-      mockPlayers.devendra, // id: 4 (RCB)
-      mockPlayers.rohit, // id: 5 (RB)
-      mockPlayers.arik, // id: 6 (LCM)
-      mockPlayers.laken, // id: 7 (CM)
-      mockPlayers.preeti, // id: 8 (RCM)
-      mockPlayers.samba, // id: 9 (LW)
-      mockPlayers.anjan, // id: 10 (ST)
-      mockPlayers.ayush, // id: 11 (RW)
-    ];
+  const handleLoadDefaults = async () => {
+    if (allPlayers.length === 0 || autoFilling) return;
+    setAutoFilling(true);
+    try {
+      const result = await optimizeSquad({
+        teamId: 'nepal',
+        availablePlayerIds: allPlayers.map((p: Player) => p.id),
+        formationPreference: activeFormation,
+      });
+      const playerById: Record<string, Player> = {};
+      allPlayers.forEach((p: Player) => { playerById[p.id] = p; });
 
-    guys.forEach((g, idx) => {
-      if (g) {
-        defaults[idx + 1] = g;
-      }
-    });
-
-    const subGuys = [
-      mockPlayers.angela, // id: 12
-      mockPlayers.gita,   // id: 13
-      mockPlayers.apuia,  // id: 14
-      mockPlayers.sunil,  // id: 15
-      mockPlayers.amisha, // id: 16
-    ];
-
-    subGuys.forEach((g, idx) => {
-      if (g) {
-        defaults[idx + 12] = g;
-      }
-    });
-
-    setAssignedPlayers(defaults);
-    triggerAlert('Gorkhali Stars XI draft and 5 subs applied!');
+      const defaults: Record<number, Player> = {};
+      result.startingXI.forEach((entry, idx) => {
+        const player = playerById[entry.playerId];
+        if (player) defaults[idx + 1] = player;
+      });
+      result.bench.slice(0, 5).forEach((entry, idx) => {
+        const player = playerById[entry.playerId];
+        if (player) defaults[idx + 12] = player;
+      });
+      setAssignedPlayers(defaults);
+      triggerAlert(`Algorithm 3 · ${result.formation} · conf ${result.confidence.toFixed(0)}%`);
+    } catch {
+      triggerAlert('Could not reach ML service — try again');
+    } finally {
+      setAutoFilling(false);
+    }
   };
 
   const triggerAlert = (msg: string) => {
@@ -434,7 +431,7 @@ export default function LineupBuilder() {
   const activeSlotRole = (selectedSlotId !== null && selectedSlotId < 12)
     ? activeSlots.find(s => s.id === selectedSlotId)?.role 
     : null;
-  const filteredPlayers = allPlayers.filter(p => {
+  const filteredPlayers = allPlayers.filter((p: Player) => {
     // Only match position role of slot if needed, or allow selecting anybody
     if (activeSlotRole && p.position !== activeSlotRole) {
       // e.g. let users pick defenders for DF, midfielders for MF, but search filter is most useful
@@ -487,12 +484,13 @@ export default function LineupBuilder() {
 
             {/* Actions defaults reset */}
             <div className="flex gap-2 text-xs">
-              <button 
+              <button
                 onClick={handleLoadDefaults}
-                className="bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-slate-800/80 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer"
+                disabled={autoFilling || allPlayers.length === 0}
+                className="bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-slate-800/80 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Fill Gorkhali XI</span>
+                <Sparkles className={`w-3.5 h-3.5 ${autoFilling ? 'animate-spin' : ''}`} />
+                <span>{autoFilling ? 'Optimizing…' : 'Fill Gorkhali XI'}</span>
               </button>
 
               <button 
@@ -723,7 +721,7 @@ export default function LineupBuilder() {
                       <p className="text-xs">No star match</p>
                     </div>
                   ) : (
-                    filteredPlayers.map((p) => {
+                    filteredPlayers.map((p: Player) => {
                       return (
                         <button
                           key={p.id}
