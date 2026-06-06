@@ -1,0 +1,175 @@
+{
+  "Nepal National Team": {
+    "formation": "4-3-3",
+    "squad": [
+      {"name": "Kiran Chemjong",           "position": "GK"},
+      {"name": "Abishek Baral",             "position": "GK"},
+      {"name": "Alan Neupane",              "position": "GK"},
+      {"name": "Ananta Tamang",             "position": "DF"},
+      {"name": "Ranjit Dhimal",             "position": "DF"},
+      {"name": "Sanish Shrestha",           "position": "DF"},
+      {"name": "Abhishek Limbu",            "position": "DF"},
+      {"name": "Suman Shrestha",            "position": "DF"},
+      {"name": "Chhiring Lama",             "position": "DF"},
+      {"name": "Rohit Chand",               "position": "MF"},
+      {"name": "Arik Bista",                "position": "MF"},
+      {"name": "Pujan Uperkoti",            "position": "MF"},
+      {"name": "Mani Kumar Lama",           "position": "MF"},
+      {"name": "Bikram Lama",               "position": "MF"},
+      {"name": "Sunil Bal",                 "position": "MF"},
+      {"name": "Anjan Bista",               "position": "FW"},
+      {"name": "Bimal Gharti Magar",        "position": "FW"},
+      {"name": "Manish Dangi",              "position": "FW"},
+      {"name": "Ayush Ghalan",              "position": "FW"},
+      {"name": "Gillespye Jung Karki",      "position": "FW"}
+    ]
+  },
+  "Nepal Women's National Team": {
+    "formation": "4-4-2",
+    "squad": [
+      {"name": "Anjila Tumbapo Subba",      "position": "GK"},
+      {"name": "Anjana Rana Magar",         "position": "GK"},
+      {"name": "Usha Nath",                 "position": "GK"},
+      {"name": "Amrita Jaishi",             "position": "DF"},
+      {"name": "Gita Rana",                 "position": "DF"},
+      {"name": "Punam Jargha Magar",        "position": "DF"},
+      {"name": "Puja Rana",                 "position": "DF"},
+      {"name": "Nisha Thokar",              "position": "DF"},
+      {"name": "Anita Basnet",              "position": "MF"},
+      {"name": "Saru Limbu",                "position": "MF"},
+      {"name": "Renuka Nagarkote",          "position": "MF"},
+      {"name": "Bimala Chaudhary",          "position": "MF"},
+      {"name": "Preeti Rai",                "position": "MF"},
+      {"name": "Dipa Rai",                  "position": "MF"},
+      {"name": "Sabita Rana Magar",         "position": "MF"},
+      {"name": "Sabitra Bhandari",          "position": "FW"},
+      {"name": "Sharmila Thapa",            "position": "FW"},
+      {"name": "Rajani Thokar",             "position": "FW"}
+    ]
+  },
+  "Machhindra FC": {
+    "formation": "4-4-2",
+    "squad": [
+      {"name": "Abishek Baral",             "position": "GK"},
+      {"name": "Deep Karki",                "position": "GK"},
+      {"name": "Sanish Shrestha",           "position": "DF"},
+      {"name": "Devendra Tamang",           "position": "DF"},
+      {"name": "Nishan Khadka",             "position": "DF"},
+      {"name": "Dinesh Rajbanshi",          "position": "DF"},
+      {"name": "Chhiring Lama",             "position": "DF"},
+      {"name": "Bishal Basnet",             "position": "DF"},
+      {"name": "Manish Dangi",              "position": "MF"},
+      {"name": "Ayush Ghalan",              "position": "MF"},
+      {"name": "Tej Tamang",                "position": "MF"},
+      {"name": "Sujal Shreshtha",           "position": "MF"},
+      {"name": "Heman Gurung",              "position": "MF"},
+      {"name": "Sunil Bal",                 "position": "MF"},
+      {"name": "Nawayug Shrestha",          "position": "FW"},
+      {"name": "Bimal Gharti Magar",        "position": "FW"},
+      {"name": "Darshan Gurung",            "position": "FW"}
+    ]
+  },
+  "Manang Marshyangdi Club": {
+    "formation": "4-3-3",
+    "squad": [
+      {"name": "Bishal Sunar",              "position": "GK"},
+      {"name": "Alan Neupane",              "position": "GK"},
+      {"name": "Biraj Maharjan",            "position": "DF"},
+      {"name": "Amrit Shrestha",            "position": "DF"},
+      {"name": "Jitendra Karki",            "position": "DF"},
+      {"name": "Rajan Gurung",              "position": "DF"},
+      {"name": "Nabin Gurung",              "position": "DF"},
+      {"name": "Ajit Bhandari",             "position": "DF"},
+      {"name": "Bikram Lama",               "position": "MF"},
+      {"name": "Bishal Rai",                "position": "MF"},
+      {"name": "Santosh Tamang",            "position": "MF"},
+      {"name": "Tridev Gurung",             "position": "MF"},
+      {"name": "Rajendra Rawal",            "position": "MF"},
+      {"name": "Abhishek Rijal",            "position": "FW"},
+      {"name": "Ravishankar Paswan",        "position": "FW"},
+      {"name": "Bimal Rana",                "position": "FW"},
+      {"name": "Suman Lama",                "position": "FW"}
+    ]
+  },
+  "Three Star Club": {
+    "formation": "4-2-3-1",
+    "squad": [
+      {"name": "Tikendra Singh Thapa",      "position": "GK"},
+      {"name": "Abishek Baral",             "position": "GK"},
+      {"name": "Rabin Shrestha",            "position": "DF"},
+      {"name": "Anjan Rai",                 "position": "DF"},
+      {"name": "Jitendra Karki",            "position": "DF"},
+      {"name": "Bishal Basnet",             "position": "DF"},
+      {"name": "Saubhagya Rai",             "position": "DF"},
+      {"name": "Suraj Jeu Thakuri",         "position": "MF"},
+      {"name": "Kamal Thapa",               "position": "MF"},
+      {"name": "Shiva Shrestha",            "position": "MF"},
+      {"name": "Prakash Budhathoki",        "position": "MF"},
+      {"name": "Mikchhen Tamang",           "position": "MF"},
+      {"name": "Suvash Gurung",             "position": "MF"},
+      {"name": "Prince George Karki",       "position": "FW"},
+      {"name": "Deepak Raj Singh Thakuri",  "position": "FW"},
+      {"name": "Bimal Rana",                "position": "FW"}
+    ]
+  },
+  "Tribhuvan Army Club": {
+    "formation": "4-3-3",
+    "squad": [
+      {"name": "Shatrudhan Kumar Chaudhary","position": "GK"},
+      {"name": "Tikendra Singh Thapa",      "position": "GK"},
+      {"name": "Ashish Gurung",             "position": "DF"},
+      {"name": "Ajay Chaudhary",            "position": "DF"},
+      {"name": "Mohammad Zavari",           "position": "DF"},
+      {"name": "Yogesh Gurung",             "position": "DF"},
+      {"name": "Nabin Gurung",              "position": "DF"},
+      {"name": "Roshan Rana Magar",         "position": "MF"},
+      {"name": "Tridev Gurung",             "position": "MF"},
+      {"name": "Suvash Gurung",             "position": "MF"},
+      {"name": "Nitin Thapa",               "position": "MF"},
+      {"name": "Kamal Thapa",               "position": "MF"},
+      {"name": "Gillespye Jung Karki",      "position": "FW"},
+      {"name": "Sushil Rai",                "position": "FW"},
+      {"name": "Prince George Karki",       "position": "FW"}
+    ]
+  },
+  "New Road Team": {
+    "formation": "4-4-2",
+    "squad": [
+      {"name": "Bishal Sunar",              "position": "GK"},
+      {"name": "Deep Karki",                "position": "GK"},
+      {"name": "Mohammad Zavari",           "position": "DF"},
+      {"name": "Saubhagya Rai",             "position": "DF"},
+      {"name": "Yogesh Gurung",             "position": "DF"},
+      {"name": "Nishan Khadka",             "position": "DF"},
+      {"name": "Bishal Basnet",             "position": "DF"},
+      {"name": "Pujan Uperkoti",            "position": "MF"},
+      {"name": "Bishal Rai",                "position": "MF"},
+      {"name": "Heman Gurung",              "position": "MF"},
+      {"name": "Sunil Bal",                 "position": "MF"},
+      {"name": "Santosh Tamang",            "position": "MF"},
+      {"name": "Anjan Bista",               "position": "FW"},
+      {"name": "Nawayug Shrestha",          "position": "FW"},
+      {"name": "Abhishek Rijal",            "position": "FW"}
+    ]
+  },
+  "APF FC": {
+    "formation": "4-3-3",
+    "squad": [
+      {"name": "Deep Karki",                "position": "GK"},
+      {"name": "Abishek Baral",             "position": "GK"},
+      {"name": "Ranjit Dhimal",             "position": "DF"},
+      {"name": "Devendra Tamang",           "position": "DF"},
+      {"name": "Bikash Tamang",             "position": "DF"},
+      {"name": "Chhiring Lama",             "position": "DF"},
+      {"name": "Ajit Bhandari",             "position": "DF"},
+      {"name": "Mani Kumar Lama",           "position": "MF"},
+      {"name": "Rajendra Rawal",            "position": "MF"},
+      {"name": "Roshan Rana Magar",         "position": "MF"},
+      {"name": "Shiva Shrestha",            "position": "MF"},
+      {"name": "Nitin Thapa",               "position": "MF"},
+      {"name": "Bimal Gharti Magar",        "position": "FW"},
+      {"name": "Bharat Khawas",             "position": "FW"},
+      {"name": "Sushil Rai",                "position": "FW"}
+    ]
+  }
+}

@@ -6,8 +6,12 @@ async function callML<T>(endpoint: string, payload: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`ML service error on ${endpoint}: ${res.statusText}`);
-  return res.json() as Promise<T>;
+  const body = await res.json();
+  if (!res.ok) {
+    const msg = (body as { detail?: string })?.detail || res.statusText;
+    throw new Error(`ML:${msg}`);
+  }
+  return body as T;
 }
 
 export interface VotePayload {

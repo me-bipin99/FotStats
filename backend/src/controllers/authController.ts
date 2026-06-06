@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import type { AuthRequest } from '../middleware/authMiddleware';
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body;
@@ -29,4 +30,13 @@ export async function register(req: Request, res: Response): Promise<void> {
     expiresIn: (process.env.JWT_EXPIRY || '7d') as unknown as number,
   });
   res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, reputation: user.reputation } });
+}
+
+export async function me(req: AuthRequest, res: Response): Promise<void> {
+  const user = await User.findById(req.userId).select('email name reputation').lean();
+  if (!user) {
+    res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+    return;
+  }
+  res.json({ id: user._id, email: user.email, name: user.name, reputation: user.reputation });
 }

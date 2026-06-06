@@ -12,6 +12,7 @@ pymongo==4.7.3
 motor==3.4.0          # Async MongoDB driver for FastAPI
 
 # Utilities
+bcrypt==4.1.3
 python-dotenv==1.0.1
 pydantic==2.7.4       # Data validation (FastAPI uses this)
 pydantic-settings==2.3.0

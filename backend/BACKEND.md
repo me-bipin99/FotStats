@@ -61,7 +61,7 @@ src/
 ### authController.ts
 - `login(email, password)` → JWT token + User
 - `register(email, password, name)` → JWT token + User
-- `validateToken(token)` → User or 401
+- `me(req)` → User (requires `requireAuth` — reads `req.userId` from JWT)
 
 ### playerController.ts
 - `listPlayers(position?, search?, sortBy, limit, offset)` → Player[]

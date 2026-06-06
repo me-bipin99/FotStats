@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run from anywhere in the project — schedules an upcoming match in MongoDB
+cd "$(dirname "$0")/services/ml-service"
+source venv/bin/activate
+python scripts/add_match.py "$@"

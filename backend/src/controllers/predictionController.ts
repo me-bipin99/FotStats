@@ -4,10 +4,22 @@ import { Vote } from '../models/Vote';
 import { User } from '../models/User';
 import { predictMatch, comparePlayers, optimizeSquad, VotePayload } from '../services/mlIntegration';
 
+function mlError(err: unknown): { status: number; error: string; message: string } {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.startsWith('ML:')) return { status: 400, error: 'ML_ERROR', message: msg.slice(3) };
+  return { status: 503, error: 'ML_UNAVAILABLE', message: 'ML service is unavailable' };
+}
+
 export async function triggerPrediction(req: Request, res: Response): Promise<void> {
   const { matchId } = req.body;
 
   const votes = await Vote.find({ matchId }).lean();
+
+  if (votes.length === 0) {
+    res.status(400).json({ error: 'NO_VOTES', message: 'No votes found for this match. Cast a vote first.' });
+    return;
+  }
+
   const userIds = votes.map((v) => v.userId);
   const users = await User.find({ _id: { $in: userIds } }).select('reputation').lean();
   const repMap: Record<string, number> = {};
@@ -22,8 +34,9 @@ export async function triggerPrediction(req: Request, res: Response): Promise<vo
   let result: unknown;
   try {
     result = await predictMatch(matchId, votePayload);
-  } catch {
-    res.status(503).json({ error: 'ML_UNAVAILABLE', message: 'ML service is unavailable' });
+  } catch (err) {
+    const { status, error, message } = mlError(err);
+    res.status(status).json({ error, message });
     return;
   }
 
@@ -52,8 +65,9 @@ export async function comparePlayersProxy(req: Request, res: Response): Promise<
   let result: unknown;
   try {
     result = await comparePlayers(playerAId, playerBId);
-  } catch {
-    res.status(503).json({ error: 'ML_UNAVAILABLE', message: 'ML service is unavailable' });
+  } catch (err) {
+    const { status, error, message } = mlError(err);
+    res.status(status).json({ error, message });
     return;
   }
   res.json(result);
@@ -64,8 +78,9 @@ export async function optimizeSquadProxy(req: Request, res: Response): Promise<v
   let result: unknown;
   try {
     result = await optimizeSquad(teamId, availablePlayerIds, formationPreference, constraints ?? { injured: [], suspended: [] });
-  } catch {
-    res.status(503).json({ error: 'ML_UNAVAILABLE', message: 'ML service is unavailable' });
+  } catch (err) {
+    const { status, error, message } = mlError(err);
+    res.status(status).json({ error, message });
     return;
   }
   res.json(result);

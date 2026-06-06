@@ -4,6 +4,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## ⚠️ ALWAYS READ PLAN.md FIRST
+
+**At the start of every session, read [PLAN.md](./PLAN.md) before touching any code.** It is the single source of truth for:
+
+- What has already been built (don't re-implement)
+- What the current blocker is
+- What to work on next (phased, with exact file paths and commands)
+- The dev startup commands
+
+Do not ask the user "what should I work on?" — the answer is in PLAN.md.
+
+---
+
+## ⚠️ ALWAYS UPDATE MARKDOWN FILES AFTER EVERY CHANGE
+
+**After completing any implementation step, immediately update the relevant markdown file(s).** Do not wait until the end of a session.
+
+### Which file to update for which type of change
+
+| Change type | File to update |
+| --- | --- |
+| Task completed, phase status, current blocker | `PLAN.md` |
+| New algorithm added or algorithm logic changed | `ALGORITHMS.md` + `services/ml-service/ML_SERVICE.md` |
+| Backend controller, route, or model changed | `backend/BACKEND.md` |
+| Frontend component or auth flow changed | `frontend/FRONTEND.md` |
+| Commands, architecture, or design system changed | `CLAUDE.md` |
+| Phase complete or major implementation decision | Memory: `project_fotnep_progress.md` |
+
+### PLAN.md update rules (most common)
+
+1. **Check off completed tasks** — change `- [ ]` to `- [x]` for every step you finish.
+2. **Update the Current State Snapshot table** — flip the status cell from `❌`/`⏳` to `✅ Done` for completed items.
+3. **Update "Current Blocker"** at the bottom — reflect what is actually blocking next progress.
+4. **Update the Completed Phases Summary table** — mark phases `✅ Complete` when all tasks in that phase are done.
+
+### Canonical markdown files (the only docs that exist — keep them accurate)
+
+- `PLAN.md` — task tracking, phase status, blockers (single source of truth for what to do next)
+- `CLAUDE.md` — AI guidance, architecture overview, commands
+- `ALGORITHMS.md` — algorithm math and logic
+- `backend/BACKEND.md` — backend controller/route/model API reference
+- `frontend/FRONTEND.md` — component and flow reference
+- `frontend/FIGMA_AI_CONTEXT.md` — Figma design specification (do not modify unless UI changes)
+- `services/ml-service/ML_SERVICE.md` — ML algorithm implementation detail
+- `README.md` — project overview for humans
+
+**Do not create new markdown files** unless there is no existing file that fits. **Do not duplicate content** across files — each fact lives in exactly one place, others link to it.
+
+**This is non-negotiable.** Stale docs are the primary cause of lost context across sessions.
+
+---
+
 ## Project: FotNep — Nepali Football Analytics Platform
 
 Full-stack analytics app for Nepali football with 3 core ML algorithms.
@@ -32,6 +84,17 @@ Full-stack analytics app for Nepali football with 3 core ML algorithms.
 ---
 
 ## Commands
+
+### Start Everything (single command)
+
+```bash
+npm install   # root — installs concurrently (first time only)
+npm run dev   # starts backend :3001 + ML service :8000 + frontend :3000
+```
+
+Output is color-coded: cyan = backend, magenta = ML service, green = frontend. Ctrl+C kills all three.
+
+---
 
 ### Frontend
 
@@ -151,6 +214,7 @@ frontend/src/
 **Tab navigation:** `activeTab: 'home' | 'compare' | 'stats' | 'lineups'` in `App.tsx`.
 
 **Design system (dark):**
+
 - Backgrounds: `#0d0e10` (page), `#151619` (cards)
 - Text: `#cbd5e1` (primary), `#64748b` (secondary)
 - Accents: `#10b981` emerald (interactive), `#dc2626` Nepal red (wins only)
@@ -159,6 +223,7 @@ frontend/src/
 - Tailwind v4 configured with `@tailwindcss/vite` plugin; theme tokens in `@theme {}` block in `index.css` — no `tailwind.config.ts`
 
 **Migrating from mock data to backend:**
+
 1. Create `src/services/api.ts` — HTTP client with `Authorization: Bearer <token>` header
 2. Replace `import { mockX } from './data/mockData'` with `useEffect` + API calls
 3. Move auth state from `Header.tsx` localStorage to a proper `authContext.ts`
