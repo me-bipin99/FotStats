@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import { connectDB } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -23,6 +24,12 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'RATE_LIMITED', message: 'Too many requests, try again later' },
+});
+app.use('/api/v1/auth', authLimiter);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/players', playerRoutes);
 app.use('/api/v1/teams', teamRoutes);

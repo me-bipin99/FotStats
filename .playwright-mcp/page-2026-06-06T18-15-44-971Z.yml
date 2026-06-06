@@ -1,0 +1,560 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e21]:
+          - generic [ref=e23]: Fotnep
+          - paragraph [ref=e24]: Football Analytical App
+      - navigation [ref=e25]:
+        - button "Matches" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+          - generic [ref=e30]: Matches
+        - button "Compare" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Compare
+        - button "Stats" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e41]: Stats
+        - button "Lineups" [ref=e42] [cursor=pointer]:
+          - img [ref=e43]
+          - generic [ref=e47]: Lineups
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e53]: 18:15:43 UTC
+        - generic [ref=e55] [cursor=pointer]: AD
+  - main [ref=e56]:
+    - generic [ref=e481]:
+      - generic [ref=e482]:
+        - generic [ref=e484]:
+          - generic [ref=e1076]:
+            - generic [ref=e1077]:
+              - generic [ref=e1078]:
+                - generic [ref=e1080]: ⭐ 69
+                - img [ref=e1081]
+              - heading "Bista" [level=4] [ref=e1097]
+              - generic [ref=e1098]:
+                - generic [ref=e1099]:
+                  - img "club element" [ref=e1100]: 🔥
+                  - generic [ref=e1101]: Nepali
+                - generic [ref=e1102]: FWD
+            - button "Change" [ref=e1103] [cursor=pointer]
+          - generic [ref=e1104]:
+            - generic [ref=e1105]:
+              - generic [ref=e1106]:
+                - generic [ref=e1108]: 👤
+                - generic [ref=e1109]:
+                  - generic [ref=e1110]: Athlete Name
+                  - generic [ref=e1111]: Anjan Bista
+              - img [ref=e1113]:
+                - generic [ref=e1117]: "0"
+            - generic [ref=e1118]:
+              - generic [ref=e1119]:
+                - generic [ref=e1120]: Nationality
+                - generic [ref=e1121]:
+                  - generic [ref=e1122]: 🇳🇵
+                  - generic [ref=e1123]: NPL
+              - generic [ref=e1124]:
+                - generic [ref=e1125]: Age
+                - generic [ref=e1126]: 27 yrs
+              - generic [ref=e1127]:
+                - generic [ref=e1128]: Pref. Foot
+                - text: Right
+            - generic [ref=e1129]:
+              - generic [ref=e1130]:
+                - generic [ref=e1131]: Weight
+                - text: —
+              - generic [ref=e1132]:
+                - generic [ref=e1133]: Height
+                - text: —
+              - generic [ref=e1134]:
+                - generic [ref=e1135]: Market Value
+                - generic [ref=e1136]: —
+        - generic [ref=e490]:
+          - button "Compare Player B Click to select Gorkhali roster" [ref=e492] [cursor=pointer]:
+            - img [ref=e494]
+            - generic [ref=e495]: Compare Player B
+            - generic [ref=e496]: Click to select Gorkhali roster
+          - generic [ref=e1169]:
+            - generic [ref=e1170]:
+              - img [ref=e1171]
+              - textbox "Query athlete name..." [active] [ref=e1174]
+            - generic [ref=e1175]:
+              - generic [ref=e1176] [cursor=pointer]:
+                - generic [ref=e1177]:
+                  - generic [ref=e1178]: MF
+                  - generic [ref=e1179]:
+                    - text: Harry Kane
+                    - generic [ref=e1180]: (eng)
+                - generic [ref=e1181]: 70 OVR
+              - generic [ref=e1182] [cursor=pointer]:
+                - generic [ref=e1183]:
+                  - generic [ref=e1184]: FW
+                  - generic [ref=e1185]:
+                    - text: Esteban Lepaul
+                    - generic [ref=e1186]: (fr)
+                - generic [ref=e1187]: 70 OVR
+              - generic [ref=e1188] [cursor=pointer]:
+                - generic [ref=e1189]:
+                  - generic [ref=e1190]: FW
+                  - generic [ref=e1191]:
+                    - text: Marcus Thuram
+                    - generic [ref=e1192]: (fr)
+                - generic [ref=e1193]: 70 OVR
+              - generic [ref=e1194] [cursor=pointer]:
+                - generic [ref=e1195]:
+                  - generic [ref=e1196]: MF
+                  - generic [ref=e1197]:
+                    - text: Ethan Nwaneri
+                    - generic [ref=e1198]: (eng)
+                - generic [ref=e1199]: 70 OVR
+              - generic [ref=e1200] [cursor=pointer]:
+                - generic [ref=e1201]:
+                  - generic [ref=e1202]: FW
+                  - generic [ref=e1203]:
+                    - text: Lautaro Martínez
+                    - generic [ref=e1204]: (ar)
+                - generic [ref=e1205]: 70 OVR
+              - generic [ref=e1206] [cursor=pointer]:
+                - generic [ref=e1207]:
+                  - generic [ref=e1208]: FW
+                  - generic [ref=e1209]:
+                    - text: Charles Herrmann
+                    - generic [ref=e1210]: (de)
+                - generic [ref=e1211]: 70 OVR
+              - generic [ref=e1212] [cursor=pointer]:
+                - generic [ref=e1213]:
+                  - generic [ref=e1214]: FW
+                  - generic [ref=e1215]:
+                    - text: Jack Harrison
+                    - generic [ref=e1216]: (eng)
+                - generic [ref=e1217]: 69 OVR
+              - generic [ref=e1218] [cursor=pointer]:
+                - generic [ref=e1219]:
+                  - generic [ref=e1220]: FW
+                  - generic [ref=e1221]:
+                    - text: Ludovic Ajorque
+                    - generic [ref=e1222]: (fr)
+                - generic [ref=e1223]: 69 OVR
+              - generic [ref=e1224] [cursor=pointer]:
+                - generic [ref=e1225]:
+                  - generic [ref=e1226]: MF
+                  - generic [ref=e1227]:
+                    - text: Michael Olise
+                    - generic [ref=e1228]: (fr)
+                - generic [ref=e1229]: 69 OVR
+              - generic [ref=e1230] [cursor=pointer]:
+                - generic [ref=e1231]:
+                  - generic [ref=e1232]: MF
+                  - generic [ref=e1233]:
+                    - text: Rémy Labeau Lascary
+                    - generic [ref=e1234]: (gp)
+                - generic [ref=e1235]: 69 OVR
+              - generic [ref=e1236] [cursor=pointer]:
+                - generic [ref=e1237]:
+                  - generic [ref=e1238]: MF
+                  - generic [ref=e1239]:
+                    - text: Aleksandr Golovin
+                    - generic [ref=e1240]: (ru)
+                - generic [ref=e1241]: 69 OVR
+              - generic [ref=e1242] [cursor=pointer]:
+                - generic [ref=e1243]:
+                  - generic [ref=e1244]: FW
+                  - generic [ref=e1245]:
+                    - text: Ousmane Dembélé
+                    - generic [ref=e1246]: (fr)
+                - generic [ref=e1247]: 69 OVR
+              - generic [ref=e1248] [cursor=pointer]:
+                - generic [ref=e1249]:
+                  - generic [ref=e1250]: FW
+                  - generic [ref=e1251]:
+                    - text: Manuel De Luca
+                    - generic [ref=e1252]: (it)
+                - generic [ref=e1253]: 69 OVR
+              - generic [ref=e1254] [cursor=pointer]:
+                - generic [ref=e1255]:
+                  - generic [ref=e1256]: FW
+                  - generic [ref=e1257]:
+                    - text: Miguel Cubo
+                    - generic [ref=e1258]: (es)
+                - generic [ref=e1259]: 69 OVR
+              - generic [ref=e1260] [cursor=pointer]:
+                - generic [ref=e1261]:
+                  - generic [ref=e1262]: MF
+                  - generic [ref=e1263]:
+                    - text: Timothy Castagne
+                    - generic [ref=e1264]: (be)
+                - generic [ref=e1265]: 69 OVR
+              - generic [ref=e1266] [cursor=pointer]:
+                - generic [ref=e1267]:
+                  - generic [ref=e1268]: FW
+                  - generic [ref=e1269]:
+                    - text: Beto
+                    - generic [ref=e1270]: (gw)
+                - generic [ref=e1271]: 69 OVR
+              - generic [ref=e1272] [cursor=pointer]:
+                - generic [ref=e1273]:
+                  - generic [ref=e1274]: MF
+                  - generic [ref=e1275]:
+                    - text: Deniz Undav
+                    - generic [ref=e1276]: (de)
+                - generic [ref=e1277]: 69 OVR
+              - generic [ref=e1278] [cursor=pointer]:
+                - generic [ref=e1279]:
+                  - generic [ref=e1280]: FW
+                  - generic [ref=e1281]:
+                    - text: Dane Scarlett
+                    - generic [ref=e1282]: (eng)
+                - generic [ref=e1283]: 69 OVR
+              - generic [ref=e1284] [cursor=pointer]:
+                - generic [ref=e1285]:
+                  - generic [ref=e1286]: MF
+                  - generic [ref=e1287]:
+                    - text: Allan Saint-Maximin
+                    - generic [ref=e1288]: (fr)
+                - generic [ref=e1289]: 69 OVR
+              - generic [ref=e1290] [cursor=pointer]:
+                - generic [ref=e1291]:
+                  - generic [ref=e1292]: FW
+                  - generic [ref=e1293]:
+                    - text: Mikel Oyarzabal
+                    - generic [ref=e1294]: (es)
+                - generic [ref=e1295]: 69 OVR
+              - generic [ref=e1296] [cursor=pointer]:
+                - generic [ref=e1297]:
+                  - generic [ref=e1298]: FW
+                  - generic [ref=e1299]:
+                    - text: Randy Nteka
+                    - generic [ref=e1300]: (ao)
+                - generic [ref=e1301]: 69 OVR
+              - generic [ref=e1302] [cursor=pointer]:
+                - generic [ref=e1303]:
+                  - generic [ref=e1304]: FW
+                  - generic [ref=e1305]:
+                    - text: Evan Ferguson
+                    - generic [ref=e1306]: (ie)
+                - generic [ref=e1307]: 69 OVR
+              - generic [ref=e1308] [cursor=pointer]:
+                - generic [ref=e1309]:
+                  - generic [ref=e1310]: FW
+                  - generic [ref=e1311]:
+                    - text: Igor Thiago
+                    - generic [ref=e1312]: (br)
+                - generic [ref=e1313]: 69 OVR
+              - generic [ref=e1314] [cursor=pointer]:
+                - generic [ref=e1315]:
+                  - generic [ref=e1316]: FW
+                  - generic [ref=e1317]:
+                    - text: Kylian Mbappé
+                    - generic [ref=e1318]: (fr)
+                - generic [ref=e1319]: 69 OVR
+              - generic [ref=e1320] [cursor=pointer]:
+                - generic [ref=e1321]:
+                  - generic [ref=e1322]: FW
+                  - generic [ref=e1323]:
+                    - text: Francesco Esposito
+                    - generic [ref=e1324]: (it)
+                - generic [ref=e1325]: 69 OVR
+              - generic [ref=e1326] [cursor=pointer]:
+                - generic [ref=e1327]:
+                  - generic [ref=e1328]: MF
+                  - generic [ref=e1329]:
+                    - text: Endrick
+                    - generic [ref=e1330]: (br)
+                - generic [ref=e1331]: 69 OVR
+              - generic [ref=e1332] [cursor=pointer]:
+                - generic [ref=e1333]:
+                  - generic [ref=e1334]: MF
+                  - generic [ref=e1335]:
+                    - text: Luis Díaz
+                    - generic [ref=e1336]: (co)
+                - generic [ref=e1337]: 69 OVR
+              - generic [ref=e1338] [cursor=pointer]:
+                - generic [ref=e1339]:
+                  - generic [ref=e1340]: FW
+                  - generic [ref=e1341]:
+                    - text: Lucas Boyé
+                    - generic [ref=e1342]: (ar)
+                - generic [ref=e1343]: 69 OVR
+              - generic [ref=e1344] [cursor=pointer]:
+                - generic [ref=e1345]:
+                  - generic [ref=e1346]: MF
+                  - generic [ref=e1347]:
+                    - text: Jude Bellingham
+                    - generic [ref=e1348]: (eng)
+                - generic [ref=e1349]: 69 OVR
+              - generic [ref=e1350] [cursor=pointer]:
+                - generic [ref=e1351]:
+                  - generic [ref=e1352]: FW
+                  - generic [ref=e1353]:
+                    - text: Phillip Tietz
+                    - generic [ref=e1354]: (de)
+                - generic [ref=e1355]: 69 OVR
+              - generic [ref=e1356] [cursor=pointer]:
+                - generic [ref=e1357]:
+                  - generic [ref=e1358]: FW
+                  - generic [ref=e1359]:
+                    - text: Cristhian Stuani
+                    - generic [ref=e1360]: (uy)
+                - generic [ref=e1361]: 69 OVR
+              - generic [ref=e1362] [cursor=pointer]:
+                - generic [ref=e1363]:
+                  - generic [ref=e1364]: MF
+                  - generic [ref=e1365]:
+                    - text: Stefano Sabelli
+                    - generic [ref=e1366]: (it)
+                - generic [ref=e1367]: 69 OVR
+              - generic [ref=e1368] [cursor=pointer]:
+                - generic [ref=e1369]:
+                  - generic [ref=e1370]: FW
+                  - generic [ref=e1371]:
+                    - text: Salomón Rondón
+                    - generic [ref=e1372]: (ve)
+                - generic [ref=e1373]: 69 OVR
+              - generic [ref=e1374] [cursor=pointer]:
+                - generic [ref=e1375]:
+                  - generic [ref=e1376]: MF
+                  - generic [ref=e1377]:
+                    - text: Diego Moreira
+                    - generic [ref=e1378]: (be)
+                - generic [ref=e1379]: 69 OVR
+              - generic [ref=e1380] [cursor=pointer]:
+                - generic [ref=e1381]:
+                  - generic [ref=e1382]: MF
+                  - generic [ref=e1383]:
+                    - text: Mayckel Lahdo
+                    - generic [ref=e1384]: (se)
+                - generic [ref=e1385]: 69 OVR
+              - generic [ref=e1386] [cursor=pointer]:
+                - generic [ref=e1387]:
+                  - generic [ref=e1388]: MF
+                  - generic [ref=e1389]:
+                    - text: Sidiki Cherif
+                    - generic [ref=e1390]: (fr)
+                - generic [ref=e1391]: 69 OVR
+              - generic [ref=e1392] [cursor=pointer]:
+                - generic [ref=e1393]:
+                  - generic [ref=e1394]: FW
+                  - generic [ref=e1395]:
+                    - text: Sheraldo Becker
+                    - generic [ref=e1396]: (sr)
+                - generic [ref=e1397]: 69 OVR
+              - generic [ref=e1398] [cursor=pointer]:
+                - generic [ref=e1399]:
+                  - generic [ref=e1400]: FW
+                  - generic [ref=e1401]:
+                    - text: Sabitra Bhandari
+                    - generic [ref=e1402]: (Nepali)
+                - generic [ref=e1403]: 69 OVR
+              - generic [ref=e1404] [cursor=pointer]:
+                - generic [ref=e1405]:
+                  - generic [ref=e1406]: MF
+                  - generic [ref=e1407]:
+                    - text: Alexis Vossah
+                    - generic [ref=e1408]: (fr)
+                - generic [ref=e1409]: 69 OVR
+              - generic [ref=e1410] [cursor=pointer]:
+                - generic [ref=e1411]:
+                  - generic [ref=e1412]: MF
+                  - generic [ref=e1413]:
+                    - text: Fábio Silva
+                    - generic [ref=e1414]: (pt)
+                - generic [ref=e1415]: 69 OVR
+              - generic [ref=e1416] [cursor=pointer]:
+                - generic [ref=e1417]:
+                  - generic [ref=e1418]: FW
+                  - generic [ref=e1419]:
+                    - text: Álex Sánchez
+                    - generic [ref=e1420]: (es)
+                - generic [ref=e1421]: 69 OVR
+              - generic [ref=e1422] [cursor=pointer]:
+                - generic [ref=e1423]:
+                  - generic [ref=e1424]: MF
+                  - generic [ref=e1425]:
+                    - text: Arnaud Nordin
+                    - generic [ref=e1426]: (fr)
+                - generic [ref=e1427]: 69 OVR
+              - generic [ref=e1428] [cursor=pointer]:
+                - generic [ref=e1429]:
+                  - generic [ref=e1430]: MF
+                  - generic [ref=e1431]:
+                    - text: Takumi Minamino
+                    - generic [ref=e1432]: (jp)
+                - generic [ref=e1433]: 69 OVR
+              - generic [ref=e1434] [cursor=pointer]:
+                - generic [ref=e1435]:
+                  - generic [ref=e1436]: FW
+                  - generic [ref=e1437]:
+                    - text: Donyell Malen
+                    - generic [ref=e1438]: (nl)
+                - generic [ref=e1439]: 69 OVR
+              - generic [ref=e1440] [cursor=pointer]:
+                - generic [ref=e1441]:
+                  - generic [ref=e1442]: MF
+                  - generic [ref=e1443]:
+                    - text: Senne Lynen
+                    - generic [ref=e1444]: (be)
+                - generic [ref=e1445]: 69 OVR
+              - generic [ref=e1446] [cursor=pointer]:
+                - generic [ref=e1447]:
+                  - generic [ref=e1448]: MF
+                  - generic [ref=e1449]:
+                    - text: Danny Loader
+                    - generic [ref=e1450]: (cm)
+                - generic [ref=e1451]: 69 OVR
+              - generic [ref=e1452] [cursor=pointer]:
+                - generic [ref=e1453]:
+                  - generic [ref=e1454]: FW
+                  - generic [ref=e1455]:
+                    - text: Marin Ljubicic
+                    - generic [ref=e1456]: (hr)
+                - generic [ref=e1457]: 69 OVR
+              - generic [ref=e1458] [cursor=pointer]:
+                - generic [ref=e1459]:
+                  - generic [ref=e1460]: FW
+                  - generic [ref=e1461]:
+                    - text: Tim Lemperle
+                    - generic [ref=e1462]: (de)
+                - generic [ref=e1463]: 69 OVR
+              - generic [ref=e1464] [cursor=pointer]:
+                - generic [ref=e1465]:
+                  - generic [ref=e1466]: MF
+                  - generic [ref=e1467]:
+                    - text: Ansgar Knauff
+                    - generic [ref=e1468]: (de)
+                - generic [ref=e1469]: 69 OVR
+              - generic [ref=e1470] [cursor=pointer]:
+                - generic [ref=e1471]:
+                  - generic [ref=e1472]: MF
+                  - generic [ref=e1473]:
+                    - text: Castrop Jens
+                    - generic [ref=e1474]: (kr)
+                - generic [ref=e1475]: 69 OVR
+      - generic [ref=e497]:
+        - generic [ref=e498]:
+          - generic [ref=e499]:
+            - heading "Match Performance Stats" [level=4] [ref=e500]
+            - generic [ref=e501]:
+              - generic [ref=e503]:
+                - generic [ref=e504]: "14"
+                - generic [ref=e505]: Goals
+                - generic [ref=e506]: "-"
+              - generic [ref=e513]:
+                - generic [ref=e514]: "9"
+                - generic [ref=e515]: Assists
+                - generic [ref=e516]: "-"
+              - generic [ref=e523]:
+                - generic [ref=e524]: "94"
+                - generic [ref=e525]: Shots on Target
+                - generic [ref=e526]: "-"
+              - generic [ref=e533]:
+                - generic [ref=e534]: "5"
+                - generic [ref=e535]: Blocks
+                - generic [ref=e536]: "-"
+              - generic [ref=e543]:
+                - generic [ref=e544]: "74"
+                - generic [ref=e545]: Games Played
+                - generic [ref=e546]: "-"
+              - generic [ref=e553]:
+                - generic [ref=e554]: "24"
+                - generic [ref=e555]: Big Chances Created
+                - generic [ref=e556]: "-"
+              - generic [ref=e563]:
+                - generic [ref=e564]: 81%
+                - generic [ref=e565]: Shot Accuracy
+                - generic [ref=e566]: "-"
+              - generic [ref=e573]:
+                - generic [ref=e574]: 81%
+                - generic [ref=e575]: Pass Accuracy
+                - generic [ref=e576]: "-"
+          - generic [ref=e582]:
+            - heading "Core Attributes" [level=4] [ref=e583]
+            - generic [ref=e584]:
+              - generic [ref=e586]:
+                - generic [ref=e587]: "76"
+                - generic [ref=e588]: Pace
+                - generic [ref=e589]: "-"
+              - generic [ref=e598]:
+                - generic [ref=e599]: "78"
+                - generic [ref=e600]: Shooting
+                - generic [ref=e601]: "-"
+              - generic [ref=e610]:
+                - generic [ref=e611]: "60"
+                - generic [ref=e612]: Passing
+                - generic [ref=e613]: "-"
+              - generic [ref=e622]:
+                - generic [ref=e623]: "70"
+                - generic [ref=e624]: Dribbling
+                - generic [ref=e625]: "-"
+              - generic [ref=e634]:
+                - generic [ref=e635]: "62"
+                - generic [ref=e636]: Physical
+                - generic [ref=e637]: "-"
+              - generic [ref=e646]:
+                - generic [ref=e647]: "36"
+                - generic [ref=e648]: Defending
+                - generic [ref=e649]: "-"
+          - generic [ref=e657]:
+            - heading "Game Intelligence & Work Rate" [level=4] [ref=e658]
+            - generic [ref=e659]:
+              - generic [ref=e661]:
+                - generic [ref=e662]: "77"
+                - generic [ref=e663]: Attacking Work Rate
+                - generic [ref=e664]: "-"
+              - generic [ref=e673]:
+                - generic [ref=e674]: "43"
+                - generic [ref=e675]: Defensive Work Rate
+                - generic [ref=e676]: "50"
+              - generic [ref=e685]:
+                - generic [ref=e686]: "71"
+                - generic [ref=e687]: Skill Moves
+                - generic [ref=e688]: "50"
+              - generic [ref=e697]:
+                - generic [ref=e698]: "63"
+                - generic [ref=e699]: Creativity
+                - generic [ref=e700]: "50"
+          - generic [ref=e708]:
+            - generic [ref=e709]:
+              - generic [ref=e710]:
+                - heading "Career Positioning Heatmaps" [level=4] [ref=e711]
+                - paragraph [ref=e712]: Position density indicating on-field activity patterns. Heat-density scales based on attributes (defending, shooting, pace, etc.).
+              - generic [ref=e713]:
+                - generic [ref=e714]: Play Direction
+                - generic [ref=e715]: →
+            - generic [ref=e716]:
+              - generic [ref=e717]:
+                - generic [ref=e718]:
+                  - generic [ref=e719]: Anjan Bista
+                  - generic [ref=e720]: FW
+                - generic [ref=e721]:
+                  - img [ref=e1145]
+                  - img [ref=e1157]
+              - generic [ref=e724]:
+                - generic [ref=e725]:
+                  - generic [ref=e726]: Slot B Candidate
+                  - generic [ref=e727]: —
+                - generic [ref=e728]:
+                  - img [ref=e729]
+                  - paragraph [ref=e730]: Awaiting Player B Select
+        - generic [ref=e731]:
+          - generic [ref=e732]:
+            - heading "Players Attributes Map" [level=4] [ref=e733]
+            - paragraph [ref=e734]: Shows the player's strengths across core attributes.
+          - img [ref=e736]:
+            - generic [ref=e745]: PAC
+            - generic [ref=e746]: DRI
+            - generic [ref=e747]: DEF
+            - generic [ref=e748]: PHY
+            - generic [ref=e749]: PAS
+            - generic [ref=e750]: SHO
+          - generic [ref=e1168]: Bista
+  - contentinfo [ref=e163]:
+    - generic [ref=e164]:
+      - paragraph [ref=e165]: © 2026 FotNep • Nepal Football Prototype Hub. All rights reserved.
+      - generic [ref=e166]:
+        - generic [ref=e167] [cursor=pointer]: Privacy Policy
+        - generic [ref=e168]: ·
+        - generic [ref=e169] [cursor=pointer]: Terms of Service
+        - generic [ref=e170]: ·
+        - generic [ref=e171] [cursor=pointer]: Gorkhali Databank API

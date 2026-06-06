@@ -1,0 +1,163 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e21]:
+          - generic [ref=e23]: Fotnep
+          - paragraph [ref=e24]: Football Analytical App
+      - navigation [ref=e25]:
+        - button "Matches" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+          - generic [ref=e30]: Matches
+        - button "Compare" [active] [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Compare
+        - button "Stats" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e41]: Stats
+        - button "Lineups" [ref=e42] [cursor=pointer]:
+          - img [ref=e43]
+          - generic [ref=e47]: Lineups
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e53]: 18:13:26 UTC
+        - generic [ref=e55] [cursor=pointer]: AD
+  - main [ref=e56]:
+    - generic [ref=e481]:
+      - generic [ref=e482]:
+        - button "Compare Player A Click to select Gorkhali roster" [ref=e485] [cursor=pointer]:
+          - img [ref=e487]
+          - generic [ref=e488]: Compare Player A
+          - generic [ref=e489]: Click to select Gorkhali roster
+        - button "Compare Player B Click to select Gorkhali roster" [ref=e492] [cursor=pointer]:
+          - img [ref=e494]
+          - generic [ref=e495]: Compare Player B
+          - generic [ref=e496]: Click to select Gorkhali roster
+      - generic [ref=e497]:
+        - generic [ref=e498]:
+          - generic [ref=e499]:
+            - heading "Match Performance Stats" [level=4] [ref=e500]
+            - generic [ref=e501]:
+              - generic [ref=e503]:
+                - generic [ref=e504]: "-"
+                - generic [ref=e505]: Goals
+                - generic [ref=e506]: "-"
+              - generic [ref=e513]:
+                - generic [ref=e514]: "-"
+                - generic [ref=e515]: Assists
+                - generic [ref=e516]: "-"
+              - generic [ref=e523]:
+                - generic [ref=e524]: "-"
+                - generic [ref=e525]: Shots on Target
+                - generic [ref=e526]: "-"
+              - generic [ref=e533]:
+                - generic [ref=e534]: "-"
+                - generic [ref=e535]: Blocks
+                - generic [ref=e536]: "-"
+              - generic [ref=e543]:
+                - generic [ref=e544]: "-"
+                - generic [ref=e545]: Games Played
+                - generic [ref=e546]: "-"
+              - generic [ref=e553]:
+                - generic [ref=e554]: "-"
+                - generic [ref=e555]: Big Chances Created
+                - generic [ref=e556]: "-"
+              - generic [ref=e563]:
+                - generic [ref=e564]: "-"
+                - generic [ref=e565]: Shot Accuracy
+                - generic [ref=e566]: "-"
+              - generic [ref=e573]:
+                - generic [ref=e574]: "-"
+                - generic [ref=e575]: Pass Accuracy
+                - generic [ref=e576]: "-"
+          - generic [ref=e582]:
+            - heading "Core Attributes" [level=4] [ref=e583]
+            - generic [ref=e584]:
+              - generic [ref=e586]:
+                - generic [ref=e587]: "-"
+                - generic [ref=e588]: Pace
+                - generic [ref=e589]: "-"
+              - generic [ref=e598]:
+                - generic [ref=e599]: "-"
+                - generic [ref=e600]: Shooting
+                - generic [ref=e601]: "-"
+              - generic [ref=e610]:
+                - generic [ref=e611]: "-"
+                - generic [ref=e612]: Passing
+                - generic [ref=e613]: "-"
+              - generic [ref=e622]:
+                - generic [ref=e623]: "-"
+                - generic [ref=e624]: Dribbling
+                - generic [ref=e625]: "-"
+              - generic [ref=e634]:
+                - generic [ref=e635]: "-"
+                - generic [ref=e636]: Physical
+                - generic [ref=e637]: "-"
+              - generic [ref=e646]:
+                - generic [ref=e647]: "-"
+                - generic [ref=e648]: Defending
+                - generic [ref=e649]: "-"
+          - generic [ref=e657]:
+            - heading "Game Intelligence & Work Rate" [level=4] [ref=e658]
+            - generic [ref=e659]:
+              - generic [ref=e661]:
+                - generic [ref=e662]: "-"
+                - generic [ref=e663]: Attacking Work Rate
+                - generic [ref=e664]: "-"
+              - generic [ref=e673]:
+                - generic [ref=e674]: "50"
+                - generic [ref=e675]: Defensive Work Rate
+                - generic [ref=e676]: "50"
+              - generic [ref=e685]:
+                - generic [ref=e686]: "50"
+                - generic [ref=e687]: Skill Moves
+                - generic [ref=e688]: "50"
+              - generic [ref=e697]:
+                - generic [ref=e698]: "50"
+                - generic [ref=e699]: Creativity
+                - generic [ref=e700]: "50"
+          - generic [ref=e708]:
+            - generic [ref=e709]:
+              - generic [ref=e710]:
+                - heading "Career Positioning Heatmaps" [level=4] [ref=e711]
+                - paragraph [ref=e712]: Position density indicating on-field activity patterns. Heat-density scales based on attributes (defending, shooting, pace, etc.).
+              - generic [ref=e713]:
+                - generic [ref=e714]: Play Direction
+                - generic [ref=e715]: →
+            - generic [ref=e716]:
+              - generic [ref=e717]:
+                - generic [ref=e718]:
+                  - generic [ref=e719]: Slot A Candidate
+                  - generic [ref=e720]: —
+                - generic [ref=e721]:
+                  - img [ref=e722]
+                  - paragraph [ref=e723]: Awaiting Player A Select
+              - generic [ref=e724]:
+                - generic [ref=e725]:
+                  - generic [ref=e726]: Slot B Candidate
+                  - generic [ref=e727]: —
+                - generic [ref=e728]:
+                  - img [ref=e729]
+                  - paragraph [ref=e730]: Awaiting Player B Select
+        - generic [ref=e731]:
+          - generic [ref=e732]:
+            - heading "Players Attributes Map" [level=4] [ref=e733]
+            - paragraph [ref=e734]: Shows the player's strengths across core attributes.
+          - img [ref=e736]:
+            - generic [ref=e745]: PAC
+            - generic [ref=e746]: DRI
+            - generic [ref=e747]: DEF
+            - generic [ref=e748]: PHY
+            - generic [ref=e749]: PAS
+            - generic [ref=e750]: SHO
+  - contentinfo [ref=e163]:
+    - generic [ref=e164]:
+      - paragraph [ref=e165]: © 2026 FotNep • Nepal Football Prototype Hub. All rights reserved.
+      - generic [ref=e166]:
+        - generic [ref=e167] [cursor=pointer]: Privacy Policy
+        - generic [ref=e168]: ·
+        - generic [ref=e169] [cursor=pointer]: Terms of Service
+        - generic [ref=e170]: ·
+        - generic [ref=e171] [cursor=pointer]: Gorkhali Databank API

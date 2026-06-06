@@ -67,11 +67,11 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | Layer | File/Area | Status | Phase |
 | --- | --- | --- | --- |
 | Backend | `authController.ts` — `GET /auth/me` endpoint | ✅ Done | Phase 5.2 |
-| Backend | `index.ts` — rate limiting on auth routes | ❌ Not wired | Phase 6 |
-| Backend | `matchController.ts` — `resolveMatch()` endpoint | ❌ Not added | Phase 9 |
+| Backend | `index.ts` — rate limiting on auth routes | ✅ Done | Phase 6 |
+| Backend | `matchController.ts` — `resolveMatch()` endpoint | ✅ Done | Phase 9 |
 | Frontend | `context/AuthContext.tsx` — JWT restore on page refresh | ✅ Done | Phase 5.1 |
-| Frontend | `data/mockData.ts` — file deletion | ❌ Not deleted yet | Phase 8.1 |
-| Verification | E2E browser smoke test (all 3 algorithms) | ❌ Not run | Phase 4 |
+| Frontend | `data/mockData.ts` — file deletion | ✅ Done | Phase 8.1 |
+| Verification | E2E browser smoke test (all 3 algorithms) | ✅ Done (3 bugs found) | Phase 4 |
 | Builds | `npm run build` frontend + backend | ❌ Not verified | Phase 7 |
 
 ---
@@ -86,6 +86,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 - [x] **Step 1: Copy the example**
 
+
   ```bash
   cp backend/.env.example backend/.env
 
@@ -93,21 +94,20 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 - [x] **Step 2: Fill in values** — open `backend/.env` and set:
 
-  ```
+  ```env
   PORT=3001
   MONGO_URI=mongodb://localhost:27017/fotnep1
   JWT_SECRET=fotnep_dev_secret_change_in_prod
   JWT_EXPIRY=7d
   ML_SERVICE_URL=http://localhost:8000
-
   ```
 
 - [ ] **Step 3: Verify backend starts**
 
   ```bash
   cd backend && PORT=3001 npm run dev
-
   ```
+
   Expected output: `Backend running on http://localhost:3001`
 
 ---
@@ -236,58 +236,37 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 ### Task 4.1: Auth flow
 
-- [ ] **Step 1: Register a new user**
+- [x] **Step 1: Register a new user** — ✅ Returns `{ token, user: { id, email, reputation: 50 } }`.
 
-  ```bash
-  curl -s -X POST http://localhost:3001/api/v1/auth/register \
-    -H "Content-Type: application/json" \
-    -d '{"email":"test@test.com","password":"test1234","name":"Test User"}' | python3 -m json.tool
-
-  ```
-  Expected: `{ "token": "...", "user": { "id": ..., "email": "test@test.com", "name": "Test User", "reputation": 50 } }`
-
-- [ ] **Step 2: Login with demo credentials**
-
-  ```bash
-  curl -s -X POST http://localhost:3001/api/v1/auth/login \
-    -H "Content-Type: application/json" \
-    -d '{"email":"admin@fotnep.com","password":"fotnep2025"}' | python3 -m json.tool
-
-  ```
-  Expected: `{ "token": "...", "user": {...} }`
+- [x] **Step 2: Login with demo credentials** — ✅ Returns `{ token, user: { id, email, reputation: 80 } }`.
 
 ---
 
 ### Task 4.2: Voting + Algorithm 1 (in-browser)
 
-- [ ] **Step 1:** Open `http://localhost:3000` in browser.
-- [ ] **Step 2:** Login with `admin@fotnep.com / fotnep2025`.
-- [ ] **Step 3:** Click on any match in the left sidebar.
-- [ ] **Step 4:** Click a vote button (1 / X / 2).
-  Expected: vote registers, percentages update.
-- [ ] **Step 5:** Click "Run Prediction" or equivalent Algorithm 1 trigger.
-  Expected: prediction panel shows home/draw/away probabilities and confidence %.
-- [ ] **Step 6:** Refresh the page. Vote should still be reflected.
+- [x] **Step 1:** Open `http://localhost:3000` in browser. ✅ App loads with match feed.
+- [x] **Step 2:** Login with `admin@fotnep.com / fotnep2025`. ✅ Auth works; AD avatar appears; leaderboard shows.
+- [x] **Step 3:** Click on any match in the left sidebar. ✅ Match details panel loads.
+- [x] **Step 4:** Click a vote button (1 / X / 2). ✅ `POST /votes` → 200; "PREDICTION REGISTERED" banner appears; percentages update.
+- [x] **Step 5:** Algorithm 1 trigger. ⚠️ No "Run Prediction" button in UI — `triggerPrediction()` exists in `api.ts` but is NOT wired to any button. Trigger via curl instead: `POST /predict-match` → `{ homeWinProb:1, drawProb:0, awayWinProb:0, confidence:77.8 }`. "ALGORITHM 1 · ML CONSENSUS H 100% · D 0% · A 0% · conf 78%" row shows after re-voting.
+- [x] **Step 6:** Refresh — JWT session persists (AD avatar stays). ⚠️ But `userVote` is in-memory only — on reload the "PREDICTION REGISTERED" branch never renders; vote buttons appear interactive again (backend deduplication prevents actual double-voting, but UI is misleading).
 
 ---
 
 ### Task 4.3: Algorithm 2 — Player Comparison (in-browser)
 
-- [ ] **Step 1:** Click "Compare" tab.
-- [ ] **Step 2:** Search for two Nepali players by name (e.g., "Anjan" and "Bimal").
-- [ ] **Step 3:** Select one for slot A and one for slot B.
-- [ ] **Step 4:** Click "Compare".
-  Expected: similarity score banner appears (0–100%) with attribute breakdown.
+- [x] **Step 1:** Click "Compare" tab. ✅ Loads with two empty player slots.
+- [x] **Step 2:** Search for two Nepali players. ✅ Search debounces correctly; returns Nepali results.
+- [x] **Step 3:** Select one for slot A and one for slot B. ✅ Player cards populate with stats + radar chart.
+- [x] **Step 4:** Comparison auto-triggers when both slots filled. ✅ `POST /compare-players` → 200; "ALGORITHM 2 · COSINE SIMILARITY 100.0%" banner with attribute breakdown and overlapping radar.
 
 ---
 
 ### Task 4.4: Algorithm 3 — Lineup Builder (in-browser)
 
-- [ ] **Step 1:** Click "Lineups" tab.
-- [ ] **Step 2:** Click "Fill Gorkhali XI" (or equivalent optimize button).
-  Expected: 11-player lineup appears on the pitch diagram, positions filled by ELO.
-- [ ] **Step 3:** Try changing formation (e.g., 4-4-2 → 3-5-2).
-  Expected: position slots rearrange.
+- [x] **Step 1:** Click "Lineups" tab. ✅ Pitch diagram, formation selector, bench, Synergy Index panel load.
+- [x] **Step 2:** Click "Fill Gorkhali XI". ⚠️ `POST /optimize-squad` → 200; 7 of 11 positions filled (LW, ST, RCM, RW empty). Players shown are Europeans (Kane, Herrmann, etc.) not Nepali — root cause: `listPlayers` in `playerController.ts` ignores `?source=` param; LineupBuilder passes all 150 IDs (mixed pool); ML picks highest-ELO = Europeans. Fix: add `if (source) filter.source = source;` to backend, pass `source:'nepali'` in `getPlayers` call.
+- [x] **Step 3:** Change formation 4-3-3 → 3-5-2. ✅ Pitch rearranges immediately to correct slot layout; Synergy Index resets to 0% (expected on draft clear).
 
 ---
 
@@ -641,15 +620,19 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | ML↔DB link | ML service `database.py` reads DB name from URI; `load_dotenv()` in `main.py` | ✅ Fixed |
 | ML↔Backend link | All 3 algorithms flow: Frontend→Backend→ML→MongoDB→Response | ✅ Verified |
 | 3 | Type-check & lint pass | ✅ Complete |
-| 4 | E2E verification (browser) | ⏳ Next |
+| 4 | E2E verification (browser) | ✅ Complete (3 bugs found — see Task 4.2 Step 5-6, Task 4.4 Step 2) |
 | 5 | Auth session persistence (JWT lost on refresh) | ✅ Complete |
-| 6 | Rate limiting | ⏳ Upcoming |
+| 6 | Rate limiting | ✅ Complete |
 | Admin | Dropped — admin features removed from scope | ❌ Removed |
 | 7 | Production builds | ⏳ Upcoming |
 | 8 | Cleanup | ⏳ Upcoming |
-| 9 | Match resolution + reputation | ⏳ Future |
+| 9 | Match resolution + reputation | ✅ Complete |
 
 ---
 
 **Last Updated:** 2026-06-06
-**Current Blocker:** Phase 4 — browser E2E verification (still pending). Phase 5 (auth session persistence) is now complete. Next: start all 3 services (backend :3001, ML :8000, frontend :3000) and follow Tasks 4.1–4.4. Note: Algorithm 1 requires at least one real Vote document to exist for a match before prediction can be triggered.
+**Current Blocker:** Phase 7 (production builds not yet verified). Phase 4 E2E is complete. Three bugs found during E2E to fix before production:
+
+1. **`playerController.ts` missing `source` filter** — add `if (source) filter.source = source;` so `?source=nepali` works; update `LineupBuilder.tsx` to fetch `source:'nepali'` only.
+2. **`userVote` not restored on reload** — `GET /votes/:matchId` only returns aggregates; need to return user's own vote when authed, or add `GET /votes/:matchId/my-vote`.
+3. **No "Run Prediction" UI button** — `triggerPrediction()` in `api.ts` is not wired to any button in `MatchDetails.tsx`; Algorithm 1 ML Consensus row only shows when prediction exists in DB.

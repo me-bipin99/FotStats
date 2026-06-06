@@ -1,0 +1,349 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e21]:
+          - generic [ref=e23]: Fotnep
+          - paragraph [ref=e24]: Football Analytical App
+      - navigation [ref=e25]:
+        - button "Matches" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+          - generic [ref=e30]: Matches
+        - button "Compare" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Compare
+        - button "Stats" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e41]: Stats
+        - button "Lineups" [ref=e42] [cursor=pointer]:
+          - img [ref=e43]
+          - generic [ref=e47]: Lineups
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e53]: 18:12:48 UTC
+        - generic [ref=e55] [cursor=pointer]: AD
+  - main [ref=e56]:
+    - generic [ref=e57]:
+      - generic [ref=e62]:
+        - text: Welcome to the
+        - strong [ref=e63]: FotNep Match Center
+        - text: . Highlighting live scopes, tactics planners, and biometric comparisons.
+      - generic [ref=e65]: ⚽ Gorkhali Databank v1.4
+    - generic [ref=e66]:
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - heading "Filter by Category" [level=4] [ref=e70]
+          - generic [ref=e71]:
+            - button "Men's" [ref=e72] [cursor=pointer]:
+              - img [ref=e73]
+              - generic [ref=e93]: Men's
+            - button "Women's" [ref=e94] [cursor=pointer]:
+              - img [ref=e95]
+              - generic [ref=e116]: Women's
+            - button "Domestic" [ref=e117] [cursor=pointer]:
+              - img [ref=e118]
+              - generic [ref=e138]: Domestic
+        - generic [ref=e139]:
+          - heading "Match Fixtures" [level=3] [ref=e140]:
+            - img [ref=e141]
+            - generic [ref=e147]: Match Fixtures
+          - generic [ref=e148]:
+            - img [ref=e149]
+            - textbox "Search teams or league..." [ref=e152]
+          - generic [ref=e153]:
+            - button "all12" [ref=e172] [cursor=pointer]
+            - button "live" [ref=e155] [cursor=pointer]
+            - button "finished3" [ref=e173] [cursor=pointer]
+            - button "upcoming9" [ref=e174] [cursor=pointer]
+        - generic [ref=e158]:
+          - generic [ref=e175] [cursor=pointer]:
+            - generic [ref=e176]:
+              - generic [ref=e177]: Martyr's Memorial A-Division League
+              - generic [ref=e178]: September 5, 2026
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - generic [ref=e181]: "N"
+                - generic [ref=e182]: NNT
+              - generic [ref=e183]: 21:45
+              - generic [ref=e184]:
+                - generic [ref=e185]: MMC
+                - generic [ref=e186]: M
+            - generic [ref=e187]:
+              - generic [ref=e188]: Dashrath Rangasala
+              - generic [ref=e189]:
+                - generic [ref=e190]: "Votes:"
+                - generic [ref=e191]: "0"
+          - generic [ref=e192] [cursor=pointer]:
+            - generic [ref=e193]:
+              - generic [ref=e194]: A-Division League
+              - generic [ref=e195]: August 20, 2026
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - generic [ref=e198]: T
+                - generic [ref=e199]: TSC
+              - generic [ref=e200]: 22:45
+              - generic [ref=e201]:
+                - generic [ref=e202]: AF
+                - generic [ref=e203]: A
+            - generic [ref=e204]:
+              - generic [ref=e205]: Pokhara Stadium
+              - generic [ref=e206]:
+                - generic [ref=e207]: "Votes:"
+                - generic [ref=e208]: "0"
+          - generic [ref=e209] [cursor=pointer]:
+            - generic [ref=e210]:
+              - generic [ref=e211]: DOmestic
+              - generic [ref=e212]: July 12, 2026
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - generic [ref=e215]: "N"
+                - generic [ref=e216]: NNT
+              - generic [ref=e217]: 05:45
+              - generic [ref=e218]:
+                - generic [ref=e219]: AF
+                - generic [ref=e220]: A
+            - generic [ref=e221]:
+              - generic [ref=e222]: Dashrath
+              - generic [ref=e223]:
+                - generic [ref=e224]: "Votes:"
+                - generic [ref=e225]: "0"
+          - generic [ref=e226] [cursor=pointer]:
+            - generic [ref=e227]:
+              - generic [ref=e228]: Martyr's Memorial A-Division League
+              - generic [ref=e229]: June 20, 2026
+            - generic [ref=e230]:
+              - generic [ref=e231]:
+                - generic [ref=e232]: "N"
+                - generic [ref=e233]: NRT
+              - generic [ref=e234]: 22:06
+              - generic [ref=e235]:
+                - generic [ref=e236]: AF
+                - generic [ref=e237]: A
+            - generic [ref=e238]:
+              - generic [ref=e239]: ANFA Complex
+              - generic [ref=e240]:
+                - generic [ref=e241]: "Votes:"
+                - generic [ref=e242]: "0"
+          - generic [ref=e243] [cursor=pointer]:
+            - generic [ref=e244]:
+              - generic [ref=e245]: A-Division League
+              - generic [ref=e246]: June 16, 2026
+            - generic [ref=e247]:
+              - generic [ref=e248]:
+                - generic [ref=e249]: T
+                - generic [ref=e250]: TSC
+              - generic [ref=e251]: 22:06
+              - generic [ref=e252]:
+                - generic [ref=e253]: TAC
+                - generic [ref=e254]: T
+            - generic [ref=e255]:
+              - generic [ref=e256]: Pokhara Stadium
+              - generic [ref=e257]:
+                - generic [ref=e258]: "Votes:"
+                - generic [ref=e259]: "0"
+          - generic [ref=e260] [cursor=pointer]:
+            - generic [ref=e261]:
+              - generic [ref=e262]: A-Division League
+              - generic [ref=e263]: June 13, 2026
+            - generic [ref=e264]:
+              - generic [ref=e265]:
+                - generic [ref=e266]: M
+                - generic [ref=e267]: MF
+              - generic [ref=e268]: 22:06
+              - generic [ref=e269]:
+                - generic [ref=e270]: MMC
+                - generic [ref=e271]: M
+            - generic [ref=e272]:
+              - generic [ref=e273]: Dashrath Rangasala
+              - generic [ref=e274]:
+                - generic [ref=e275]: "Votes:"
+                - generic [ref=e276]: "0"
+          - generic [ref=e277] [cursor=pointer]:
+            - generic [ref=e278]:
+              - generic [ref=e279]: SAFF Women's Championship
+              - generic [ref=e280]: June 11, 2026
+            - generic [ref=e281]:
+              - generic [ref=e282]:
+                - generic [ref=e283]: "N"
+                - generic [ref=e284]: NWNT
+              - generic [ref=e285]: 22:06
+              - generic [ref=e286]:
+                - generic [ref=e287]: NNT
+                - generic [ref=e288]: "N"
+            - generic [ref=e289]:
+              - generic [ref=e290]: Dashrath Rangasala
+              - generic [ref=e291]:
+                - generic [ref=e292]: "Votes:"
+                - generic [ref=e293]: "0"
+          - generic [ref=e294] [cursor=pointer]:
+            - generic [ref=e295]:
+              - generic [ref=e296]: SAFF Championship
+              - generic [ref=e297]: June 9, 2026
+            - generic [ref=e298]:
+              - generic [ref=e299]:
+                - generic [ref=e300]: "N"
+                - generic [ref=e301]: NNT
+              - generic [ref=e302]: 22:06
+              - generic [ref=e303]:
+                - generic [ref=e304]: MF
+                - generic [ref=e305]: M
+            - generic [ref=e306]:
+              - generic [ref=e307]: Dashrath Rangasala
+              - generic [ref=e308]:
+                - generic [ref=e309]: "Votes:"
+                - generic [ref=e310]: "0"
+          - generic [ref=e311] [cursor=pointer]:
+            - generic [ref=e312]:
+              - generic [ref=e313]: A-Division League
+              - generic [ref=e314]: FT
+            - generic [ref=e315]:
+              - generic [ref=e316]:
+                - generic [ref=e317]: M
+                - generic [ref=e318]: MMC
+              - generic [ref=e320]:
+                - generic [ref=e321]: "2"
+                - generic [ref=e322]: "-"
+                - generic [ref=e323]: "1"
+              - generic [ref=e324]:
+                - generic [ref=e325]: NNT
+                - generic [ref=e326]: "N"
+            - generic [ref=e327]:
+              - generic [ref=e328]: Halchowk Stadium
+              - generic [ref=e329]:
+                - generic [ref=e330]: "Votes:"
+                - generic [ref=e331]: "27"
+          - generic [ref=e332] [cursor=pointer]:
+            - generic [ref=e333]:
+              - generic [ref=e334]: Domestic
+              - generic [ref=e335]: May 26, 2026
+            - generic [ref=e336]:
+              - generic [ref=e337]:
+                - generic [ref=e338]: A
+                - generic [ref=e339]: AF
+              - generic [ref=e340]: 17:45
+              - generic [ref=e341]:
+                - generic [ref=e342]: MF
+                - generic [ref=e343]: M
+            - generic [ref=e344]:
+              - generic [ref=e345]: Dharan Stadium
+              - generic [ref=e346]:
+                - generic [ref=e347]: "Votes:"
+                - generic [ref=e348]: "0"
+          - generic [ref=e349] [cursor=pointer]:
+            - generic [ref=e350]:
+              - generic [ref=e351]: Martyr's Memorial A-Division League
+              - generic [ref=e352]: FT
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]: "N"
+                - generic [ref=e356]: NNT
+              - generic [ref=e358]:
+                - generic [ref=e359]: "3"
+                - generic [ref=e360]: "-"
+                - generic [ref=e361]: "0"
+              - generic [ref=e362]:
+                - generic [ref=e363]: TSC
+                - generic [ref=e364]: T
+            - generic [ref=e365]:
+              - generic [ref=e366]: Dashrath Rangasala
+              - generic [ref=e367]:
+                - generic [ref=e368]: "Votes:"
+                - generic [ref=e369]: "29"
+          - generic [ref=e370] [cursor=pointer]:
+            - generic [ref=e371]:
+              - generic [ref=e372]: A-Division League
+              - generic [ref=e373]: FT
+            - generic [ref=e374]:
+              - generic [ref=e375]:
+                - generic [ref=e376]: M
+                - generic [ref=e377]: MF
+              - generic [ref=e379]:
+                - generic [ref=e380]: "1"
+                - generic [ref=e381]: "-"
+                - generic [ref=e382]: "1"
+              - generic [ref=e383]:
+                - generic [ref=e384]: NRT
+                - generic [ref=e385]: "N"
+            - generic [ref=e386]:
+              - generic [ref=e387]: Dashrath Rangasala
+              - generic [ref=e388]:
+                - generic [ref=e389]: "Votes:"
+                - generic [ref=e390]: "25"
+      - generic [ref=e391]:
+        - generic [ref=e392]:
+          - generic [ref=e393]:
+            - generic [ref=e394]:
+              - img [ref=e395]
+              - generic [ref=e398]: Martyr's Memorial A-Division League
+            - generic [ref=e399]:
+              - img [ref=e400]
+              - text: September 5, 2026 • 21:45
+          - generic [ref=e402]:
+            - generic [ref=e403]:
+              - generic [ref=e404]: NNT
+              - heading "Nepal National Team" [level=4] [ref=e405]
+              - generic [ref=e406]: "H2H Rating: 7"
+            - generic [ref=e408]:
+              - paragraph [ref=e409]: KICK OFF
+              - paragraph [ref=e410]: 21:45
+              - generic [ref=e411]: Scheduled
+            - generic [ref=e412]:
+              - generic [ref=e413]: MMC
+              - heading "Manang Marshyangdi Club" [level=4] [ref=e414]
+              - generic [ref=e415]: "H2H Rating: 7"
+          - generic [ref=e417]:
+            - img [ref=e418]
+            - generic [ref=e421]: Dashrath Rangasala
+        - generic [ref=e422]:
+          - 'heading "Who Will Win? Prediction Vote Total casts: 2" [level=5] [ref=e423]':
+            - generic [ref=e424]:
+              - img [ref=e425]
+              - text: Who Will Win? Prediction Vote
+            - generic [ref=e427]: "Total casts: 2"
+          - generic [ref=e429]:
+            - generic [ref=e450]:
+              - generic [ref=e451]:
+                - img [ref=e452]
+                - text: Prediction Registered
+              - generic [ref=e455]: Live Forecast
+            - generic [ref=e456]:
+              - generic [ref=e458]:
+                - generic [ref=e459]: NNT
+                - generic [ref=e460]: 100%
+              - generic [ref=e464]: 0% Draw
+              - generic [ref=e467]:
+                - generic [ref=e468]: MMC
+                - generic [ref=e469]: 0%
+            - generic [ref=e471]:
+              - text: You predicted
+              - strong [ref=e472]: Nepal National Team
+              - text: to win. Accuracy weight applied.
+            - generic [ref=e473]:
+              - generic [ref=e474]: Algorithm 1 · ML Consensus
+              - generic [ref=e475]:
+                - text: H
+                - generic [ref=e476]: 100%
+                - text: · D
+                - generic [ref=e477]: 0%
+                - text: · A
+                - generic [ref=e478]: 0%
+                - text: · conf
+                - generic [ref=e479]: 78%
+        - generic [ref=e440]:
+          - button "Tactical Lineup" [ref=e441]
+          - button "H2H & Details" [ref=e442]
+        - generic [ref=e445]:
+          - img [ref=e446]
+          - paragraph [ref=e448]: Lineups Unavailable
+          - paragraph [ref=e449]: Starting rosters will be announced usually 1 hour before kickoff.
+  - contentinfo [ref=e163]:
+    - generic [ref=e164]:
+      - paragraph [ref=e165]: © 2026 FotNep • Nepal Football Prototype Hub. All rights reserved.
+      - generic [ref=e166]:
+        - generic [ref=e167] [cursor=pointer]: Privacy Policy
+        - generic [ref=e168]: ·
+        - generic [ref=e169] [cursor=pointer]: Terms of Service
+        - generic [ref=e170]: ·
+        - generic [ref=e171] [cursor=pointer]: Gorkhali Databank API

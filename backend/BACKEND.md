@@ -1,330 +1,221 @@
 # Backend Service Documentation
 
-**Location:** `/backend/`  
-**Port:** 3000  
+**Location:** `/backend/`
+**Port:** 3001 (dev, via `PORT=3001`) · 3000 (default)
 **API Base:** `/api/v1`
 
 ## Quick Start
 
 ```bash
-cd backend
-npm install
-npm run dev
+cd backend && PORT=3001 npm run dev
 ```
+
+Or from repo root: `npm run dev` (starts all 3 services together).
 
 ## Architecture
 
-```
+```text
 src/
-├── controllers/       # Request handlers (maps to OpenAPI paths)
-│   ├── authController.ts
-│   ├── playerController.ts
-│   ├── teamController.ts
-│   ├── matchController.ts
-│   ├── predictionController.ts
-│   ├── comparisonController.ts
-│   ├── squadController.ts
-│   └── voteController.ts
-├── models/           # MongoDB schemas
+├── controllers/
+│   ├── authController.ts        # login, register, me
+│   ├── playerController.ts      # listPlayers, getPlayer
+│   ├── teamController.ts        # listTeams, getTeam, getTeamLineup
+│   ├── matchController.ts       # listMatches, getMatch, createMatch, updateMatch, resolveMatch
+│   ├── predictionController.ts  # triggerPrediction, getPrediction, comparePlayersProxy, optimizeSquadProxy
+│   └── voteController.ts        # castVote, getMatchVotes, leaderboard
+├── models/
 │   ├── User.ts
 │   ├── Player.ts
 │   ├── Team.ts
 │   ├── Match.ts
-│   ├── Prediction.ts
 │   ├── Vote.ts
-│   └── index.ts
-├── routes/           # API route definitions
-│   ├── auth.ts
-│   ├── players.ts
-│   ├── teams.ts
-│   ├── matches.ts
-│   ├── predictions.ts
-│   ├── comparisons.ts
-│   ├── squad.ts
-│   └── votes.ts
-├── middleware/       # Auth, error handling, logging
-│   ├── authMiddleware.ts
-│   ├── errorHandler.ts
-│   └── requestLogger.ts
-├── services/         # Business logic & ML integration
-│   ├── mlIntegration.ts      # Calls to ML service (:8000)
-│   ├── reputationEngine.ts   # Reputation calculation
-│   └── dataValidation.ts
-├── config/           # Configuration
-│   ├── database.ts
-│   └── environment.ts
-└── index.ts          # Express app setup
+│   └── Prediction.ts
+├── routes/
+│   ├── auth.ts          # /api/v1/auth
+│   ├── players.ts       # /api/v1/players
+│   ├── teams.ts         # /api/v1/teams
+│   ├── matches.ts       # /api/v1/matches
+│   ├── votes.ts         # /api/v1/votes
+│   ├── predictions.ts   # /api/v1/predict-match
+│   ├── comparisons.ts   # /api/v1/compare-players
+│   └── squads.ts        # /api/v1/optimize-squad
+├── middleware/
+│   ├── authMiddleware.ts   # requireAuth() — JWT verify → req.userId
+│   └── errorHandler.ts    # standard { error, message } response
+├── services/
+│   └── mlIntegration.ts   # predictMatch, comparePlayers, optimizeSquad → HTTP to :8000
+├── config/
+│   └── database.ts        # connectDB() via MONGO_URI
+└── index.ts               # Express app setup, rate limiting, route mounting
 ```
 
 ## Key Controllers
 
 ### authController.ts
-- `login(email, password)` → JWT token + User
-- `register(email, password, name)` → JWT token + User
+
+- `login(email, password)` → `{ token, user }`
+- `register(email, password, name)` → `{ token, user }`
 - `me(req)` → User (requires `requireAuth` — reads `req.userId` from JWT)
 
 ### playerController.ts
-- `listPlayers(position?, search?, sortBy, limit, offset)` → Player[]
+
+- `listPlayers(position?, search?, gender?, limit, offset)` → `{ players[], total }`
 - `getPlayer(id)` → Player
-- `getPlayerStats(id)` → Player + Predicted Stats
-- `createPlayer(data)` → Player (for seeding)
 
 ### teamController.ts
-- `listTeams()` → Team[]
-- `getTeam(id)` → Team
-- `getTeamLineup(id)` → Lineup with formation
+
+- `listTeams()` → `{ teams[] }`
+- `getTeam(id)` → Team (with players populated)
+- `getTeamLineup(id)` → `{ homeFormation, homeLineup }`
 
 ### matchController.ts
-- `listMatches(status?, limit)` → Match[]
-- `getMatch(id)` → Match
-- `getMatchLineups(id)` → Home/Away lineups
-- `completeMatch(id, homeScore, awayScore)` → Updated match
+
+- `listMatches(status?, search?, limit, offset)` → `{ matches[], total }`
+- `getMatch(id)` → Match (populates teams + lineups + voteCounts)
+- `getMatchLineups(id)` → `{ homeFormation, awayFormation, homeLineup, awayLineup }`
+- `createMatch(body)` → Match — requires `homeTeam, awayTeam, date, competition`
+- `updateMatch(id, body)` → Match — allowed fields: `date, competition, venue, status, homeFormation, awayFormation, result`
+- `resolveMatch(id, result)` → `{ match, votesResolved }` — sets `status=completed`, marks each vote `correct`, increments voter `reputation` (+2 correct / −1 wrong) and `predictionsTotal/predictionsCorrect`
 
 ### predictionController.ts
-- `predictMatch(matchId, votes[])` → MatchPrediction (calls ML service)
-- `getPredictionHistory(matchId)` → Prediction[]
 
-### comparisonController.ts
-- `comparePlayer(playerAId, playerBId)` → PlayerComparison (calls ML service)
-
-### squadController.ts
-- `optimizeSquad(teamId, availablePlayerIds, formation?, constraints)` → SquadOptimization (calls ML service)
+- `triggerPrediction(matchId)` → PredictionResult — requires ≥1 vote; 400 if no votes, 503 if ML down
+- `getPrediction(matchId)` → PredictionResult | 404
+- `comparePlayersProxy(playerAId, playerBId)` → CompareResult (proxies Algorithm 2)
+- `optimizeSquadProxy(teamId, availablePlayerIds, formationPreference, constraints)` → SquadResult (proxies Algorithm 3)
 
 ### voteController.ts
-- `submitVote(userId, matchId, outcome)` → Vote
-- `getVotes(matchId)` → Vote[]
-- `getLeaderboard(limit)` → User[] sorted by reputation
+
+- `castVote(matchId, outcome)` → Vote — unique per user per match
+- `getMatchVotes(matchId)` → `{ home_win, draw, away_win }` counts
+- `leaderboard(limit)` → User[] sorted by reputation desc
 
 ## Database Models
 
 ### User
+
 ```typescript
 {
-  _id: ObjectId
-  email: string (unique, indexed)
-  passwordHash: string (bcrypt)
+  email: string           // unique, lowercased
+  passwordHash: string    // bcrypt
   name: string
-  reputation: number (0-100, default 50)
+  reputation: number      // 0–100, default 50
   predictionsCorrect: number
   predictionsTotal: number
-  createdAt: Date
-  updatedAt: Date
 }
 ```
 
 ### Player
+
 ```typescript
 {
-  _id: ObjectId
   name: string
   position: 'FW' | 'MF' | 'DF' | 'GK'
   nationality: string
   age: number
-  team: string (Team._id)
-  gender: string ('M' | 'F')
-  stats: {
-    pace: number (0-100)
-    shooting: number
-    passing: number
-    dribbling: number
-    defending: number
-    physical: number
-  }
-  careerStats: {
-    appearances: number
-    goals: number
-    assists: number
-    yellowCards: number
-    redCards: number
-  }
-  eloRating: number (starting 1600)
+  gender: 'M' | 'F'
+  team: Team._id
+  stats: { pace, shooting, passing, dribbling, defending, physical }  // 0–100
+  careerStats: { appearances, goals, assists, yellowCards, redCards }
+  eloRating: number       // default 1600
   source: 'nepali' | 'european'
-  rawDataPath: string (path to CSV in /data/raw if nepali)
-  createdAt: Date
 }
 ```
 
 ### Team
+
 ```typescript
 {
-  _id: ObjectId
   name: string
   country: string
-  founded: number
-  color: string (hex, e.g. '#ff0000')
-  stadium: string
-  coach: string
+  color: string           // hex
+  stadium?: string
+  coach?: string
   players: [Player._id]
-  formation: string (default '4-3-3')
-  createdAt: Date
+  formation: string       // default '4-3-3'
+  founded?: number
 }
 ```
 
 ### Match
+
 ```typescript
 {
-  _id: ObjectId
   homeTeam: Team._id
   awayTeam: Team._id
   date: Date
   competition: string
   status: 'upcoming' | 'live' | 'completed'
-  venue: string
+  venue?: string
   homeLineup: [{ playerId, position, shirtNumber }]
   awayLineup: [{ playerId, position, shirtNumber }]
   homeFormation: string
   awayFormation: string
-  result: {
-    homeScore: number
-    awayScore: number
-  } (only if completed)
-  createdAt: Date
+  result?: { homeScore: number; awayScore: number }
 }
 ```
 
 ### Vote
+
 ```typescript
 {
-  _id: ObjectId
   userId: User._id
   matchId: Match._id
   outcome: 'home_win' | 'draw' | 'away_win'
-  correct: boolean (null until match resolves, then true/false)
+  correct: boolean | null   // null until resolveMatch() is called
   timestamp: Date
+  // unique compound index: (userId, matchId)
 }
 ```
 
 ### Prediction
+
 ```typescript
 {
-  _id: ObjectId
   matchId: Match._id
-  prediction: {
-    homeWinProb: number (0-1)
-    drawProb: number
-    awayWinProb: number
-  }
-  confidence: number (0-100)
-  voteBreakdown: {
-    homeWin: number
-    draw: number
-    awayWin: number
-  }
+  prediction: { homeWinProb, drawProb, awayWinProb }  // 0–1
+  confidence: number   // 0–100
+  voteBreakdown: { homeWin, draw, awayWin }
   timestamp: Date
 }
 ```
 
-## ML Service Integration (mlIntegration.ts)
+## Security
 
-All 3 algorithms are called via HTTP to ML Service (:8000):
-
-```typescript
-// Example function
-async function predictMatch(
-  matchId: string,
-  votes: Array<{ userId: string; outcome: string; reputation: number }>
-): Promise<MatchPrediction> {
-  const response = await fetch('http://localhost:8000/predict-match', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ matchId, votes })
-  });
-  return response.json();
-}
-```
+- **Auth:** JWT via `Authorization: Bearer <token>`. `requireAuth` middleware validates and sets `req.userId`.
+- **Rate limiting:** Auth routes (`/api/v1/auth`) — 20 requests per 15 minutes via `express-rate-limit`.
+- **Passwords:** bcrypt with 12 salt rounds.
 
 ## Environment Variables (.env)
 
-```
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/fotnep
-JWT_SECRET=your-secret-key-here
+```env
+PORT=3001
+MONGO_URI=mongodb://localhost:27017/fotnep1
+JWT_SECRET=fotnep_dev_secret_change_in_prod
 JWT_EXPIRY=7d
-NODE_ENV=development
-PORT=3000
-
-# ML Service
 ML_SERVICE_URL=http://localhost:8000
-
-# Optional
-REDIS_URL=redis://localhost:6379
-LOG_LEVEL=debug
 ```
 
-## Common Development Tasks
+## Error Response Format
 
-### Seed database with test data
-```bash
-cd ../services/ml-service
-python scripts/seed_db.py
-```
-
-### Run tests
-```bash
-npm test                 # All tests
-npm test -- --watch     # Watch mode
-npm test -- auth        # Specific file
-```
-
-### Lint and format
-```bash
-npm run lint            # Check
-npm run lint:fix        # Auto-fix
-```
-
-### Build for production
-```bash
-npm run build
-NODE_ENV=production npm start
-```
-
-## Testing
-
-- Use **Jest** for unit & integration tests
-- Mock ML service in tests (don't call :8000 during tests)
-- Use **supertest** for endpoint testing
-- Test database: Use separate MongoDB test database in .env.test
-
-Example test structure:
-```typescript
-describe('POST /api/v1/auth/login', () => {
-  it('should return JWT token on valid credentials', async () => {
-    const res = await request(app)
-      .post('/api/v1/auth/login')
-      .send({ email: 'admin@fotnep.com', password: 'fotnep2025' });
-    
-    expect(res.status).toBe(200);
-    expect(res.body.token).toBeDefined();
-  });
-});
-```
-
-## Error Handling
-
-All errors return standard format:
 ```json
-{
-  "error": "ERROR_CODE",
-  "message": "Human readable message",
-  "details": {}
-}
+{ "error": "ERROR_CODE", "message": "Human readable message" }
 ```
 
-Error codes:
-- `INVALID_CREDENTIALS` — Login failed
-- `TOKEN_EXPIRED` — JWT expired
-- `PLAYER_NOT_FOUND` — Player doesn't exist
-- `INVALID_INPUT` — Request validation failed
-- `ML_SERVICE_ERROR` — Algorithm computation failed
-- `DB_ERROR` — Database operation failed
+Key error codes: `INVALID_CREDENTIALS` · `TOKEN_MISSING` · `TOKEN_EXPIRED` · `RATE_LIMITED` · `MATCH_NOT_FOUND` · `PLAYER_NOT_FOUND` · `NO_VOTES` · `ML_UNAVAILABLE` · `INVALID_RESULT`
 
-## Deployment
+## Available Scripts
 
-1. Build: `npm run build`
-2. Set production `.env`
-3. Run: `NODE_ENV=production npm start`
-4. Or use Docker: `docker build -t fotnep-backend .` (requires Dockerfile)
+```bash
+npm run dev          # tsx watch — hot reload on :3001
+npm run build        # tsc → dist/
+npm start            # run compiled dist/index.js
+npm run type-check   # TypeScript check without emitting
+npm run lint         # ESLint
+npm run lint:fix     # ESLint auto-fix
+npm test             # Jest
+```
 
 ---
 
-**Status:** To be implemented  
-**Priority:** High - Backend must run before frontend
+**Status:** Fully implemented. All 6 controllers active, rate limiting enabled, match resolution + reputation scoring live.

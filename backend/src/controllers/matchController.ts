@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Match } from '../models/Match';
 import { Vote } from '../models/Vote';
+import { User } from '../models/User';
 import type { AuthRequest } from '../middleware/authMiddleware';
 
 export async function listMatches(req: Request, res: Response): Promise<void> {
@@ -122,4 +123,41 @@ export async function updateMatch(req: AuthRequest, res: Response): Promise<void
   }
 
   res.json({ match });
+}
+
+export async function resolveMatch(req: AuthRequest, res: Response): Promise<void> {
+  const { result } = req.body as { result: 'home_win' | 'draw' | 'away_win' };
+
+  if (!['home_win', 'draw', 'away_win'].includes(result)) {
+    res.status(400).json({ error: 'INVALID_RESULT', message: 'result must be home_win, draw, or away_win' });
+    return;
+  }
+
+  const match = await Match.findByIdAndUpdate(
+    req.params.id,
+    { status: 'completed', result },
+    { new: true }
+  ).populate('homeTeam').populate('awayTeam').lean();
+
+  if (!match) {
+    res.status(404).json({ error: 'MATCH_NOT_FOUND', message: 'Match not found' });
+    return;
+  }
+
+  const votes = await Vote.find({ matchId: req.params.id }).lean();
+  for (const vote of votes) {
+    const correct = vote.outcome === result;
+    await Promise.all([
+      Vote.findByIdAndUpdate(vote._id, { correct }),
+      User.findByIdAndUpdate(vote.userId, {
+        $inc: {
+          predictionsTotal: 1,
+          predictionsCorrect: correct ? 1 : 0,
+          reputation: correct ? 2 : -1,
+        },
+      }),
+    ]);
+  }
+
+  res.json({ match, votesResolved: votes.length });
 }

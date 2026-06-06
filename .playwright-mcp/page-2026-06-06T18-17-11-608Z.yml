@@ -1,0 +1,214 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - generic [ref=e21]:
+          - generic [ref=e23]: Fotnep
+          - paragraph [ref=e24]: Football Analytical App
+      - navigation [ref=e25]:
+        - button "Matches" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+          - generic [ref=e30]: Matches
+        - button "Compare" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Compare
+        - button "Stats" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e41]: Stats
+        - button "Lineups" [ref=e42] [cursor=pointer]:
+          - img [ref=e43]
+          - generic [ref=e47]: Lineups
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e53]: 18:17:10 UTC
+        - generic [ref=e55] [cursor=pointer]: AD
+  - main [ref=e56]:
+    - generic [ref=e1597]:
+      - generic [ref=e1598]:
+        - generic [ref=e1599]:
+          - generic [ref=e1600]:
+            - generic [ref=e1601]: "Formation:"
+            - generic [ref=e1602]:
+              - combobox [ref=e1603] [cursor=pointer]:
+                - option "4-3-3" [selected]
+                - option "4-4-2"
+                - option "3-5-2"
+                - option "4-2-3-1"
+                - option "3-4-3"
+                - option "4-5-1"
+              - generic:
+                - img
+          - generic [ref=e1604]:
+            - button "Fill Gorkhali XI" [ref=e1605] [cursor=pointer]:
+              - img [ref=e1606]
+              - generic [ref=e1609]: Fill Gorkhali XI
+            - button "Clear Draft" [ref=e1610] [cursor=pointer]:
+              - img [ref=e1611]
+              - generic [ref=e1616]: Clear Draft
+        - generic [ref=e1617]:
+          - generic [ref=e1619] [cursor=pointer]:
+            - generic [ref=e1620]:
+              - generic [ref=e1769]: "0"
+              - generic [ref=e1770]: "6.9"
+              - button [ref=e1771]:
+                - img [ref=e1772]
+            - generic [ref=e1622]: Luque
+          - generic [ref=e1624] [cursor=pointer]:
+            - generic [ref=e1625]:
+              - generic [ref=e1775]: "0"
+              - generic [ref=e1776]: "7"
+              - button [ref=e1777]:
+                - img [ref=e1778]
+            - generic [ref=e1627]: Kane
+          - generic [ref=e1629] [cursor=pointer]:
+            - generic [ref=e1630]:
+              - generic [ref=e1781]: "0"
+              - generic [ref=e1782]: "7"
+              - button [ref=e1783]:
+                - img [ref=e1784]
+            - generic [ref=e1632]: Nwaneri
+          - generic [ref=e1634] [cursor=pointer]:
+            - generic [ref=e1635]:
+              - generic [ref=e1787]: "0"
+              - generic [ref=e1788]: "6.9"
+              - button [ref=e1789]:
+                - img [ref=e1790]
+            - generic [ref=e1637]: Castagne
+          - generic [ref=e1639] [cursor=pointer]:
+            - generic [ref=e1640]:
+              - generic [ref=e1793]: "0"
+              - generic [ref=e1794]: "7"
+              - button [ref=e1795]:
+                - img [ref=e1796]
+            - generic [ref=e1642]: Lepaul
+          - generic [ref=e1644] [cursor=pointer]:
+            - generic [ref=e1645]:
+              - generic [ref=e1799]: "0"
+              - generic [ref=e1800]: "7"
+              - button [ref=e1801]:
+                - img [ref=e1802]
+            - generic [ref=e1647]: Herrmann
+          - generic [ref=e1649] [cursor=pointer]:
+            - generic [ref=e1650]:
+              - generic [ref=e1805]: "0"
+              - generic [ref=e1806]: "7"
+              - button [ref=e1807]:
+                - img [ref=e1808]
+            - generic [ref=e1652]: Martínez
+          - generic [ref=e1654] [cursor=pointer]:
+            - img [ref=e1656]
+            - generic [ref=e1657]: RCM
+          - generic [ref=e1659] [cursor=pointer]:
+            - img [ref=e1661]
+            - generic [ref=e1662]: LW
+          - generic [ref=e1664] [cursor=pointer]:
+            - img [ref=e1666]
+            - generic [ref=e1667]: ST
+          - generic [ref=e1669] [cursor=pointer]:
+            - img [ref=e1671]
+            - generic [ref=e1672]: RW
+        - generic [ref=e1673]:
+          - generic [ref=e1674]:
+            - generic [ref=e1675]:
+              - generic [ref=e1676]: Bench
+              - heading "Gorkhali Substitutes (Max 5)" [level=4] [ref=e1677]
+            - generic [ref=e1678]: Click slots below to select subs
+          - generic [ref=e1679]:
+            - generic [ref=e1681] [cursor=pointer]:
+              - img [ref=e1811]
+              - generic [ref=e1684]: Bhandari
+              - generic [ref=e1830]:
+                - generic [ref=e1831]: FW
+                - generic [ref=e1832]: ⭐6.9
+              - button "Remove substitute" [ref=e1833]:
+                - img [ref=e1834]
+            - generic [ref=e1686] [cursor=pointer]:
+              - img [ref=e1837]
+              - generic [ref=e1689]: Ajorque
+              - generic [ref=e1853]:
+                - generic [ref=e1854]: FW
+                - generic [ref=e1855]: ⭐6.9
+              - button "Remove substitute" [ref=e1856]:
+                - img [ref=e1857]
+            - generic [ref=e1691] [cursor=pointer]:
+              - img [ref=e1860]
+              - generic [ref=e1694]: El-Arabi
+              - generic [ref=e1876]:
+                - generic [ref=e1877]: FW
+                - generic [ref=e1878]: ⭐6.9
+              - button "Remove substitute" [ref=e1879]:
+                - img [ref=e1880]
+            - generic [ref=e1696] [cursor=pointer]:
+              - img [ref=e1883]
+              - generic [ref=e1699]: Barcola
+              - generic [ref=e1899]:
+                - generic [ref=e1900]: FW
+                - generic [ref=e1901]: ⭐6.9
+              - button "Remove substitute" [ref=e1902]:
+                - img [ref=e1903]
+            - generic [ref=e1701] [cursor=pointer]:
+              - img [ref=e1906]
+              - generic [ref=e1704]: Baumgartner
+              - generic [ref=e1922]:
+                - generic [ref=e1923]: MF
+                - generic [ref=e1924]: ⭐6.9
+              - button "Remove substitute" [ref=e1925]:
+                - img [ref=e1926]
+      - generic [ref=e1706]:
+        - generic [ref=e1707]:
+          - img [ref=e1709]
+          - heading "Tactics Dashboard Active" [level=5] [ref=e1712]
+          - paragraph [ref=e1713]: Click on any post or plus node on the pitch to select and assign Gorkhali roster players.
+          - button "Fill Default Stars XI" [ref=e1714] [cursor=pointer]:
+            - img [ref=e1715]
+            - generic [ref=e1718]: Fill Default Stars XI
+        - generic [ref=e1719]:
+          - generic [ref=e1720]: Team Cohesion Analytics
+          - generic [ref=e1721]:
+            - generic [ref=e1723]:
+              - generic [ref=e1724]:
+                - generic [ref=e1725]: TACTICAL CALIBRATION
+                - generic [ref=e1726]: Synergy Index
+              - generic [ref=e1727]: 53%
+            - generic [ref=e1729]:
+              - generic [ref=e1730]:
+                - generic [ref=e1731]: Base OVR Power (50% max)
+                - generic [ref=e1733]: 25%
+              - generic [ref=e1734]:
+                - generic [ref=e1735]: Role-Based Balance (25% max)
+                - generic [ref=e1737]: 14%
+              - generic [ref=e1738]:
+                - generic [ref=e1739]: Squad Club Cohesion (15% max)
+                - generic [ref=e1741]: 9%
+              - generic [ref=e1742]:
+                - generic [ref=e1743]: Bench Flexibility (10% max)
+                - generic [ref=e1745]: 5%
+          - generic [ref=e1746]:
+            - generic [ref=e1747]:
+              - generic [ref=e1748]: "Starter Average:"
+              - generic [ref=e1749]: ⭐ 7.0
+            - generic [ref=e1750]:
+              - generic [ref=e1751]: "Subs Average:"
+              - generic [ref=e1752]: ⭐ 6.9
+          - generic [ref=e1753]:
+            - generic [ref=e1754]:
+              - generic [ref=e1755]: Roster Depth
+              - generic [ref=e1756]:
+                - generic [ref=e1757]: "7"
+                - generic [ref=e1758]: / 11
+              - generic [ref=e1759]: +5/5 Subs
+            - generic [ref=e1760]:
+              - generic [ref=e1761]: Squad Worth
+              - generic [ref=e1762]: €0.0M
+              - generic [ref=e1763]: Starters + Subs
+  - contentinfo [ref=e163]:
+    - generic [ref=e164]:
+      - paragraph [ref=e165]: © 2026 FotNep • Nepal Football Prototype Hub. All rights reserved.
+      - generic [ref=e166]:
+        - generic [ref=e167] [cursor=pointer]: Privacy Policy
+        - generic [ref=e168]: ·
+        - generic [ref=e169] [cursor=pointer]: Terms of Service
+        - generic [ref=e170]: ·
+        - generic [ref=e171] [cursor=pointer]: Gorkhali Databank API
