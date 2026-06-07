@@ -575,7 +575,7 @@ export default function LineupBuilder() {
           </div>
 
           {/* VIRTUAL PITCH - Enlarged dimensions */}
-          <div className="relative w-full max-w-[880px] aspect-[100/62] bg-[#0c1c11] border-4 border-slate-800 rounded-xl overflow-hidden shadow-2xl bg-radial-gradient">
+          <div className="relative w-full max-w-[880px] aspect-[100/62] bg-[#1a3824] border-4 border-slate-800 rounded-xl overflow-hidden shadow-2xl bg-radial-gradient">
             {/* Texture Pitch Lines */}
             <div className="absolute inset-x-0 inset-y-0 opacity-15 pointer-events-none border-x border-dashed border-white/40" />
             <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white/20 -translate-x-1/2 pointer-events-none" />
@@ -644,12 +644,12 @@ export default function LineupBuilder() {
                       <div className={`w-10 h-10 rounded-full border border-dashed flex items-center justify-center transition ${
                         isSelected 
                           ? 'bg-emerald-500/20 border-emerald-400 scale-105 text-emerald-400 ring-2 ring-emerald-500/25'
-                          : 'bg-slate-950/60 border-slate-600 hover:bg-slate-900 text-slate-400 hover:border-emerald-500/40'
+                          : 'bg-slate-950/60 border-white hover:bg-slate-900 text-white hover:border-emerald-500/40'
                       }`}>
                         <Plus className="w-4 h-4 animate-pulse" />
                       </div>
                       
-                      <span className="bg-slate-950/70 border border-slate-900 px-1 py-0.5 rounded text-[8.5px] font-mono tracking-wider font-extrabold text-slate-400 mt-1">
+                      <span className="bg-slate-950/70 border border-slate-900 px-1 py-0.5 rounded text-[8.5px] font-mono tracking-wider font-extrabold text-white mt-1">
                         {slot.label}
                       </span>
                     </div>
@@ -786,7 +786,7 @@ export default function LineupBuilder() {
                 </div>
 
                 {/* Scrollable list */}
-                <div className="flex-1 overflow-y-auto max-h-[350px] divide-y divide-slate-800/45 scrollbar-thin scrollbar-thumb-slate-850">
+                <div className="overflow-y-auto max-h-[calc(100vh-290px)] divide-y divide-slate-800/45 scrollbar-thin scrollbar-thumb-slate-850">
                   {filteredPlayers.length === 0 ? (
                     <div className="p-8 text-center text-slate-600">
                       <p className="text-xs">No star match</p>
@@ -816,26 +816,22 @@ export default function LineupBuilder() {
           ) : (
             <div className="flex flex-col h-full justify-between gap-6 py-2">
               <div className="flex flex-col justify-center items-center text-center px-4 self-center my-auto">
-                <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl mb-4 text-emerald-400">
-                  <Clipboard className="w-8 h-8 text-emerald-400 mx-auto" />
-                </div>
                 <h5 className="text-sm font-extrabold text-slate-100 uppercase tracking-wider font-sans">Tactics Dashboard Active</h5>
                 <p className="text-xs text-slate-400 mt-2 max-w-[240px] leading-relaxed select-none">
-                  Click on any post or plus node on the pitch to select and assign roster players.
+                  Click on any node on the pitch to select and assign roster players.
                 </p>
                 
                 <button 
                   onClick={handleLoadDefaults}
                   className="mt-5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold font-sans text-xs px-4.5 py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-150"
                 >
-                  <Sparkles className="w-4 h-4 text-black" />
                   <span>Auto Pick XI</span>
                 </button>
               </div>
 
               {/*  Synergy & Cohesion metrics placed below Tactics Dashboard Active */}
               <div className="border-t border-slate-800/80 pt-4 space-y-4">
-                <span className="text-[10px] font-mono tracking-widest text-slate-500 font-bold uppercase block text-center">Team Cohesion Analytics</span>
+                <span className="text-[10px] font-mono tracking-widest text-white font-bold uppercase block text-center">Team Cohesion Analytics</span>
                 
                 {/* Team Synergy rating */}
                 <div className="bg-slate-950/85 border border-slate-900 rounded-xl p-4 shadow-inner relative overflow-hidden">

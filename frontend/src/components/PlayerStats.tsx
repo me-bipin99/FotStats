@@ -61,7 +61,8 @@ export default function PlayerStats() {
   const fetchPlayers = (search: string, gender: 'ALL' | 'MEN' | 'WOMEN') => {
     setLoading(true);
     const gParam = gender === 'MEN' ? 'M' : gender === 'WOMEN' ? 'F' : undefined;
-    getPlayers({ search: search || undefined, gender: gParam, limit: 100 })
+    const sourceParam: 'nepali' | undefined = gender !== 'ALL' ? 'nepali' : undefined;
+    getPlayers({ search: search || undefined, gender: gParam, source: sourceParam, limit: 100 })
       .then(({ players: fetched }) => {
         setPlayers(fetched);
         if (!selectedPlayerId && fetched.length > 0) setSelectedPlayerId(fetched[0].id);
@@ -97,7 +98,7 @@ export default function PlayerStats() {
       <div className="bg-[#151619] border border-[#202124] rounded-xl p-4 flex flex-col h-[650px]">
         <div className="mb-4">
           <h4 className="text-sm font-bold text-slate-200 tracking-wider uppercase mb-3 flex items-center gap-2">
-            <User className="w-4 h-4 text-emerald-400" />
+            
             <span>Football Stars Directory</span>
           </h4>
 
@@ -121,7 +122,7 @@ export default function PlayerStats() {
                   genderFilter === cat ? 'bg-emerald-500 text-black' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {cat === 'ALL' ? 'All' : cat === 'MEN' ? "Men's Star" : "Women's Star"}
+                {cat === 'ALL' ? 'All' : cat === 'MEN' ? "Nep Men's" : "Nep W"}
               </button>
             ))}
           </div>
@@ -232,7 +233,7 @@ export default function PlayerStats() {
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
             <div className="sm:col-span-3 bg-[#151619] border border-[#202124] rounded-xl p-5 md:p-6 shadow-xl space-y-4">
               <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-2 border-b border-slate-800 pb-2">
-                <Zap className="w-4 h-4 text-emerald-400" />
+                
                 <span>Attributes Profile Matrix</span>
               </h4>
               <div className="space-y-3.5">
@@ -253,7 +254,7 @@ export default function PlayerStats() {
             <div className="sm:col-span-2 bg-[#151619] border border-[#202124] rounded-xl p-5 md:p-6 shadow-xl flex flex-col justify-between">
               <div className="space-y-4">
                 <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-2 border-b border-slate-800 pb-2">
-                  <Award className="w-4 h-4 text-emerald-400" />
+                  
                   <span>Career Dashboard</span>
                 </h4>
                 <div className="space-y-3">

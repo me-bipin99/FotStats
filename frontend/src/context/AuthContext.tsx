@@ -32,11 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
-    const { token, user: u } = await apiRegister(email, password, name);
-    setToken(token);
-    setUser(u);
-    localStorage.setItem('FOTNEP_LOGGED_IN', u.name);
-    window.dispatchEvent(new Event('fotnep-auth-change'));
+    await apiRegister(email, password, name);
   }, []);
 
   const logout = useCallback(() => {

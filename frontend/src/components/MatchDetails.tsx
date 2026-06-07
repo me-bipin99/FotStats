@@ -190,7 +190,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
       {/* 1. Scoreline and Match Banner */}
       <div className="p-4 md:p-6 bg-gradient-to-b from-[#212228] to-[#151619] border-b border-[#202124] relative">
         <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
-          <span className="bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded flex items-center gap-1.5 border border-emerald-500/15">
+          <span className="bg-emerald-500/10 text-white font-bold px-2 py-0.5 rounded flex items-center gap-1.5 border border-emerald-500/15">
             <Award className="w-3.5 h-3.5" />
             <span className="uppercase tracking-wider">{match.competition}</span>
           </span>
@@ -290,7 +290,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
         
         <h5 className="text-[11px] uppercase font-bold tracking-widest text-slate-400 mb-4 flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-emerald-400">
+          <span className="flex items-center gap-1.5 text-white ">
             
             Crowd Consensus Prediction, Cast Your Vote!
           </span>
@@ -476,7 +476,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         {/* Algorithm 1 prediction row — shown pre-vote and post-vote for any non-finished match */}
         {match.status !== 'FINISHED' && predResult && (
           <div className="flex items-center justify-between text-[10px] text-slate-500 px-1 mt-3 pt-3 border-t border-slate-800/60">
-            <span className="font-bold uppercase tracking-wider text-emerald-600">Algorithm 1 · ML Consensus</span>
+            <span className="font-bold uppercase tracking-wider text-whitw-200 ">ML Consensus</span>
             <span className="font-mono">
               H <span className="text-emerald-400 font-bold">{Math.round(predResult.prediction.homeWinProb * 100)}%</span>
               &nbsp;· D <span className="text-slate-400 font-bold">{Math.round(predResult.prediction.drawProb * 100)}%</span>

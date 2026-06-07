@@ -28,7 +28,7 @@ The frontend is a **fully API-connected dark-themed SPA** with tab-based navigat
 
 ## Architecture
 
-```
+```text
 src/
 ├── components/            # All UI components (flat, not nested)
 │   ├── Header.tsx         # Navigation + auth via useAuth()
@@ -93,6 +93,8 @@ Auth state lives in `src/context/AuthContext.tsx` using real JWT:
 - On mount, reads `FOTNEP_TOKEN` from `localStorage`, calls `GET /auth/me`, and restores the user — session survives page refresh
 - `useAuth()` hook exposes `{ user, isLoggedIn, login, register, logout }`
 - Token is stored under key `FOTNEP_TOKEN` in localStorage
+- **`register` does NOT auto-login** — it calls the API and returns; on success `Header.tsx` switches to the sign-in tab and shows a success banner. The user must sign in manually after registering.
+- Duplicate email → backend returns 409 `"An account with this email already exists"`. Duplicate username → `"Username is already taken"`. Both surface as `authError` in the signup form.
 
 ## Types (src/types.ts)
 
@@ -107,6 +109,7 @@ MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
 ```
 
 **Lineup display logic in `MatchDetails.tsx`:**
+
 - LIVE/FINISHED: renders `match.homeLineup` / `match.awayLineup` (populated by backend from seed data)
 - UPCOMING: on mount, fetches players by teamId (`getPlayers({ teamId, source:'nepali' })`), calls `optimizeSquad` for both teams in parallel, converts result via `squadToLineup()` helper; shows "Predicting Lineup…" spinner while loading, then renders predicted XI with green "Predicted Lineup by Machine" badge
 - Falls back to "Lineups Unavailable" placeholder if ML returns no result
@@ -175,15 +178,30 @@ The active filter is highlighted in emerald. `loadingFilter` tracks which button
 
 **Pitch + bench colors:** Driven by `playerFilter === 'nep-women'` (not `isFemalePlayer()`). Nep Women filter → pink gradients for pitch bubbles and bench cards + female avatar. All Men / Nep Men → emerald. The `isFemalePlayer` helper is retained only for the synergy cohesion calculation.
 
+**"Tactics Dashboard Active" idle state:** When no slot is selected the sidebar shows this heading, a description, and the Auto Pick XI button. The icon box that previously held a `Clipboard` icon has been removed.
+
+**Drafting panel player list height:** The scrollable player list uses `max-h-[calc(100vh-290px)]` (viewport-relative) instead of a fixed `max-h-[350px]`, so it fills the available panel height on any screen size.
+
 **Drafting list deduplication:** The player picker shown when a slot is selected excludes any player already assigned to another slot on the pitch or bench. `assignedPlayerIds` (a `Set` of ids from `assignedPlayers`) is computed before filtering and used as the first filter predicate.
 
 **Position-priority sort:** When a pitch slot is selected, the picker sorts players by positional relevance first, then by rating descending within each group. Priority order per slot role (defined in `POSITION_PRIORITY` constant): FW → MF,DF,GK | MF → FW,DF,GK | DF → MF,FW,GK | GK → DF,MF,FW. Sub slots have no role constraint — sorted by rating only.
+
+### PlayerStats category filter
+
+The filter bar in `PlayerStats.tsx` has three buttons — **All**, **Nep Men's**, **Nep W** — mapped to internal state `'ALL' | 'MEN' | 'WOMEN'`.
+
+| Button    | API params                                                       |
+| --------- | ---------------------------------------------------------------- |
+| All       | `{ gender: undefined, source: undefined }` — all players         |
+| Nep Men's | `{ gender: 'M', source: 'nepali' }` — Nepali male players only   |
+| Nep W     | `{ gender: 'F', source: 'nepali' }` — Nepali female players only |
 
 ### Prediction votes
 
 `Match.predictionVotes: { home, draw, away }` stores vote counts. `MatchDetails` renders bar charts from these numbers and allows authenticated users to cast votes via `castVote()`.
 
 **Voting UX behaviour:**
+
 - On mount, `triggerPrediction` is called automatically if there are any existing votes (from any user), so Algorithm 1 shows even before the current user votes.
 - Clicking a vote button applies an **optimistic update** instantly — `voteOutcome` and `voteCounts` update in state before the API call completes, making bars animate immediately. On error the update rolls back.
 - The Algorithm 1 · ML Consensus row is rendered **outside** the voted/unvoted branch — it appears at the bottom of the prediction card for any upcoming/live match whenever `predResult` is available.

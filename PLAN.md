@@ -282,7 +282,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **Files:** `backend/src/controllers/playerController.ts`, `frontend/src/components/LineupBuilder.tsx`
 
-- [ ] **Step 1:** In `backend/src/controllers/playerController.ts` line 5, extract `source` and add it to the filter:
+- [x] **Step 1:** In `backend/src/controllers/playerController.ts` line 5, extract `source` and add it to the filter:
 
   ```typescript
   const { position, search, source, sortBy = 'eloRating', limit = '50', offset = '0' } = req.query as Record<string, string>;
@@ -292,7 +292,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
   if (source) filter.source = source;
   ```
 
-- [ ] **Step 2:** In `frontend/src/components/LineupBuilder.tsx` line 245, add `source: 'nepali'` to the fetch:
+- [x] **Step 2:** In `frontend/src/components/LineupBuilder.tsx` line 245, add `source: 'nepali'` to the fetch:
 
   ```typescript
   getPlayers({ limit: 150, source: 'nepali' })
@@ -300,7 +300,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
   Also update the `getPlayers` signature in `frontend/src/services/api.ts` if `source` is not already a param (check around line 220).
 
-- [ ] **Step 3:** Run type-check and verify in browser — "Fill Gorkhali XI" should now return Nepali players and fill all 11 positions.
+- [x] **Step 3:** Run type-check and verify in browser — "Fill Gorkhali XI" should now return Nepali players and fill all 11 positions.
 
 ---
 
@@ -308,7 +308,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **File:** `backend/src/controllers/voteController.ts`, `backend/src/routes/votes.ts`, `frontend/src/components/MatchDetails.tsx`, `frontend/src/services/api.ts`
 
-- [ ] **Step 1:** In `voteController.ts`, update `getMatchVotes` to return the calling user's vote when an auth token is present:
+- [x] **Step 1:** In `voteController.ts`, update `getMatchVotes` to return the calling user's vote when an auth token is present:
 
   ```typescript
   export async function getMatchVotes(req: AuthRequest, res: Response): Promise<void> {
@@ -322,9 +322,9 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
   }
   ```
 
-- [ ] **Step 2:** Make the route optionally authenticated (no hard 401 if no token) — use a `softAuth` middleware that calls `next()` even without a token but populates `req.userId` if one is present.
+- [x] **Step 2:** Make the route optionally authenticated (no hard 401 if no token) — use a `softAuth` middleware that calls `next()` even without a token but populates `req.userId` if one is present.
 
-- [ ] **Step 3:** In `frontend/src/services/api.ts`, update `getMatchVotes` return type to include `userVote`:
+- [x] **Step 3:** In `frontend/src/services/api.ts`, update `getMatchVotes` return type to include `userVote`:
 
   ```typescript
   export async function getMatchVotes(matchId: string): Promise<{ home_win: number; draw: number; away_win: number; userVote: string | null }> {
@@ -332,7 +332,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
   }
   ```
 
-- [ ] **Step 4:** In `frontend/src/components/MatchDetails.tsx`, restore `voteOutcome` from the API response on mount:
+- [x] **Step 4:** In `frontend/src/components/MatchDetails.tsx`, restore `voteOutcome` from the API response on mount:
 
   ```typescript
   getMatchVotes(match.id).then(data => {
@@ -341,7 +341,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
   }).catch(() => {});
   ```
 
-- [ ] **Step 5:** Run type-check. Test in browser: vote, reload, confirm "PREDICTION REGISTERED" + Algorithm 1 row still show.
+- [x] **Step 5:** Run type-check. Test in browser: vote, reload, confirm "PREDICTION REGISTERED" + Algorithm 1 row still show.
 
 ---
 
@@ -349,13 +349,13 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **File:** `frontend/src/components/MatchDetails.tsx`
 
-- [ ] **Step 1:** Import `triggerPrediction` in `MatchDetails.tsx` (it's already in `api.ts` line 331):
+- [x] **Step 1:** Import `triggerPrediction` in `MatchDetails.tsx` (it's already in `api.ts` line 331):
 
   ```typescript
   import { castVote, getMatchVotes, getPrediction, triggerPrediction, PredictionResult } from '../services/api';
   ```
 
-- [ ] **Step 2:** After a successful vote in `handleVoteChoice`, auto-trigger the prediction:
+- [x] **Step 2:** After a successful vote in `handleVoteChoice`, auto-trigger the prediction:
 
   ```typescript
   await castVote(match.id, outcomeMap[choice]);
@@ -369,7 +369,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
   } catch { /* prediction will show on next load */ }
   ```
 
-- [ ] **Step 3:** Test: vote on a match → Algorithm 1 ML Consensus row should appear immediately without needing a page reload.
+- [x] **Step 3:** Test: vote on a match → Algorithm 1 ML Consensus row should appear immediately without needing a page reload.
 
 ---
 
@@ -381,116 +381,24 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **File:** `frontend/src/context/AuthContext.tsx`
 
-- [ ] **Step 1:** Read the current `AuthContext.tsx`
-  Open: [frontend/src/context/AuthContext.tsx](frontend/src/context/AuthContext.tsx)
-
-- [ ] **Step 2:** Add token restore on mount — add this `useEffect` inside `AuthProvider`:
-
-  ```tsx
-  useEffect(() => {
-    const token = localStorage.getItem('FOTNEP_TOKEN');
-    if (!token) return;
-    // Decode payload without verification (trust our own token)
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp * 1000 > Date.now()) {
-        setToken(token);
-        // Fetch real user data from /api/v1/auth/me (Task 5.2) or reconstruct from payload
-        setUser({ id: payload.userId, email: '', name: localStorage.getItem('FOTNEP_LOGGED_IN') ?? '', reputation: 50 });
-      } else {
-        clearToken();
-      }
-    } catch {
-      clearToken();
-    }
-  }, []);
-
-  ```
-
-- [ ] **Step 3:** Run lint to verify no TypeScript errors
-
-  ```bash
-  cd frontend && npm run lint
-
-  ```
-
-- [ ] **Step 4:** Test in browser — login, refresh, confirm user stays logged in.
-
-- [ ] **Step 5: Commit**
-
-  ```bash
-  git add frontend/src/context/AuthContext.tsx
-  git commit -m "fix: persist JWT session across page refresh"
-
-  ```
+- [x] **Step 1:** Read the current `AuthContext.tsx`
+- [x] **Step 2:** Add token restore on mount — implemented via `getMe()` call in `useEffect`
+- [x] **Step 3:** Run lint — no errors
+- [x] **Step 4:** Test in browser — login, refresh, user stays logged in ✅
+- [x] **Step 5: Commit** — done
 
 ---
 
-### Task 5.2: Add GET /auth/me endpoint (optional — improves token restore)
+### Task 5.2: Add GET /auth/me endpoint
 
 **Files:** `backend/src/controllers/authController.ts`, `backend/src/routes/auth.ts`
 
-- [ ] **Step 1:** Add `me()` handler to `authController.ts`:
-
-  ```typescript
-  export async function me(req: AuthRequest, res: Response): Promise<void> {
-    const user = await User.findById(req.userId).select('email name reputation').lean();
-    if (!user) {
-      res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
-      return;
-    }
-    res.json({ id: user._id, email: user.email, name: user.name, reputation: user.reputation });
-  }
-
-  ```
-
-- [ ] **Step 2:** Mount in `routes/auth.ts`:
-
-  ```typescript
-  import { requireAuth } from '../middleware/authMiddleware';
-  import { login, register, me } from '../controllers/authController';
-  router.get('/me', requireAuth, asyncHandler(me));
-
-  ```
-
-- [ ] **Step 3:** Add `getMe()` to `frontend/src/services/api.ts`:
-
-  ```typescript
-  export async function getMe(): Promise<AuthUser> {
-    return apiFetch<AuthUser>('/auth/me');
-  }
-
-  ```
-
-- [ ] **Step 4:** Update `AuthContext.tsx` to call `getMe()` instead of reconstructing from payload (replaces Step 2 of Task 5.1):
-
-  ```tsx
-  useEffect(() => {
-    const token = localStorage.getItem('FOTNEP_TOKEN');
-    if (!token) return;
-    setToken(token);
-    getMe()
-      .then(setUser)
-      .catch(() => { clearToken(); setUser(null); });
-  }, []);
-
-  ```
-
-- [ ] **Step 5:** Run type-check and lint
-
-  ```bash
-  cd backend && npm run type-check
-  cd frontend && npm run lint
-
-  ```
-
-- [ ] **Step 6: Commit**
-
-  ```bash
-  git add backend/src/controllers/authController.ts backend/src/routes/auth.ts frontend/src/services/api.ts frontend/src/context/AuthContext.tsx
-  git commit -m "feat: add GET /auth/me + restore session on refresh"
-
-  ```
+- [x] **Step 1:** `me()` handler added to `authController.ts` (line 35)
+- [x] **Step 2:** Mounted at `GET /me` in `routes/auth.ts` with `requireAuth`
+- [x] **Step 3:** `getMe()` added to `frontend/src/services/api.ts`
+- [x] **Step 4:** `AuthContext.tsx` calls `getMe()` on mount to restore session
+- [x] **Step 5:** Type-check and lint passed
+- [x] **Step 6: Commit** — done
 
 ---
 
@@ -502,39 +410,10 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **File:** `backend/src/index.ts`
 
-- [ ] **Step 1:** Add import at top of `backend/src/index.ts`:
-
-  ```typescript
-  import rateLimit from 'express-rate-limit';
-
-  ```
-
-- [ ] **Step 2:** Add limiter before auth routes (inside `index.ts`, after middleware setup):
-
-  ```typescript
-  const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20,
-    message: { error: 'RATE_LIMITED', message: 'Too many requests, try again later' },
-  });
-  app.use('/api/v1/auth', authLimiter);
-
-  ```
-
-- [ ] **Step 3:** Verify backend still starts
-
-  ```bash
-  cd backend && PORT=3001 npm run dev
-
-  ```
-
-- [ ] **Step 4: Commit**
-
-  ```bash
-  git add backend/src/index.ts
-  git commit -m "feat: add rate limiting to auth routes"
-
-  ```
+- [x] **Step 1:** `import rateLimit from 'express-rate-limit'` added to `backend/src/index.ts` (line 6)
+- [x] **Step 2:** `authLimiter` (20 req / 15 min) mounted before auth routes (lines 27–32)
+- [x] **Step 3:** Backend starts successfully
+- [x] **Step 4: Committed**
 
 ---
 
@@ -586,35 +465,10 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **File:** `frontend/src/data/mockData.ts`
 
-- [ ] **Step 1:** Confirm nothing imports it
-
-  ```bash
-  grep -r "mockData" frontend/src --include="*.ts" --include="*.tsx"
-
-  ```
-  Expected: no output (no imports).
-
-- [ ] **Step 2:** Delete the file
-
-  ```bash
-  rm frontend/src/data/mockData.ts
-
-  ```
-
-- [ ] **Step 3:** Run lint to verify no broken imports
-
-  ```bash
-  cd frontend && npm run lint
-
-  ```
-
-- [ ] **Step 4: Commit**
-
-  ```bash
-  git add -u frontend/src/data/mockData.ts
-  git commit -m "chore: remove unused mockData.ts"
-
-  ```
+- [x] **Step 1:** Confirmed — no mockData imports in any `.ts`/`.tsx` file
+- [x] **Step 2:** `frontend/src/data/` directory deleted (does not exist)
+- [x] **Step 3:** Lint passes — no broken imports
+- [x] **Step 4: Committed**
 
 ---
 
@@ -635,39 +489,9 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **Files:** `backend/src/controllers/matchController.ts`, `backend/src/routes/matches.ts`
 
-- [ ] **Step 1:** Add `resolveMatch()` to `matchController.ts`:
-
-  ```typescript
-  export async function resolveMatch(req: AuthRequest, res: Response): Promise<void> {
-    const { result } = req.body; // 'home_win' | 'draw' | 'away_win'
-    const match = await Match.findByIdAndUpdate(
-      req.params.id,
-      { status: 'completed', result },
-      { new: true }
-    ).lean();
-    if (!match) {
-      res.status(404).json({ error: 'MATCH_NOT_FOUND', message: 'Match not found' });
-      return;
-    }
-    res.json({ match });
-  }
-
-  ```
-
-- [ ] **Step 2:** Mount in `routes/matches.ts`:
-
-  ```typescript
-  router.post('/:id/resolve', requireAuth, asyncHandler(resolveMatch));
-
-  ```
-
-- [ ] **Step 3: Commit**
-
-  ```bash
-  git add backend/src/controllers/matchController.ts backend/src/routes/matches.ts
-  git commit -m "feat: add POST /matches/:id/resolve endpoint"
-
-  ```
+- [x] **Step 1:** `resolveMatch()` implemented in `matchController.ts` (line 130) — validates result, updates match status + result, populates teams
+- [x] **Step 2:** Mounted at `POST /:id/resolve` with `requireAuth` in `routes/matches.ts`
+- [x] **Step 3: Committed**
 
 ---
 
@@ -675,37 +499,9 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 **File:** `backend/src/controllers/matchController.ts`
 
-- [ ] **Step 1:** After saving match result, trigger reputation update inside `resolveMatch()`:
-
-  ```typescript
-  // After match update:
-  const votes = await Vote.find({ matchId: req.params.id }).lean();
-  for (const vote of votes) {
-    const correct = vote.outcome === result;
-    await User.findByIdAndUpdate(vote.userId, {
-      $inc: {
-        predictionsCorrect: correct ? 1 : 0,
-        reputation: correct ? 2 : -1,
-      },
-    });
-  }
-
-  ```
-
-- [ ] **Step 2:** Run type-check
-
-  ```bash
-  cd backend && npm run type-check
-
-  ```
-
-- [ ] **Step 3: Commit**
-
-  ```bash
-  git add backend/src/controllers/matchController.ts
-  git commit -m "feat: update user reputation on match resolution"
-
-  ```
+- [x] **Step 1:** Reputation update implemented inside `resolveMatch()` — iterates all votes, increments `predictionsCorrect` (+1 if correct), `reputation` (+2 correct / -1 wrong), marks `vote.correct` flag
+- [x] **Step 2:** Type-check passed
+- [x] **Step 3: Committed**
 
 ---
 
@@ -729,10 +525,10 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | 6 | Rate limiting | ✅ Complete |
 | Admin | Dropped — admin features removed from scope | ❌ Removed |
 | 7 | Production builds | ⏳ Upcoming |
-| 8 | Cleanup | ⏳ Upcoming |
+| 8 | Cleanup | ✅ Complete (mockData deleted, security checklist is pre-deploy only) |
 | 9 | Match resolution + reputation | ✅ Complete |
 
 ---
 
 **Last Updated:** 2026-06-07
-**Current Blocker:** Phase 7 (production builds not yet verified). All E2E bugs fixed. Next: run `npm run build` in both `frontend/` and `backend/` to verify production builds pass.
+**Current Blocker:** Phase 7 (production builds not yet verified). All feature code complete. Only remaining work before deploy: run `npm run build` in both `frontend/` and `backend/`, then apply Phase 8.2 security checklist (CORS lock-down, rotate JWT_SECRET, remove demo creds from seed script).

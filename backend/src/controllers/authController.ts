@@ -19,9 +19,14 @@ export async function login(req: Request, res: Response): Promise<void> {
 
 export async function register(req: Request, res: Response): Promise<void> {
   const { email, password, name } = req.body;
-  const exists = await User.findOne({ email: email.toLowerCase() });
-  if (exists) {
-    res.status(409).json({ error: 'EMAIL_TAKEN', message: 'Email already registered' });
+  const emailExists = await User.findOne({ email: email.toLowerCase() });
+  if (emailExists) {
+    res.status(409).json({ error: 'USER_EXISTS', message: 'An account with this email already exists' });
+    return;
+  }
+  const nameExists = await User.findOne({ name });
+  if (nameExists) {
+    res.status(409).json({ error: 'USER_EXISTS', message: 'Username is already taken' });
     return;
   }
   const passwordHash = await bcrypt.hash(password, 12);

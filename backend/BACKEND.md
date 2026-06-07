@@ -54,7 +54,7 @@ src/
 ### authController.ts
 
 - `login(email, password)` → `{ token, user }`
-- `register(email, password, name)` → `{ token, user }`
+- `register(email, password, name)` → `{ token, user }` (201). 409 `USER_EXISTS` if email or username already taken (checked separately — email first, then name).
 - `me(req)` → User (requires `requireAuth` — reads `req.userId` from JWT)
 
 ### playerController.ts
@@ -206,7 +206,7 @@ ML_SERVICE_URL=http://localhost:8000
 { "error": "ERROR_CODE", "message": "Human readable message" }
 ```
 
-Key error codes: `INVALID_CREDENTIALS` · `TOKEN_MISSING` · `TOKEN_EXPIRED` · `RATE_LIMITED` · `MATCH_NOT_FOUND` · `PLAYER_NOT_FOUND` · `NO_VOTES` · `ML_UNAVAILABLE` · `INVALID_RESULT`
+Key error codes: `INVALID_CREDENTIALS` · `USER_EXISTS` · `TOKEN_MISSING` · `TOKEN_EXPIRED` · `RATE_LIMITED` · `MATCH_NOT_FOUND` · `PLAYER_NOT_FOUND` · `NO_VOTES` · `ML_UNAVAILABLE` · `INVALID_RESULT`
 
 ## Available Scripts
 

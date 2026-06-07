@@ -77,10 +77,12 @@ Full-stack analytics app for Nepali football with 3 core ML algorithms.
 
 | Layer | Status |
 | --- | --- |
-| Frontend | ✅ Implemented (dark theme, mock data — not yet API-connected) |
-| Backend | 🔧 Scaffolded (models + middleware defined — controllers need completion) |
-| ML Service | 🔧 Scaffolded (Algorithm 1 ready, 2 & 3 need DB wiring) |
-| Database | ✅ Schema defined, seed script ready |
+| Frontend | ✅ Fully API-connected (dark theme, JWT auth, all 3 algorithms wired, mockData deleted) |
+| Backend | ✅ Complete (all 8 routes, 6 controllers, rate limiting, softAuth, resolveMatch + reputation) |
+| ML Service | ✅ All 3 algorithms live (consensus, cosine similarity, ELO squad optimizer) |
+| Database | ✅ Seeded (2879 players, 8 teams, 8 matches, demo users) |
+| Production builds | ⏳ Not yet verified — `npm run build` in frontend/ and backend/ |
+| Pre-deploy security | ⏳ CORS lock-down, strong JWT_SECRET, remove demo creds from seed script |
 
 ---
 
