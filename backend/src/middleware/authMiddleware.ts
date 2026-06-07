@@ -5,6 +5,19 @@ export interface AuthRequest extends Request {
   userId?: string;
 }
 
+export function softAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const payload = jwt.verify(authHeader.slice(7), process.env.JWT_SECRET!) as { userId: string };
+      req.userId = payload.userId;
+    } catch {
+      // invalid token — continue unauthenticated
+    }
+  }
+  next();
+}
+
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {

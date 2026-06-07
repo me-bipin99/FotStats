@@ -204,7 +204,7 @@ export default function MatchFeed({
       {/* Header and Controls */}
       <div className="p-4 border-b border-[#202124] bg-[#151619]">
         <h3 className="text-sm font-sans font-semibold text-slate-200 uppercase tracking-wider mb-2.5 flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-emerald-500" />
+          
           <span>Match Fixtures</span>
         </h3>
 

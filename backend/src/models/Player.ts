@@ -16,6 +16,10 @@ export interface IPlayer extends Document {
   age: number;
   team: Schema.Types.ObjectId;
   gender: 'M' | 'F';
+  height?: number;
+  weight?: number;
+  preferredFoot?: 'Right' | 'Left' | 'Both';
+  marketValue?: number;
   stats: IPlayerStats;
   careerStats: {
     appearances: number;
@@ -37,6 +41,10 @@ const playerSchema = new Schema<IPlayer>(
     age: { type: Number },
     team: { type: Schema.Types.ObjectId, ref: 'Team' },
     gender: { type: String, enum: ['M', 'F'], default: 'M' },
+    height:        { type: Number },
+    weight:        { type: Number },
+    preferredFoot: { type: String, enum: ['Right', 'Left', 'Both'] },
+    marketValue:   { type: Number, default: 0 },
     stats: {
       pace: { type: Number, default: 50 },
       shooting: { type: Number, default: 50 },

@@ -15,6 +15,8 @@ export async function listMatches(req: Request, res: Response): Promise<void> {
     Match.find(filter)
       .populate('homeTeam')
       .populate('awayTeam')
+      .populate('homeLineup.playerId')
+      .populate('awayLineup.playerId')
       .sort({ date: -1 })
       .skip(Number(offset))
       .limit(Number(limit))

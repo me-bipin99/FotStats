@@ -229,21 +229,51 @@ const FORMATIONS: Record<string, PositionSlot[]> = {
   ],
 };
 
+const POSITION_PRIORITY: Record<string, Record<string, number>> = {
+  FW: { FW: 0, MF: 1, DF: 2, GK: 3 },
+  MF: { MF: 0, FW: 1, DF: 2, GK: 3 },
+  DF: { DF: 0, MF: 1, FW: 2, GK: 3 },
+  GK: { GK: 0, DF: 1, MF: 2, FW: 3 },
+};
+
+type PlayerFilter = 'all-men' | 'nep-men' | 'nep-women';
+
+const FILTER_LABELS: Record<PlayerFilter, string> = {
+  'all-men': 'All Men',
+  'nep-men': 'Nep Men',
+  'nep-women': 'Nep Women',
+};
+
 export default function LineupBuilder() {
   const [activeFormation, setActiveFormation] = useState<string>('4-3-3');
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
   const [assignedPlayers, setAssignedPlayers] = useState<Record<number, Player>>({});
+  const [savedLineups, setSavedLineups] = useState<Record<PlayerFilter, Record<number, Player>>>({
+    'all-men': {}, 'nep-men': {}, 'nep-women': {},
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotification, setShowNotification] = useState<string | null>(null);
+  const [playerFilter, setPlayerFilter] = useState<PlayerFilter>('nep-men');
+  const [loadingFilter, setLoadingFilter] = useState<PlayerFilter | null>(null);
 
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [autoFilling, setAutoFilling] = useState(false);
 
   const activeSlots = FORMATIONS[activeFormation];
 
+  const fetchBalancedPool = async (base: Parameters<typeof getPlayers>[0]): Promise<Player[]> => {
+    const [gks, dfs, mfs, fws] = await Promise.all([
+      getPlayers({ ...base, position: 'GK', limit: 20 }),
+      getPlayers({ ...base, position: 'DF', limit: 60 }),
+      getPlayers({ ...base, position: 'MF', limit: 75 }),
+      getPlayers({ ...base, position: 'FW', limit: 60 }),
+    ]);
+    return [...gks.players, ...dfs.players, ...mfs.players, ...fws.players];
+  };
+
   useEffect(() => {
-    getPlayers({ limit: 150 })
-      .then(({ players }) => setAllPlayers(players))
+    fetchBalancedPool({ source: 'nepali', gender: 'M' })
+      .then(players => setAllPlayers(players))
       .catch(() => {});
   }, []);
 
@@ -279,33 +309,59 @@ export default function LineupBuilder() {
     setSelectedSlotId(null);
   };
 
+  const fillLineupFromPlayers = async (players: Player[], label: string) => {
+    const result = await optimizeSquad({
+      teamId: 'nepal',
+      availablePlayerIds: players.map((p: Player) => p.id),
+      formationPreference: activeFormation,
+    });
+    const playerById: Record<string, Player> = {};
+    players.forEach((p: Player) => { playerById[p.id] = p; });
+
+    const defaults: Record<number, Player> = {};
+    result.startingXI.forEach((entry, idx) => {
+      const player = playerById[entry.playerId];
+      if (player) defaults[idx + 1] = player;
+    });
+    result.bench.slice(0, 5).forEach((entry, idx) => {
+      const player = playerById[entry.playerId];
+      if (player) defaults[idx + 12] = player;
+    });
+    setAssignedPlayers(defaults);
+    triggerAlert(`${label} · ${result.formation} · conf ${result.confidence.toFixed(0)}%`);
+  };
+
   const handleLoadDefaults = async () => {
     if (allPlayers.length === 0 || autoFilling) return;
     setAutoFilling(true);
     try {
-      const result = await optimizeSquad({
-        teamId: 'nepal',
-        availablePlayerIds: allPlayers.map((p: Player) => p.id),
-        formationPreference: activeFormation,
-      });
-      const playerById: Record<string, Player> = {};
-      allPlayers.forEach((p: Player) => { playerById[p.id] = p; });
-
-      const defaults: Record<number, Player> = {};
-      result.startingXI.forEach((entry, idx) => {
-        const player = playerById[entry.playerId];
-        if (player) defaults[idx + 1] = player;
-      });
-      result.bench.slice(0, 5).forEach((entry, idx) => {
-        const player = playerById[entry.playerId];
-        if (player) defaults[idx + 12] = player;
-      });
-      setAssignedPlayers(defaults);
-      triggerAlert(`Algorithm 3 · ${result.formation} · conf ${result.confidence.toFixed(0)}%`);
+      await fillLineupFromPlayers(allPlayers, FILTER_LABELS[playerFilter]);
     } catch {
       triggerAlert('Could not reach ML service — try again');
     } finally {
       setAutoFilling(false);
+    }
+  };
+
+  const handleFilterChange = async (filter: PlayerFilter) => {
+    if (loadingFilter || autoFilling) return;
+    // Save current lineup under the outgoing filter, restore the incoming filter's lineup
+    setSavedLineups(prev => ({ ...prev, [playerFilter]: assignedPlayers }));
+    setAssignedPlayers(savedLineups[filter]);
+    setPlayerFilter(filter);
+    setSelectedSlotId(null);
+    setLoadingFilter(filter);
+    try {
+      const base: Parameters<typeof getPlayers>[0] = {};
+      if (filter === 'nep-men') { base.source = 'nepali'; base.gender = 'M'; }
+      else if (filter === 'nep-women') { base.source = 'nepali'; base.gender = 'F'; }
+      else { base.gender = 'M'; }
+      const players = await fetchBalancedPool(base);
+      setAllPlayers(players);
+    } catch {
+      triggerAlert('Could not load players — try again');
+    } finally {
+      setLoadingFilter(null);
     }
   };
 
@@ -427,22 +483,28 @@ export default function LineupBuilder() {
       }, 0) / 10).toFixed(1)}M`
     : '€0.0M';
 
-  // Filter available players to assign
+  // Filter and sort available players to assign
   const activeSlotRole = (selectedSlotId !== null && selectedSlotId < 12)
-    ? activeSlots.find(s => s.id === selectedSlotId)?.role 
+    ? activeSlots.find(s => s.id === selectedSlotId)?.role
     : null;
-  const filteredPlayers = allPlayers.filter((p: Player) => {
-    // Only match position role of slot if needed, or allow selecting anybody
-    if (activeSlotRole && p.position !== activeSlotRole) {
-      // e.g. let users pick defenders for DF, midfielders for MF, but search filter is most useful
-    }
-    
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase();
-      return p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q) || p.position.toLowerCase().includes(q);
-    }
-    return true;
-  });
+  const assignedPlayerIds = new Set(Object.values(assignedPlayers).map((p) => (p as Player).id));
+  const filteredPlayers = allPlayers
+    .filter((p: Player) => {
+      if (assignedPlayerIds.has(p.id)) return false;
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase();
+        return p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q) || p.position.toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (activeSlotRole) {
+        const priorities = POSITION_PRIORITY[activeSlotRole];
+        const diff = (priorities[a.position] ?? 4) - (priorities[b.position] ?? 4);
+        if (diff !== 0) return diff;
+      }
+      return b.rating - a.rating;
+    });
 
   return (
     <div className="space-y-5">
@@ -482,18 +544,27 @@ export default function LineupBuilder() {
               </div>
             </div>
 
-            {/* Actions defaults reset */}
-            <div className="flex gap-2 text-xs">
-              <button
-                onClick={handleLoadDefaults}
-                disabled={autoFilling || allPlayers.length === 0}
-                className="bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-slate-800/80 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Sparkles className={`w-3.5 h-3.5 ${autoFilling ? 'animate-spin' : ''}`} />
-                <span>{autoFilling ? 'Optimizing…' : 'Fill Gorkhali XI'}</span>
-              </button>
+            {/* Player pool filter + reset */}
+            <div className="flex gap-2 text-xs items-center">
+              <div className="flex gap-1">
+                {(Object.keys(FILTER_LABELS) as PlayerFilter[]).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => handleFilterChange(f)}
+                    disabled={!!loadingFilter || autoFilling}
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                      playerFilter === f
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'
+                        : 'bg-slate-900 hover:bg-slate-850 text-slate-400 border-slate-800/80 hover:text-slate-200'
+                    }`}
+                  >
+                    {loadingFilter === f && <Sparkles className="w-3 h-3 animate-spin" />}
+                    {FILTER_LABELS[f]}
+                  </button>
+                ))}
+              </div>
 
-              <button 
+              <button
                 onClick={handleResetLineup}
                 className="bg-slate-900 hover:bg-slate-850 text-slate-400 border border-slate-850 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
               >
@@ -536,9 +607,9 @@ export default function LineupBuilder() {
                     <div className="flex flex-col items-center">
                       {/* Football Star Bubble */}
                       <div className={`relative w-11 h-11 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center font-bold text-center text-xs md:text-sm shadow-xl transition overflow-hidden group-hover:scale-105 ${
-                        isSelected 
+                        isSelected
                           ? 'bg-emerald-500 text-black border-white'
-                          : assignedPlayer.id === 'samba' || assignedPlayer.id === 'preeti'
+                          : playerFilter === 'nep-women'
                           ? 'bg-gradient-to-br from-pink-600 to-pink-500 text-white border-pink-400'
                           : 'bg-gradient-to-br from-emerald-600 to-emerald-400 text-white border-emerald-400'
                       }`}>
@@ -593,7 +664,7 @@ export default function LineupBuilder() {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 font-mono font-black rounded border border-emerald-500/20 uppercase tracking-wider">Bench</span>
-                <h4 className="text-xs font-extrabold text-slate-100 uppercase tracking-widest font-sans">Gorkhali Substitutes (Max 5)</h4>
+                <h4 className="text-xs font-extrabold text-slate-100 uppercase tracking-widest font-sans">Substitutes (Max 5)</h4>
               </div>
               <span className="text-[9.5px] text-slate-500 font-mono">Click slots below to select subs</span>
             </div>
@@ -602,7 +673,7 @@ export default function LineupBuilder() {
               {SUB_SLOTS.map((subSlot) => {
                 const assignedPlayer = assignedPlayers[subSlot.id];
                 const isSelected = selectedSlotId === subSlot.id;
-                const isFemale = assignedPlayer ? isFemalePlayer(assignedPlayer) : false;
+                const isWomen = playerFilter === 'nep-women';
 
                 return (
                   <div
@@ -612,7 +683,7 @@ export default function LineupBuilder() {
                       assignedPlayer
                         ? isSelected
                           ? 'bg-emerald-950/40 border-emerald-400 shadow-md scale-[1.02]'
-                          : isFemale
+                          : isWomen
                           ? 'bg-gradient-to-b from-pink-950/20 to-pink-950/5 border-pink-500/20 hover:border-pink-500/40'
                           : 'bg-gradient-to-b from-emerald-950/20 to-emerald-950/5 border-emerald-500/20 hover:border-emerald-500/40'
                         : isSelected
@@ -624,13 +695,13 @@ export default function LineupBuilder() {
                       <div className="w-full flex flex-col items-center relative">
                         {/* Little avatar elements matching male/female design */}
                         <div className={`w-9 h-9 rounded-full border flex items-end justify-center overflow-hidden mb-1 relative ${
-                          isFemale
+                          isWomen
                             ? 'bg-gradient-to-b from-pink-900/40 to-pink-950 border-pink-500/20'
                             : 'bg-gradient-to-b from-emerald-900/40 to-emerald-950 border-emerald-500/20'
                         }`}>
-                          <DummyPlayerAvatar 
-                            className="w-[90%] h-[90%] absolute bottom-0 object-contain drop-shadow" 
-                            gender={isFemale ? 'female' : 'male'} 
+                          <DummyPlayerAvatar
+                            className="w-[90%] h-[90%] absolute bottom-0 object-contain drop-shadow"
+                            gender={isWomen ? 'female' : 'male'}
                           />
                         </div>
 
@@ -750,7 +821,7 @@ export default function LineupBuilder() {
                 </div>
                 <h5 className="text-sm font-extrabold text-slate-100 uppercase tracking-wider font-sans">Tactics Dashboard Active</h5>
                 <p className="text-xs text-slate-400 mt-2 max-w-[240px] leading-relaxed select-none">
-                  Click on any post or plus node on the pitch to select and assign Gorkhali roster players.
+                  Click on any post or plus node on the pitch to select and assign roster players.
                 </p>
                 
                 <button 
@@ -758,11 +829,11 @@ export default function LineupBuilder() {
                   className="mt-5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold font-sans text-xs px-4.5 py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-150"
                 >
                   <Sparkles className="w-4 h-4 text-black" />
-                  <span>Fill Default Stars XI</span>
+                  <span>Auto Pick XI</span>
                 </button>
               </div>
 
-              {/* Gorkhali Synergy & Cohesion metrics placed below Tactics Dashboard Active */}
+              {/*  Synergy & Cohesion metrics placed below Tactics Dashboard Active */}
               <div className="border-t border-slate-800/80 pt-4 space-y-4">
                 <span className="text-[10px] font-mono tracking-widest text-slate-500 font-bold uppercase block text-center">Team Cohesion Analytics</span>
                 

@@ -27,6 +27,7 @@ ml-service/
 │   ├── consensus.py          # Algorithm 1: Crowd Consensus Prediction
 │   ├── player_estimator.py   # Algorithm 2: Player Performance Estimator
 │   ├── squad_optimizer.py    # Algorithm 3: Optimal Squad Generator
+│   ├── attribute_imputer.py  # Algorithm 4: Player Attribute Imputer (height/weight/foot/marketValue)
 │   ├── knn_model.py          # KNN implementation (used by Algorithm 2)
 │   ├── kmeans_model.py       # K-Means implementation (clustering)
 │   ├── naive_bayes_model.py  # Naive Bayes implementation
@@ -34,7 +35,8 @@ ml-service/
 │   └── genetic_algorithm.py  # Genetic algorithm for lineups
 ├── scripts/
 │   ├── __init__.py
-│   ├── seed_db.py            # MongoDB seeding script
+│   ├── seed_db.py            # MongoDB seeding script (calls all 4 attribute imputers)
+│   ├── train_imputer.py      # Train CatBoost market value model from CSVs → trained_models/market_value_catboost.pkl
 │   ├── train_models.py       # Train ML models on player data
 │   └── data_processor.py     # Load and process CSV data
 ├── config/
@@ -58,6 +60,36 @@ ml-service/
 ## API Endpoints
 
 All endpoints require valid request JSON. See `backend/openapi.yaml` for full spec.
+
+### POST /impute-attributes
+**Algorithm 4: Player Attribute Imputer**
+
+On-demand imputation of missing player attributes. Primary use is at seed time via `seed_db.py`; this endpoint enables single-player on-demand prediction.
+
+Input:
+```json
+{
+  "name": "Tej Tamang",
+  "nationality": "Nepali",
+  "position": "MF",
+  "age": 27,
+  "eloRating": 1612,
+  "appearances": 27,
+  "goals": 1,
+  "assists": 2,
+  "stats": { "pace": 65, "shooting": 58, "passing": 72, "dribbling": 67, "defending": 58, "physical": 62 }
+}
+```
+
+Output:
+```json
+{
+  "height": 171,
+  "weight": 71,
+  "preferredFoot": "Right",
+  "marketValue": 18400
+}
+```
 
 ### POST /predict-match
 **Algorithm 1: Crowd Consensus Prediction**
@@ -452,46 +484,30 @@ def calculate_fitness(lineup: List[str], team_id: str, all_players: List[str]) -
 
 ## Seeding Script (scripts/seed_db.py)
 
-```python
-def main():
-    """
-    Seed MongoDB with:
-    - 102 Nepali players (from /data/raw)
-    - 2780 European players (from /data/players_data-2025_2026.csv)
-    - Sample teams, matches, users, votes
-    """
-    
-    # 1. Load data
-    nepali_players = load_nepali_players('/data/raw/nepali_players.csv')
-    european_players = load_european_players('/data/players_data-2025_2026.csv')
-    
-    # 2. Calculate ELO ratings
-    for player in nepali_players + european_players:
-        player['eloRating'] = calculate_initial_elo(player)
-    
-    # 3. Create sample teams (2 Nepali teams, 5 European for comparison)
-    teams = create_sample_teams()
-    
-    # 4. Assign players to teams
-    assign_players_to_teams(nepali_players, teams)
-    
-    # 5. Create sample matches
-    matches = create_sample_matches(teams)
-    
-    # 6. Create sample users
-    users = create_sample_users()
-    
-    # 7. Create sample votes
-    votes = create_sample_votes(users, matches)
-    
-    # 8. Insert to MongoDB
-    db.players.insertMany(nepali_players + european_players)
-    db.teams.insertMany(teams)
-    db.matches.insertMany(matches)
-    db.users.insertMany(users)
-    db.votes.insertMany(votes)
-    
-    print("✓ Seeding complete")
+Run order: `seed_teams` → build `team_lookup` → `seed_players(team_lookup)` → `seed_demo_users` → `seed_matches` → `seed_indexes`.
+
+**What is auto-filled at seed time** (see `SEEDING_BENCHMARK.md` at repo root for full table):
+
+| Field | Source |
+|---|---|
+| name, position, nationality, age, gender | Raw CSV columns |
+| 6 attributes (pace/shooting/…/physical) | `_stats_from_role()` — role-template lookup + `_apply_performance_boost()` from goals/assists/appearances |
+| eloRating | `_elo_from_stats()` — avg attribute score mapped to 1600 base |
+| careerStats (appearances/goals/assists/cards) | CSV columns |
+| currentClub | CSV "Current Club" / "Squad" column (stored as plain text for display fallback) |
+| team (ObjectId ref) | `_find_team_id()` — fuzzy-matches nslTeam → currentClub → national team for squad members |
+
+**Team assignment logic** (`_find_team_id`):
+1. Try `nslTeam` → DB team (exact then partial match, strips FC/Club/Team suffixes)
+2. Try `currentClub` → DB team
+3. If player is in `nepalisquad.csv` and no club matched → assign to "Nepal National Team" (M) or "Nepal Women's National Team" (F)
+4. European players: no `team` ref (not in our DB); `currentClub` text used for display only
+
+```bash
+cd services/ml-service && source venv/bin/activate
+# First time: train CatBoost model, then seed
+python scripts/train_imputer.py   # writes trained_models/market_value_catboost.pkl
+python scripts/seed_db.py         # seeds all players with height/weight/preferredFoot/marketValue
 ```
 
 ## Environment Variables (.env)

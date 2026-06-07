@@ -40,7 +40,7 @@ src/
 │   ├── comparisons.ts   # /api/v1/compare-players
 │   └── squads.ts        # /api/v1/optimize-squad
 ├── middleware/
-│   ├── authMiddleware.ts   # requireAuth() — JWT verify → req.userId
+│   ├── authMiddleware.ts   # requireAuth() — hard 401 if no token; softAuth() — sets req.userId if token present, always calls next()
 │   └── errorHandler.ts    # standard { error, message } response
 ├── services/
 │   └── mlIntegration.ts   # predictMatch, comparePlayers, optimizeSquad → HTTP to :8000
@@ -59,8 +59,8 @@ src/
 
 ### playerController.ts
 
-- `listPlayers(position?, search?, gender?, limit, offset)` → `{ players[], total }`
-- `getPlayer(id)` → Player
+- `listPlayers(position?, search?, gender?, source?, teamId?, limit, offset)` → `{ players[], total }` — team field is populated (`{ _id, name }`); `source` filters `'nepali'|'european'`; `teamId` (ObjectId string) filters by team assignment
+- `getPlayer(id)` → Player — team fully populated
 
 ### teamController.ts
 
@@ -70,7 +70,7 @@ src/
 
 ### matchController.ts
 
-- `listMatches(status?, search?, limit, offset)` → `{ matches[], total }`
+- `listMatches(status?, search?, limit, offset)` → `{ matches[], total }` — populates homeTeam, awayTeam, homeLineup.playerId, awayLineup.playerId
 - `getMatch(id)` → Match (populates teams + lineups + voteCounts)
 - `getMatchLineups(id)` → `{ homeFormation, awayFormation, homeLineup, awayLineup }`
 - `createMatch(body)` → Match — requires `homeTeam, awayTeam, date, competition`
@@ -86,8 +86,8 @@ src/
 
 ### voteController.ts
 
-- `castVote(matchId, outcome)` → Vote — unique per user per match
-- `getMatchVotes(matchId)` → `{ home_win, draw, away_win }` counts
+- `castVote(matchId, outcome)` → Vote — unique per user per match (upserts on re-vote)
+- `getMatchVotes(matchId)` → `{ home_win, draw, away_win, userVote }` — `userVote` is the caller's outcome string or `null`; route uses `softAuth` (no 401 if unauthenticated)
 - `leaderboard(limit)` → User[] sorted by reputation desc
 
 ## Database Models
@@ -114,6 +114,10 @@ src/
   nationality: string
   age: number
   gender: 'M' | 'F'
+  height?: number                        // cm — imputed by Algorithm 4a at seed time
+  weight?: number                        // kg — imputed by Algorithm 4b at seed time
+  preferredFoot?: 'Right' | 'Left' | 'Both'  // imputed by Algorithm 4c at seed time
+  marketValue?: number                   // € — imputed by Algorithm 4d (CatBoost) at seed time
   team: Team._id
   stats: { pace, shooting, passing, dribbling, defending, physical }  // 0–100
   careerStats: { appearances, goals, assists, yellowCards, redCards }

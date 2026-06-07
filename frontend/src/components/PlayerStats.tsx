@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Player } from '../types';
 import { getPlayers } from '../services/api';
 import { User, Award, Zap, Search } from 'lucide-react';
+import { getCountryDisplay } from '../utils/nationality';
 
 const DummyPlayerAvatar = ({ className = "w-13 h-13", gender = "male" }: { className?: string; gender?: 'male' | 'female' }) => {
   if (gender === 'female') {
@@ -97,7 +98,7 @@ export default function PlayerStats() {
         <div className="mb-4">
           <h4 className="text-sm font-bold text-slate-200 tracking-wider uppercase mb-3 flex items-center gap-2">
             <User className="w-4 h-4 text-emerald-400" />
-            <span>Nepalese Stars Directory</span>
+            <span>Football Stars Directory</span>
           </h4>
 
           <div className="relative mb-3">
@@ -153,7 +154,9 @@ export default function PlayerStats() {
                     </div>
                     <div className="truncate">
                       <p className={`text-xs font-semibold ${isSelected ? 'text-emerald-400' : 'text-slate-200'}`}>{player.name}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{player.positionDetail} &bull; {player.club}</p>
+                      <p className="text-[10px] text-slate-500 truncate">
+                        {player.position} &bull; {getCountryDisplay(player.nationality).flag} {getCountryDisplay(player.nationality).code}
+                      </p>
                     </div>
                   </div>
                   <span className="font-mono text-[11px] font-bold text-slate-400">OVR {player.rating}</span>
@@ -205,16 +208,23 @@ export default function PlayerStats() {
                 <span className="text-sm font-mono font-bold text-slate-100">{selectedPlayer.age || '—'} {selectedPlayer.age ? 'Years' : ''}</span>
               </div>
               <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
-                <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Height</span>
-                <span className="text-sm font-mono font-bold text-slate-100">{selectedPlayer.height}</span>
+                <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Nationality</span>
+                {(() => {
+                  const { flag, code } = getCountryDisplay(selectedPlayer.nationality);
+                  return (
+                    <span className="text-sm font-bold text-slate-100 flex items-center justify-center gap-1.5">
+                      <span>{flag}</span><span className="font-mono">{code}</span>
+                    </span>
+                  );
+                })()}
               </div>
               <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Foot</span>
                 <span className="text-sm font-bold text-slate-100">{selectedPlayer.preferredFoot}</span>
               </div>
               <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
-                <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Est. Value</span>
-                <span className="text-sm font-mono font-bold text-amber-500">{selectedPlayer.marketValue}</span>
+                <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Height</span>
+                <span className="text-sm font-mono font-bold text-slate-100">{selectedPlayer.height}</span>
               </div>
             </div>
           </div>

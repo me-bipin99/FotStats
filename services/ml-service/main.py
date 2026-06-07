@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from models.consensus import router as consensus_router
 from models.player_estimator import router as estimator_router
 from models.squad_optimizer import router as squad_router
+from models.attribute_imputer import router as imputer_router
 
 app = FastAPI(
     title="FotNep ML Service",
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(consensus_router)
 app.include_router(estimator_router)
 app.include_router(squad_router)
+app.include_router(imputer_router)
 
 
 @app.get("/health")

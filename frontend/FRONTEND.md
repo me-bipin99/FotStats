@@ -3,6 +3,7 @@
 **Location:** `/frontend/`
 **Port:** 3000 (dev server)
 **Framework:** React 19 + TypeScript + Vite + Tailwind CSS v4
+**Favicon:** `frontend/public/football-game.png` served at `/football-game.png` (Vite `public/` root). Declared in `index.html` as `<link rel="icon" type="image/png" href="/football-game.png" />`.
 
 ## Quick Start
 
@@ -35,7 +36,7 @@ src/
 │   ├── MatchDetails.tsx   # Match scoreboard, voting, Algorithm 1 prediction
 │   ├── PlayerComparison.tsx  # Algorithm 2: side-by-side player compare
 │   ├── PlayerStats.tsx    # Live player search + stat tables
-│   └── LineupBuilder.tsx  # Algorithm 3: squad optimizer UI
+│   └── LineupBuilder.tsx  # Algorithm 3: squad optimizer UI — player pool filter + auto-fill
 ├── context/
 │   └── AuthContext.tsx    # JWT auth provider (login/register/logout + session restore)
 ├── services/
@@ -98,12 +99,29 @@ Auth state lives in `src/context/AuthContext.tsx` using real JWT:
 Key interfaces:
 
 ```typescript
-Player      // id, name, number, position, rating, attributes (pace/shooting/passing/dribbling/defending/physical)
-Team        // id, name, shorthand, color, coach, stadium
-Match       // id, category, status, homeTeam, awayTeam, predictionVotes
+Player      // id, name, number, position, nationality?, rating, attributes (pace/shooting/passing/dribbling/defending/physical)
+Team        // id, name, shorthand, color, coach, stadium, formation (e.g. '4-3-3')
+Match       // id, category, status, homeTeam, awayTeam, homeFormation, awayFormation, homeLineup?, awayLineup?, predictionVotes
 LineupPosition  // player, x, y (pitch coordinates as %)
 MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
 ```
+
+**Lineup display logic in `MatchDetails.tsx`:**
+- LIVE/FINISHED: renders `match.homeLineup` / `match.awayLineup` (populated by backend from seed data)
+- UPCOMING: on mount, fetches players by teamId (`getPlayers({ teamId, source:'nepali' })`), calls `optimizeSquad` for both teams in parallel, converts result via `squadToLineup()` helper; shows "Predicting Lineup…" spinner while loading, then renders predicted XI with green "Predicted Lineup by Machine" badge
+- Falls back to "Lineups Unavailable" placeholder if ML returns no result
+
+**Pitch coordinate utility:** `src/utils/pitchCoords.ts` — `getFormationCoords(formation, players, isHome)` maps GK→DF→MF→FW ordered players to `{x,y}` percentage coordinates. Home team occupies left half (x: 3–47%), away mirrors right (x: 53–97%). Supports `4-3-3`, `4-4-2`, `4-2-3-1`, `3-5-2`; falls back to `4-3-3`.
+
+**`Player.nationality`** is the raw string from the DB — either `"Nepali"` (Nepali players) or `"xx XXX"` format (European dataset, e.g. `"us USA"`, `"eng ENG"`). `adaptPlayer()` in `api.ts` passes it through directly. The `club` field is set to the populated team name, or `'—'` when no team is available (nationality no longer bleeds into the club field).
+
+`PlayerComparison.tsx` exposes a `shortClubName(club)` helper that strips common prefixes (`FC`, `AC`, `AS`, `RB`, `VfL`, etc.) and returns the first meaningful word — used in both the FUTCard footer and the player-picker dropdown. The dropdown hides the club token entirely when no club is available (i.e. `shortClubName` returns `''`). `PlayerStats.tsx` shows the full `player.club` string in the detail pane — no truncation.
+
+`adaptPlayer()` resolves `club` with this priority: (1) populated `team.name` from the DB ref, (2) `currentClub` raw string stored on the player document (present for both Nepali and European players from the seed CSVs), (3) `'—'` fallback. This means European players (e.g. Harry Kane → "Bayern Munich") display correctly even without a Team document in the DB.
+
+`ApiPlayer` now includes four imputed physical fields (all optional): `height` (cm), `weight` (kg), `preferredFoot` (`'Right' | 'Left' | 'Both'`), `marketValue` (€). `adaptPlayer()` surfaces them with graceful fallbacks: `height` → `"178 cm"` or `'—'`; `weight` → `"71 kg"` or `'—'`; `marketValue` → `"€18,400"` or `'—'`; `preferredFoot` → value from DB or `'Right'` default. These fields are populated at seed time by Algorithm 4 (`services/ml-service/models/attribute_imputer.py`).
+
+**`src/utils/nationality.ts`** — shared `getCountryDisplay(nationality?)` utility. Parses the raw DB nationality string and returns `{ flag: string; code: string }` — a Unicode flag emoji + 3-letter country code. Used by both `PlayerComparison.tsx` and `PlayerStats.tsx`. Special cases handled: `eng/sco/wal/nir` → 🇬🇧, `Nepali/Nepal` → 🇳🇵, standard ISO alpha-2 prefixes → emoji via Regional Indicator codepoints.
 
 ## Available Scripts
 
@@ -135,9 +153,42 @@ Players positioned with `x, y` as percentage of pitch dimensions (0–100). Home
 
 Matches have `category: 'MEN' | 'WOMEN' | 'DOMESTIC'` derived from the competition name. `MatchFeed` filters by selected category and auto-selects the first matching match.
 
+### LineupBuilder player pool filter
+
+The controls bar exposes three toggle buttons — **All Men**, **Nep Men**, **Nep Women** — that control which player pool is available for manual drafting. Each filter has its own independent lineup state. Clicking a filter (`handleFilterChange`):
+
+1. Snapshots `assignedPlayers` into `savedLineups[currentFilter]`.
+2. Restores `savedLineups[newFilter]` into `assignedPlayers` (empty `{}` on first visit).
+3. Sets `playerFilter`, clears `selectedSlotId`, fetches the new pool into `allPlayers`.
+
+`savedLineups` is `Record<PlayerFilter, Record<number, Player>>` initialised to `{}` per key. This means switching between **Nep Men** and **All Men** preserves each tab's draft independently — including any auto-fill result from "Fill Default Stars XI".
+
+**Position-balanced pool fetch (`fetchBalancedPool`):** Each filter fetches 4 parallel `getPlayers` calls — one per position — then merges the results. This guarantees GKs are always in the pool regardless of ELO distribution (the backend sorts by ELO desc, so a flat limit excluded low-ELO GKs for "All Men"). Limits: GK 20, DF 60, MF 75, FW 60.
+
+Effective query params per filter:
+
+- `all-men` → `{ gender: 'M', position: <each> }` per position bucket (all sources)
+- `nep-men` → `{ source: 'nepali', gender: 'M', position: <each> }`
+- `nep-women` → `{ source: 'nepali', gender: 'F', position: <each> }`
+
+The active filter is highlighted in emerald. `loadingFilter` tracks which button is fetching (spinner on that button only); `autoFilling` tracks Algorithm 3 separately. Both disable the filter buttons while in-progress. The sidebar "Fill Default Stars XI" button triggers Algorithm 3 (`optimizeSquad`) with the currently loaded pool and updates `assignedPlayers` for the active filter (saved on next switch).
+
+**Pitch + bench colors:** Driven by `playerFilter === 'nep-women'` (not `isFemalePlayer()`). Nep Women filter → pink gradients for pitch bubbles and bench cards + female avatar. All Men / Nep Men → emerald. The `isFemalePlayer` helper is retained only for the synergy cohesion calculation.
+
+**Drafting list deduplication:** The player picker shown when a slot is selected excludes any player already assigned to another slot on the pitch or bench. `assignedPlayerIds` (a `Set` of ids from `assignedPlayers`) is computed before filtering and used as the first filter predicate.
+
+**Position-priority sort:** When a pitch slot is selected, the picker sorts players by positional relevance first, then by rating descending within each group. Priority order per slot role (defined in `POSITION_PRIORITY` constant): FW → MF,DF,GK | MF → FW,DF,GK | DF → MF,FW,GK | GK → DF,MF,FW. Sub slots have no role constraint — sorted by rating only.
+
 ### Prediction votes
 
 `Match.predictionVotes: { home, draw, away }` stores vote counts. `MatchDetails` renders bar charts from these numbers and allows authenticated users to cast votes via `castVote()`.
+
+**Voting UX behaviour:**
+- On mount, `triggerPrediction` is called automatically if there are any existing votes (from any user), so Algorithm 1 shows even before the current user votes.
+- Clicking a vote button applies an **optimistic update** instantly — `voteOutcome` and `voteCounts` update in state before the API call completes, making bars animate immediately. On error the update rolls back.
+- The Algorithm 1 · ML Consensus row is rendered **outside** the voted/unvoted branch — it appears at the bottom of the prediction card for any upcoming/live match whenever `predResult` is available.
+- Pre-vote: live crowd vote bars (read-only preview) are shown above the vote buttons whenever `cv1 + cvX + cv2 > 0`.
+- Vote buttons are labelled **Win (1) / Draw (X) / Win (2)** — both team wins use "Win".
 
 ---
 

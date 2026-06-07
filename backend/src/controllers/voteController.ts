@@ -22,7 +22,7 @@ export async function castVote(req: AuthRequest, res: Response): Promise<void> {
   res.json({ success: true });
 }
 
-export async function getMatchVotes(req: Request, res: Response): Promise<void> {
+export async function getMatchVotes(req: AuthRequest, res: Response): Promise<void> {
   const matchObjectId = new mongoose.Types.ObjectId(req.params.matchId);
   const counts = await Vote.aggregate([
     { $match: { matchId: matchObjectId } },
@@ -30,7 +30,14 @@ export async function getMatchVotes(req: Request, res: Response): Promise<void> 
   ]);
   const votes: Record<string, number> = { home_win: 0, draw: 0, away_win: 0 };
   for (const c of counts) votes[c._id as string] = c.count;
-  res.json(votes);
+
+  let userVote: string | null = null;
+  if (req.userId) {
+    const myVote = await Vote.findOne({ matchId: matchObjectId, userId: req.userId }).lean();
+    userVote = myVote?.outcome ?? null;
+  }
+
+  res.json({ ...votes, userVote });
 }
 
 export async function getLeaderboard(req: Request, res: Response): Promise<void> {

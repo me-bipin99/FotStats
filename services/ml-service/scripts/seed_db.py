@@ -1,7 +1,9 @@
 """Seed MongoDB with all available players and demo data. Development only — remove before production."""
 import os
+import re
 import csv
 import random
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from pymongo import MongoClient
@@ -10,6 +12,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 random.seed(42)
+
+# Allow imports from ml-service/ root (models/, config/)
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from models.attribute_imputer import (
+    impute_height,
+    impute_weight,
+    impute_preferred_foot,
+    impute_market_value,
+)
+from config.model_loader import ModelLoader
+
+_mv_model = ModelLoader().get("market_value_catboost")
+if _mv_model is None:
+    print("  WARNING: market_value_catboost.pkl not found.")
+    print("           Run: python scripts/train_imputer.py  then re-run seed_db.py.")
+    print("           marketValue will use CSV data only (0 for players not in squad CSV).")
 
 DATA_DIR = Path(__file__).parent.parent.parent.parent / "data"
 NEPALI_CSV = DATA_DIR / "raw" / "nepali player stats with role and gender.csv"
@@ -108,6 +127,105 @@ def _apply_performance_boost(stats: dict, goals: int, assists: int, appearances:
     return stats
 
 
+def _build_team_lookup(db) -> dict:
+    """Case-insensitive name → _id map with stripped aliases (e.g. 'machhindra' alongside 'machhindra fc')."""
+    lookup: dict = {}
+    for t in db.teams.find():
+        name: str = t["name"]
+        tid = t["_id"]
+        lookup[name.lower()] = tid
+        stripped = re.sub(r"\b(fc|sc|ac|club|team)\b", "", name.lower()).strip()
+        if stripped and stripped != name.lower():
+            lookup[stripped] = tid
+    return lookup
+
+
+_SKIP_CLUBS = {"free agent", "nepal", "—", "-", "", "n/a"}
+
+
+def _find_team_id(club_name: str, team_lookup: dict):
+    """Return ObjectId if club_name fuzzy-matches any DB team, else None."""
+    if not club_name:
+        return None
+    key = club_name.lower().strip()
+    if key in _SKIP_CLUBS:
+        return None
+    if key in team_lookup:
+        return team_lookup[key]
+    for t_name, t_id in team_lookup.items():
+        if t_name and (t_name in key or key in t_name):
+            return t_id
+    return None
+
+
+def _distribute_unassigned_players(db):
+    """Assign Nepali players with no team to teams round-robin by position.
+    Ensures every team has enough players per position to field a full lineup.
+    """
+    team_ids = [t["_id"] for t in db.teams.find()]
+    if not team_ids:
+        return
+    for pos in ["GK", "DF", "MF", "FW"]:
+        unassigned = list(
+            db.players.find(
+                {"source": "nepali", "position": pos, "team": {"$exists": False}},
+            ).sort("eloRating", -1)
+        )
+        for i, player in enumerate(unassigned):
+            team_id = team_ids[i % len(team_ids)]
+            db.players.update_one({"_id": player["_id"]}, {"$set": {"team": team_id}})
+    total_assigned = db.players.count_documents({"source": "nepali", "team": {"$exists": True}})
+    print(f"  After distribution: {total_assigned} Nepali players have a team")
+
+
+FORMATION_SLOTS = {
+    "4-3-3":   {"GK": 1, "DF": 4, "MF": 3, "FW": 3},
+    "4-4-2":   {"GK": 1, "DF": 4, "MF": 4, "FW": 2},
+    "4-2-3-1": {"GK": 1, "DF": 4, "MF": 5, "FW": 1},
+    "3-5-2":   {"GK": 1, "DF": 3, "MF": 5, "FW": 2},
+}
+
+
+def _build_lineup(db, team_id, formation: str) -> list[dict]:
+    """Pick top players by ELO per position slot. Falls back to any nepali player if team pool is thin."""
+    slots = FORMATION_SLOTS.get(formation, FORMATION_SLOTS["4-3-3"])
+    lineup = []
+    shirt = 1
+    used_ids: set = set()
+
+    for pos, count in slots.items():
+        team_players = list(
+            db.players.find({
+                "team": team_id,
+                "position": pos,
+                "_id": {"$nin": list(used_ids)},
+            }).sort("eloRating", -1).limit(count)
+        )
+        selected = team_players
+
+        if len(selected) < count:
+            remaining = count - len(selected)
+            fill = list(
+                db.players.find({
+                    "source": "nepali",
+                    "position": pos,
+                    "_id": {"$nin": list(used_ids) + [p["_id"] for p in selected]},
+                }).sort("eloRating", -1).limit(remaining)
+            )
+            selected += fill
+
+        for p in selected:
+            lineup.append({
+                "playerId": p["_id"],
+                "position": pos,
+                "shirtNumber": shirt,
+            })
+            used_ids.add(p["_id"])
+            shirt += 1
+
+    return lineup
+
+
 def _map_euro_pos(raw: str) -> str:
     """Map European CSV compound Pos field (e.g. 'MF,FW') to GK/DF/MF/FW."""
     p = raw.upper()
@@ -129,9 +247,12 @@ def _safe_int(val, default: int = 0) -> int:
 
 # ─── Seeders ─────────────────────────────────────────────────────────────────
 
-def seed_players(db):
+def seed_players(db, team_lookup: dict):
     db.players.drop()
     players = []
+
+    nat_m_id = team_lookup.get("nepal national team")
+    nat_f_id = team_lookup.get("nepal women's national team")
 
     # --- Build name→detail lookup from nepalisquad.csv ---
     squad_lookup: dict[str, dict] = {}
@@ -171,12 +292,41 @@ def seed_players(db):
                 current_club = (sq.get("Current Club", "") or "").strip() or "Nepal"
                 nsl_team = (sq.get("NSL Team", "") or "").strip() or None
 
-                players.append({
+                # Team assignment priority:
+                # 1. NSL club match → assign to that NSL club team
+                # 2. Current club match → assign to that DB team
+                # 3. Player is in national squad → assign to national team (M/F)
+                team_id = (
+                    _find_team_id(nsl_team or "", team_lookup)
+                    or _find_team_id(current_club, team_lookup)
+                    or (nat_f_id if (gender == "F" and name.lower() in squad_lookup) else None)
+                    or (nat_m_id if (gender == "M" and name.lower() in squad_lookup) else None)
+                )
+
+                # Algorithm 4: impute missing physical attributes
+                _height = impute_height("Nepali", position)
+                _weight = impute_weight(_height, position)
+                _foot   = impute_preferred_foot(name, position)
+                if market_value == 0 and _mv_model is not None:
+                    market_value = impute_market_value(
+                        {
+                            "age": age, "position": position,
+                            "eloRating": _elo_from_stats(stats),
+                            "appearances": caps, "goals": goals, "assists": assists,
+                            **stats,
+                        },
+                        _mv_model,
+                    )
+
+                doc: dict = {
                     "name": name,
                     "position": position,
                     "nationality": "Nepali",
                     "age": age,
                     "gender": gender,
+                    "height": _height,
+                    "weight": _weight,
+                    "preferredFoot": _foot,
                     "currentClub": current_club,
                     "nslTeam": nsl_team,
                     "marketValue": market_value,
@@ -191,7 +341,10 @@ def seed_players(db):
                     "eloRating": _elo_from_stats(stats),
                     "source": "nepali",
                     "createdAt": datetime.utcnow(),
-                })
+                }
+                if team_id:
+                    doc["team"] = team_id
+                players.append(doc)
                 nepali_count += 1
     else:
         print(f"  Warning: {NEPALI_CSV} not found")
@@ -224,12 +377,30 @@ def seed_players(db):
                 for key in stats:
                     stats[key] = _clamp(stats[key] + random.randint(-6, 6))
 
+                # Algorithm 4: impute missing physical attributes
+                _height = impute_height(nation, position)
+                _weight = impute_weight(_height, position)
+                _foot   = impute_preferred_foot(name, position)
+                _euro_mv = impute_market_value(
+                    {
+                        "age": age, "position": position,
+                        "eloRating": _elo_from_stats(stats),
+                        "appearances": appearances, "goals": goals, "assists": assists,
+                        **stats,
+                    },
+                    _mv_model,
+                )
+
                 players.append({
                     "name": name,
                     "position": position,
                     "nationality": nation,
                     "age": age,
                     "gender": "M",
+                    "height": _height,
+                    "weight": _weight,
+                    "preferredFoot": _foot,
+                    "marketValue": _euro_mv,
                     "currentClub": squad,
                     "competition": comp,
                     "stats": stats,
@@ -297,18 +468,22 @@ def seed_matches(db):
                result=None, votes=None):
         h, a = t.get(home), t.get(away)
         if not h or not a:
+            print(f"  Warning: team not found — {home!r} or {away!r}")
             return None
+        home_lineup = _build_lineup(db, h, hf) if status != "upcoming" else []
+        away_lineup = _build_lineup(db, a, af) if status != "upcoming" else []
         return {
             "homeTeam": h, "awayTeam": a,
             "date": now + timedelta(days=days),
             "competition": comp, "status": status, "venue": venue,
-            "homeLineup": [], "awayLineup": [],
+            "homeLineup": home_lineup, "awayLineup": away_lineup,
             "homeFormation": hf, "awayFormation": af,
             **({"result": result} if result else {}),
             "voteCounts": votes or {"home_win": 0, "draw": 0, "away_win": 0},
         }
 
     matches_raw = [
+        # 5 upcoming matches — lineups empty, ML predicts on frontend load
         match("Nepal National Team", "Machhindra FC",
               "SAFF Championship", 3, "upcoming", "Dashrath Rangasala",
               "4-3-3", "4-4-2"),
@@ -324,6 +499,12 @@ def seed_matches(db):
         match("Nepal Women's National Team", "Nepal National Team",
               "SAFF Women's Championship", 5, "upcoming", "Dashrath Rangasala",
               "4-4-2", "4-3-3"),
+        # 1 live match — lineup populated from team players
+        match("Nepal National Team", "APF FC",
+              "Martyr's Memorial A-Division League", 0, "live",
+              "Dashrath Rangasala", "4-3-3", "4-3-3",
+              votes={"home_win": 18, "draw": 5, "away_win": 7}),
+        # 3 completed matches — lineups populated
         match("Manang Marshyangdi Club", "Nepal National Team",
               "A-Division League", -5, "completed", "Halchowk Stadium",
               "4-3-3", "4-3-3",
@@ -344,6 +525,10 @@ def seed_matches(db):
     valid = [m for m in matches_raw if m]
     db.matches.insert_many(valid)
     print(f"  Inserted {len(valid)} matches")
+    for m in valid:
+        hc = len(m.get("homeLineup", []))
+        ac = len(m.get("awayLineup", []))
+        print(f"    {m['status']:9s}  home lineup: {hc} players  away: {ac}")
 
 
 def seed_demo_users(db):
@@ -378,8 +563,12 @@ if __name__ == "__main__":
     db = get_db()
     print("Seeding teams...")
     seed_teams(db)
+    team_lookup = _build_team_lookup(db)
+    print(f"  Team lookup: {list(team_lookup.keys())}")
     print("Seeding players...")
-    seed_players(db)
+    seed_players(db, team_lookup)
+    print("Distributing unassigned Nepali players to teams...")
+    _distribute_unassigned_players(db)
     print("Seeding users...")
     seed_demo_users(db)
     print("Seeding matches...")

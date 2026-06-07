@@ -10,6 +10,7 @@ export interface Team {
   coach: string;
   stadium: string;
   stadiumCapacity: string;
+  formation: string; // e.g. '4-3-3'
 }
 
 export interface PlayerAttributes {
@@ -29,6 +30,7 @@ export interface Player {
   number: number;
   position: 'GK' | 'DF' | 'MF' | 'FW';
   positionDetail: string; // e.g. 'Center Back', 'Striker', 'Central Midfielder'
+  nationality?: string; // raw string from DB e.g. "Nepali", "us USA", "fr FRA"
   rating: number; // standard Match rating out of 10, e.g. 7.4
   age: number;
   height: string;
@@ -81,6 +83,8 @@ export interface Match {
   awayTeam: Team;
   homeScore?: number;
   awayScore?: number;
+  homeFormation: string; // e.g. '4-3-3'
+  awayFormation: string;
   stats?: MatchStats;
   homeLineup?: TeamLineup;
   awayLineup?: TeamLineup;

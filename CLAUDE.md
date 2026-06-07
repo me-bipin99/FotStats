@@ -44,6 +44,7 @@ Do not ask the user "what should I work on?" — the answer is in PLAN.md.
 - `PLAN.md` — task tracking, phase status, blockers (single source of truth for what to do next)
 - `CLAUDE.md` — AI guidance, architecture overview, commands
 - `ALGORITHMS.md` — algorithm math and logic
+- `SEEDING_BENCHMARK.md` — field-by-field table: auto-filled vs ML-predicted vs missing; re-seed checklist
 - `backend/BACKEND.md` — backend controller/route/model API reference
 - `frontend/FRONTEND.md` — component and flow reference
 - `frontend/FIGMA_AI_CONTEXT.md` — Figma design specification (do not modify unless UI changes)

@@ -1,4 +1,5 @@
-import type { Match, Player, Team } from '../types';
+import type { Match, Player, Team, TeamLineup } from '../types';
+import { getFormationCoords } from '../utils/pitchCoords';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api/v1';
 const TOKEN_KEY = 'FOTNEP_TOKEN';
@@ -22,6 +23,11 @@ export interface ApiPlayer {
   age: number;
   gender: 'M' | 'F';
   team?: ApiTeam | string;
+  currentClub?: string;
+  height?: number;
+  weight?: number;
+  preferredFoot?: 'Right' | 'Left' | 'Both';
+  marketValue?: number;
   stats: ApiPlayerStats;
   careerStats: {
     appearances: number;
@@ -126,29 +132,33 @@ export function adaptTeam(t: ApiTeam): Team {
     coach: t.coach || '—',
     stadium: t.stadium || '—',
     stadiumCapacity: '—',
+    formation: t.formation || '4-3-3',
   };
 }
 
 export function adaptPlayer(p: ApiPlayer): Player {
   const teamName =
-    p.team && typeof p.team === 'object' ? (p.team as ApiTeam).name : p.nationality || 'Nepal';
+    p.team && typeof p.team === 'object'
+      ? (p.team as ApiTeam).name
+      : p.currentClub || '—';
   return {
     id: p._id,
     name: p.name,
     number: 0,
     position: p.position,
     positionDetail: p.position,
+    nationality: p.nationality,
     rating: Math.min(Math.round((p.eloRating / 240) * 10) / 10, 10),
     age: p.age || 0,
-    height: '—',
-    weight: '—',
-    marketValue: '—',
+    height: p.height ? `${p.height} cm` : '—',
+    weight: p.weight ? `${p.weight} kg` : '—',
+    marketValue: p.marketValue ? `€${p.marketValue.toLocaleString()}` : '—',
     goals: p.careerStats.goals,
     assists: p.careerStats.assists,
     matchesPlayed: p.careerStats.appearances,
     yellowCards: p.careerStats.yellowCards,
     redCards: p.careerStats.redCards,
-    preferredFoot: 'Right',
+    preferredFoot: p.preferredFoot ?? 'Right',
     club: teamName,
     attributes: {
       pace: p.stats.pace,
@@ -161,11 +171,52 @@ export function adaptPlayer(p: ApiPlayer): Player {
   };
 }
 
+function adaptLineup(
+  entries: { playerId: ApiPlayer | string; position: string; shirtNumber: number }[],
+  formation: string,
+  isHome: boolean,
+): TeamLineup | undefined {
+  const populated = entries.filter(
+    (e): e is typeof e & { playerId: ApiPlayer } =>
+      typeof e.playerId === 'object' && e.playerId !== null,
+  );
+  if (populated.length === 0) return undefined;
+
+  const ordered = [...populated].sort((a, b) => {
+    const order = { GK: 0, DF: 1, MF: 2, FW: 3 };
+    return (order[a.position as keyof typeof order] ?? 4) - (order[b.position as keyof typeof order] ?? 4);
+  });
+
+  const positioned = ordered.map((e) => ({
+    player: adaptPlayer(e.playerId as ApiPlayer),
+    position: e.position as 'GK' | 'DF' | 'MF' | 'FW',
+    shirtNumber: e.shirtNumber,
+  }));
+
+  const coords = getFormationCoords(
+    formation,
+    positioned.map((p) => ({ position: p.position })),
+    isHome,
+  );
+
+  return {
+    formation,
+    starters: positioned.map((p, i) => ({
+      player: { ...p.player, number: p.shirtNumber },
+      x: coords[i].x,
+      y: coords[i].y,
+    })),
+    substitutes: [],
+  };
+}
+
 export function adaptMatch(m: ApiMatch): Match {
   const d = new Date(m.date);
   const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   const votes = m.voteCounts ?? { home_win: 0, draw: 0, away_win: 0 };
+  const hf = m.homeFormation || '4-3-3';
+  const af = m.awayFormation || '4-3-3';
   return {
     id: m._id,
     category: deriveCategory(m.competition),
@@ -178,6 +229,10 @@ export function adaptMatch(m: ApiMatch): Match {
     awayTeam: adaptTeam(m.awayTeam),
     homeScore: m.result?.homeScore,
     awayScore: m.result?.awayScore,
+    homeFormation: hf,
+    awayFormation: af,
+    homeLineup: adaptLineup(m.homeLineup, hf, true),
+    awayLineup: adaptLineup(m.awayLineup, af, false),
     predictionVotes: {
       home: votes.home_win,
       draw: votes.draw,
@@ -221,6 +276,8 @@ export async function getPlayers(params?: {
   position?: string;
   search?: string;
   gender?: 'M' | 'F';
+  source?: 'nepali' | 'european';
+  teamId?: string;
   limit?: number;
   offset?: number;
 }): Promise<{ players: Player[]; total: number }> {
@@ -228,6 +285,8 @@ export async function getPlayers(params?: {
   if (params?.position) qs.set('position', params.position);
   if (params?.search) qs.set('search', params.search);
   if (params?.gender) qs.set('gender', params.gender);
+  if (params?.source) qs.set('source', params.source);
+  if (params?.teamId) qs.set('teamId', params.teamId);
   if (params?.limit) qs.set('limit', String(params.limit));
   if (params?.offset) qs.set('offset', String(params.offset));
   const raw = await request<{ players: ApiPlayer[]; total: number }>(`/players?${qs}`);
@@ -318,7 +377,7 @@ export async function castVote(matchId: string, outcome: 'home_win' | 'draw' | '
   await request('/votes', { method: 'POST', body: JSON.stringify({ matchId, outcome }) });
 }
 
-export async function getMatchVotes(matchId: string): Promise<{ home_win: number; draw: number; away_win: number }> {
+export async function getMatchVotes(matchId: string): Promise<{ home_win: number; draw: number; away_win: number; userVote: string | null }> {
   return request(`/votes/${matchId}`);
 }
 

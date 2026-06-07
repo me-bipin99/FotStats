@@ -1,11 +1,63 @@
 import { useState, useEffect } from 'react';
-import { Match, Player } from '../types';
+import { Match, Player, TeamLineup } from '../types';
 import {
   MapPin, Users, Calendar, AlertCircle, Info,
-  CheckCircle2, Award, Flame, Check
+  CheckCircle2, Award, Flame, Check, Loader2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { castVote, getMatchVotes, getPrediction, PredictionResult } from '../services/api';
+import {
+  castVote, getMatchVotes, getPrediction, triggerPrediction, PredictionResult,
+  getPlayers, optimizeSquad, SquadResult,
+} from '../services/api';
+import { getFormationCoords } from '../utils/pitchCoords';
+
+function squadToLineup(squad: SquadResult, playerPool: Player[], isHome: boolean): TeamLineup {
+  const byId = Object.fromEntries(playerPool.map((p) => [p.id, p]));
+
+  const ordered = [...squad.startingXI].sort((a, b) => {
+    const order = { GK: 0, DF: 1, MF: 2, FW: 3 };
+    return (order[a.position as keyof typeof order] ?? 4) - (order[b.position as keyof typeof order] ?? 4);
+  });
+
+  const starters = ordered.map((xi, i) => ({
+    player: byId[xi.playerId]
+      ? { ...byId[xi.playerId], number: i + 1 }
+      : {
+          id: xi.playerId, name: xi.playerName, number: i + 1,
+          position: xi.position as 'GK' | 'DF' | 'MF' | 'FW',
+          positionDetail: xi.position, rating: 6.5, age: 0,
+          height: '—', weight: '—', marketValue: '—',
+          goals: 0, assists: 0, matchesPlayed: 0,
+          yellowCards: 0, redCards: 0, preferredFoot: 'Right' as const,
+          club: '—',
+          attributes: { pace: 60, shooting: 60, passing: 60, dribbling: 60, defending: 60, physical: 60 },
+        },
+    position: xi.position as 'GK' | 'DF' | 'MF' | 'FW',
+  }));
+
+  const coords = getFormationCoords(
+    squad.formation,
+    starters.map((s) => ({ position: s.position })),
+    isHome,
+  );
+
+  return {
+    formation: squad.formation,
+    starters: starters.map((s, i) => ({ player: s.player, x: coords[i].x, y: coords[i].y })),
+    substitutes: squad.bench.map((b) =>
+      byId[b.playerId] ?? {
+        id: b.playerId, name: b.playerName, number: 0,
+        position: b.position as 'GK' | 'DF' | 'MF' | 'FW',
+        positionDetail: b.position, rating: 6.0, age: 0,
+        height: '—', weight: '—', marketValue: '—',
+        goals: 0, assists: 0, matchesPlayed: 0,
+        yellowCards: 0, redCards: 0, preferredFoot: 'Right' as const,
+        club: '—',
+        attributes: { pace: 60, shooting: 60, passing: 60, dribbling: 60, defending: 60, physical: 60 },
+      }
+    ),
+  };
+}
 
 interface MatchDetailsProps {
   match: Match;
@@ -23,16 +75,66 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
   const [voteCounts, setVoteCounts] = useState({ home_win: 0, draw: 0, away_win: 0 });
   const [predResult, setPredResult] = useState<PredictionResult | null>(null);
   const [voting, setVoting] = useState(false);
+  const [predictedHome, setPredictedHome] = useState<TeamLineup | null>(null);
+  const [predictedAway, setPredictedAway] = useState<TeamLineup | null>(null);
+  const [lineupLoading, setLineupLoading] = useState(false);
 
   useEffect(() => {
     setVoteOutcome(null);
+    setPredResult(null);
     getMatchVotes(match.id)
-      .then(counts => setVoteCounts(counts))
+      .then(data => {
+        setVoteCounts({ home_win: data.home_win, draw: data.draw, away_win: data.away_win });
+        if (data.userVote) setVoteOutcome(data.userVote as 'home_win' | 'draw' | 'away_win');
+        // Trigger prediction whenever votes exist, even before user casts one
+        if (data.home_win + data.draw + data.away_win > 0) {
+          triggerPrediction(match.id).then(setPredResult).catch(() => {});
+        }
+      })
       .catch(() => {});
     getPrediction(match.id)
       .then(result => { if (result) setPredResult(result); })
       .catch(() => {});
   }, [match.id]);
+
+  useEffect(() => {
+    if (match.status !== 'UPCOMING') return;
+    setPredictedHome(null);
+    setPredictedAway(null);
+    setLineupLoading(true);
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [{ players: homePlayers }, { players: awayPlayers }] = await Promise.all([
+          getPlayers({ teamId: match.homeTeam.id, source: 'nepali', limit: 50 }),
+          getPlayers({ teamId: match.awayTeam.id, source: 'nepali', limit: 50 }),
+        ]);
+
+        const homeIds = homePlayers.map((p) => p.id);
+        const awayIds = awayPlayers.map((p) => p.id);
+
+        const [homeSquad, awaySquad] = await Promise.all([
+          homeIds.length
+            ? optimizeSquad({ teamId: match.homeTeam.id, availablePlayerIds: homeIds, formationPreference: match.homeFormation })
+            : Promise.resolve(null),
+          awayIds.length
+            ? optimizeSquad({ teamId: match.awayTeam.id, availablePlayerIds: awayIds, formationPreference: match.awayFormation })
+            : Promise.resolve(null),
+        ]);
+
+        if (cancelled) return;
+        if (homeSquad) setPredictedHome(squadToLineup(homeSquad, homePlayers, true));
+        if (awaySquad) setPredictedAway(squadToLineup(awaySquad, awayPlayers, false));
+      } catch {
+        // silently fall through — pitch shows unavailable placeholder
+      } finally {
+        if (!cancelled) setLineupLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [match.id, match.status, match.homeTeam.id, match.awayTeam.id, match.homeFormation, match.awayFormation]);
 
   const userVote: '1' | 'X' | '2' | null =
     voteOutcome === 'home_win' ? '1' : voteOutcome === 'draw' ? 'X' : voteOutcome === 'away_win' ? '2' : null;
@@ -48,14 +150,20 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
   const handleVoteChoice = async (choice: '1' | 'X' | '2') => {
     if (!loggedInUser || voteOutcome || voting) return;
     const outcomeMap = { '1': 'home_win', 'X': 'draw', '2': 'away_win' } as const;
+    const outcome = outcomeMap[choice];
+    // Optimistic update — bars respond immediately
+    setVoteOutcome(outcome);
+    setVoteCounts(prev => ({ ...prev, [outcome]: prev[outcome] + 1 }));
     setVoting(true);
     try {
-      await castVote(match.id, outcomeMap[choice]);
-      setVoteOutcome(outcomeMap[choice]);
-      const counts = await getMatchVotes(match.id);
-      setVoteCounts(counts);
+      await castVote(match.id, outcome);
+      const data = await getMatchVotes(match.id);
+      setVoteCounts({ home_win: data.home_win, draw: data.draw, away_win: data.away_win });
+      triggerPrediction(match.id).then(setPredResult).catch(() => {});
     } catch {
-      // silently fail — user can retry
+      // Roll back optimistic update
+      setVoteOutcome(null);
+      setVoteCounts(prev => ({ ...prev, [outcome]: Math.max(0, prev[outcome] - 1) }));
     } finally {
       setVoting(false);
     }
@@ -72,6 +180,10 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
   const isPlayerSelected = (playerId: string) => {
     return selectedPlayers.some((p) => p.id === playerId);
   };
+
+  const homeLineup = match.homeLineup ?? predictedHome;
+  const awayLineup = match.awayLineup ?? predictedAway;
+  const isPredicted = match.status === 'UPCOMING' && !match.homeLineup;
 
   return (
     <div className="bg-[#151619] border border-slate-800/60 rounded-xl overflow-hidden shadow-xl flex flex-col h-full">
@@ -179,8 +291,8 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         
         <h5 className="text-[11px] uppercase font-bold tracking-widest text-slate-400 mb-4 flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-emerald-400">
-            <Flame className="w-4 h-4 text-emerald-500 animate-pulse" />
-            Who Will Win? Prediction Vote
+            
+            Crowd Consensus Prediction, Cast Your Vote!
           </span>
           <span className="text-[10px] text-slate-500 font-mono">
             Total casts: {totalCrowdVotes.toLocaleString()}
@@ -279,17 +391,6 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               <div className="bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 rounded-lg text-[10.5px] text-slate-300">
                 You predicted <strong>{userVote === '1' ? match.homeTeam.name : userVote === '2' ? match.awayTeam.name : 'Draw'}</strong> to win. Accuracy weight applied.
               </div>
-              {predResult && (
-                <div className="flex items-center justify-between text-[10px] text-slate-500 px-1">
-                  <span className="font-bold uppercase tracking-wider text-emerald-600">Algorithm 1 · ML Consensus</span>
-                  <span className="font-mono">
-                    H <span className="text-emerald-400 font-bold">{Math.round(predResult.prediction.homeWinProb * 100)}%</span>
-                    &nbsp;· D <span className="text-slate-400 font-bold">{Math.round(predResult.prediction.drawProb * 100)}%</span>
-                    &nbsp;· A <span className="text-rose-400 font-bold">{Math.round(predResult.prediction.awayWinProb * 100)}%</span>
-                    &nbsp;· conf <span className="text-amber-400 font-bold">{predResult.confidence.toFixed(0)}%</span>
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         ) : (
@@ -301,7 +402,37 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 <span>Please <strong>Sign In</strong> from the top navbar profile menu to register your prediction vote.</span>
               </div>
             )}
-            
+
+            {/* Live crowd vote preview — visible before user casts */}
+            {(cv1 + cvX + cv2) > 0 && (
+              <div className="grid grid-cols-[1fr_80px_1fr] gap-2 items-center px-1">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-mono font-bold">
+                    <span className="text-slate-350 truncate">{match.homeTeam.shorthand}</span>
+                    <span className="text-emerald-450">{pc1}%</span>
+                  </div>
+                  <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-emerald-500 h-full transition-all duration-700" style={{ width: `${pc1}%` }} />
+                  </div>
+                </div>
+                <div className="space-y-1 text-center font-bold">
+                  <span className="text-[10.5px] font-mono block text-slate-400">{pcX}% Draw</span>
+                  <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-slate-600 h-full transition-all duration-700 mx-auto" style={{ width: `${pcX}%` }} />
+                  </div>
+                </div>
+                <div className="space-y-1 text-right">
+                  <div className="flex justify-between text-[11px] font-mono font-bold flex-row-reverse">
+                    <span className="text-slate-350 truncate">{match.awayTeam.shorthand}</span>
+                    <span className="text-rose-450">{pc2}%</span>
+                  </div>
+                  <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-rose-500 h-full transition-all duration-700 ml-auto" style={{ width: `${pc2}%` }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-3">
               {/* Home win */}
               <button
@@ -333,12 +464,25 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 disabled={!loggedInUser || !!voting}
                 className="bg-[#1c1214] border border-rose-500/15 hover:border-rose-500/40 disabled:opacity-40 disabled:hover:border-rose-500/15 p-3.5 rounded-xl hover:bg-rose-500/10 text-center transition-all cursor-pointer group active:scale-95"
               >
-                <div className="text-[10px] font-mono text-rose-400 uppercase tracking-widest mb-1 font-bold font-mono">Loss (2)</div>
+                <div className="text-[10px] font-mono text-rose-400 uppercase tracking-widest mb-1 font-bold font-mono">Win (2)</div>
                 <div className="text-xs font-black text-slate-200 truncate group-hover:text-white">
                   {match.awayTeam.shorthand}
                 </div>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Algorithm 1 prediction row — shown pre-vote and post-vote for any non-finished match */}
+        {match.status !== 'FINISHED' && predResult && (
+          <div className="flex items-center justify-between text-[10px] text-slate-500 px-1 mt-3 pt-3 border-t border-slate-800/60">
+            <span className="font-bold uppercase tracking-wider text-emerald-600">Algorithm 1 · ML Consensus</span>
+            <span className="font-mono">
+              H <span className="text-emerald-400 font-bold">{Math.round(predResult.prediction.homeWinProb * 100)}%</span>
+              &nbsp;· D <span className="text-slate-400 font-bold">{Math.round(predResult.prediction.drawProb * 100)}%</span>
+              &nbsp;· A <span className="text-rose-400 font-bold">{Math.round(predResult.prediction.awayWinProb * 100)}%</span>
+              &nbsp;· conf <span className="text-amber-400 font-bold">{predResult.confidence.toFixed(0)}%</span>
+            </span>
           </div>
         )}
       </div>
@@ -387,7 +531,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         {/* TAB 1: TACTICAL LINEUP (HORIZONTALLY RENDERED PITCH) */}
         {activeTab === 'lineup' && (
           <div className="space-y-4 animate-fadeIn">
-            {match.homeLineup && match.awayLineup ? (
+            {homeLineup && awayLineup ? (
               <>
                 {/* Horizontal Pitch Wrapper inside Elegant Slate framework */}
                 <div className="relative aspect-[16/9] w-full bg-[#0A0B0E] border-2 border-slate-800 rounded-xl overflow-hidden shadow-inner group">
@@ -418,15 +562,15 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   {/* Helper indicators overlay */}
                   <div className="absolute top-2.5 left-3.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>{match.homeTeam.shorthand} ({match.homeLineup.formation})</span>
+                    <span>{match.homeTeam.shorthand} ({homeLineup.formation})</span>
                   </div>
                   <div className="absolute top-2.5 right-3.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 justify-end">
-                    <span>{match.awayTeam.shorthand} ({match.awayLineup.formation})</span>
+                    <span>{match.awayTeam.shorthand} ({awayLineup.formation})</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                   </div>
 
                   {/* Home Team Players nodes on Left half of pitch */}
-                  {match.homeLineup.starters.map(({ player, x, y }) => {
+                  {homeLineup.starters.map(({ player, x, y }) => {
                     const isSel = isPlayerSelected(player.id);
                     return (
                       <div
@@ -471,7 +615,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   })}
 
                   {/* Away Team Players nodes on Right half of pitch */}
-                  {match.awayLineup.starters.map(({ player, x, y }) => {
+                  {awayLineup.starters.map(({ player, x, y }) => {
                     const isSel = isPlayerSelected(player.id);
                     return (
                       <div
@@ -516,7 +660,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   })}
 
                   {/* Predicted Lineup Indicator centered at the bottom of the pitch container */}
-                  {match.status !== 'FINISHED' && (
+                  {isPredicted && (
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       Predicted Lineup by Machine
@@ -555,6 +699,12 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   </div>
                 )}
               </>
+            ) : lineupLoading ? (
+              <div className="py-12 text-center text-slate-500 border border-slate-850 border-dashed rounded-xl">
+                <Loader2 className="w-7 h-7 text-emerald-500 mx-auto mb-2 animate-spin" />
+                <p className="text-sm font-semibold text-slate-300">Predicting Lineup...</p>
+                <p className="text-xs text-slate-500 mt-1">Machine is selecting the optimal XI from available players.</p>
+              </div>
             ) : (
               <div className="py-12 text-center text-slate-500 border border-slate-850 border-dashed rounded-xl">
                 <Info className="w-8 h-8 text-slate-600 mx-auto mb-2" />

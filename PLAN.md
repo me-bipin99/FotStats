@@ -72,6 +72,10 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | Frontend | `context/AuthContext.tsx` — JWT restore on page refresh | ✅ Done | Phase 5.1 |
 | Frontend | `data/mockData.ts` — file deletion | ✅ Done | Phase 8.1 |
 | Verification | E2E browser smoke test (all 3 algorithms) | ✅ Done (3 bugs found) | Phase 4 |
+| Backend | `playerController.ts` — add `source` filter to `listPlayers` | ✅ Done | Phase 4-fix |
+| Frontend | `LineupBuilder.tsx` — pass `source:'nepali'` to `getPlayers` | ✅ Done | Phase 4-fix |
+| Frontend | `MatchDetails.tsx` — restore `userVote` on reload from API | ✅ Done | Phase 4-fix |
+| Frontend | `MatchDetails.tsx` — auto-trigger `triggerPrediction()` after vote | ✅ Done | Phase 4-fix |
 | Builds | `npm run build` frontend + backend | ❌ Not verified | Phase 7 |
 
 ---
@@ -267,6 +271,105 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 - [x] **Step 1:** Click "Lineups" tab. ✅ Pitch diagram, formation selector, bench, Synergy Index panel load.
 - [x] **Step 2:** Click "Fill Gorkhali XI". ⚠️ `POST /optimize-squad` → 200; 7 of 11 positions filled (LW, ST, RCM, RW empty). Players shown are Europeans (Kane, Herrmann, etc.) not Nepali — root cause: `listPlayers` in `playerController.ts` ignores `?source=` param; LineupBuilder passes all 150 IDs (mixed pool); ML picks highest-ELO = Europeans. Fix: add `if (source) filter.source = source;` to backend, pass `source:'nepali'` in `getPlayers` call.
 - [x] **Step 3:** Change formation 4-3-3 → 3-5-2. ✅ Pitch rearranges immediately to correct slot layout; Synergy Index resets to 0% (expected on draft clear).
+
+---
+
+## Phase 4-fix — E2E Bug Fixes (found during smoke test)
+
+> Three bugs uncovered during Phase 4 browser verification. Fix these before Phase 7 production builds.
+
+### Fix 1: `listPlayers` ignores `?source=` filter → "Fill Gorkhali XI" returns Europeans
+
+**Files:** `backend/src/controllers/playerController.ts`, `frontend/src/components/LineupBuilder.tsx`
+
+- [ ] **Step 1:** In `backend/src/controllers/playerController.ts` line 5, extract `source` and add it to the filter:
+
+  ```typescript
+  const { position, search, source, sortBy = 'eloRating', limit = '50', offset = '0' } = req.query as Record<string, string>;
+  const filter: Record<string, unknown> = {};
+  if (position) filter.position = position;
+  if (search) filter.name = { $regex: search, $options: 'i' };
+  if (source) filter.source = source;
+  ```
+
+- [ ] **Step 2:** In `frontend/src/components/LineupBuilder.tsx` line 245, add `source: 'nepali'` to the fetch:
+
+  ```typescript
+  getPlayers({ limit: 150, source: 'nepali' })
+  ```
+
+  Also update the `getPlayers` signature in `frontend/src/services/api.ts` if `source` is not already a param (check around line 220).
+
+- [ ] **Step 3:** Run type-check and verify in browser — "Fill Gorkhali XI" should now return Nepali players and fill all 11 positions.
+
+---
+
+### Fix 2: `userVote` not restored on page reload → Algorithm 1 Consensus row never shows after refresh
+
+**File:** `backend/src/controllers/voteController.ts`, `backend/src/routes/votes.ts`, `frontend/src/components/MatchDetails.tsx`, `frontend/src/services/api.ts`
+
+- [ ] **Step 1:** In `voteController.ts`, update `getMatchVotes` to return the calling user's vote when an auth token is present:
+
+  ```typescript
+  export async function getMatchVotes(req: AuthRequest, res: Response): Promise<void> {
+    const votes = await Vote.find({ matchId: req.params.matchId }).lean();
+    const counts = { home_win: 0, draw: 0, away_win: 0 };
+    votes.forEach(v => { counts[v.outcome as keyof typeof counts]++; });
+    const userVote = req.userId
+      ? votes.find(v => v.userId?.toString() === req.userId)?.outcome ?? null
+      : null;
+    res.json({ ...counts, userVote });
+  }
+  ```
+
+- [ ] **Step 2:** Make the route optionally authenticated (no hard 401 if no token) — use a `softAuth` middleware that calls `next()` even without a token but populates `req.userId` if one is present.
+
+- [ ] **Step 3:** In `frontend/src/services/api.ts`, update `getMatchVotes` return type to include `userVote`:
+
+  ```typescript
+  export async function getMatchVotes(matchId: string): Promise<{ home_win: number; draw: number; away_win: number; userVote: string | null }> {
+    return request(`/votes/${matchId}`);
+  }
+  ```
+
+- [ ] **Step 4:** In `frontend/src/components/MatchDetails.tsx`, restore `voteOutcome` from the API response on mount:
+
+  ```typescript
+  getMatchVotes(match.id).then(data => {
+    setVoteCounts({ home_win: data.home_win, draw: data.draw, away_win: data.away_win });
+    if (data.userVote) setVoteOutcome(data.userVote as 'home_win' | 'draw' | 'away_win');
+  }).catch(() => {});
+  ```
+
+- [ ] **Step 5:** Run type-check. Test in browser: vote, reload, confirm "PREDICTION REGISTERED" + Algorithm 1 row still show.
+
+---
+
+### Fix 3: No "Run Prediction" UI button → Algorithm 1 ML Consensus only visible after manual API call
+
+**File:** `frontend/src/components/MatchDetails.tsx`
+
+- [ ] **Step 1:** Import `triggerPrediction` in `MatchDetails.tsx` (it's already in `api.ts` line 331):
+
+  ```typescript
+  import { castVote, getMatchVotes, getPrediction, triggerPrediction, PredictionResult } from '../services/api';
+  ```
+
+- [ ] **Step 2:** After a successful vote in `handleVoteChoice`, auto-trigger the prediction:
+
+  ```typescript
+  await castVote(match.id, outcomeMap[choice]);
+  setVoteOutcome(outcomeMap[choice]);
+  const counts = await getMatchVotes(match.id);
+  setVoteCounts(counts);
+  // Auto-trigger Algorithm 1 after voting
+  try {
+    const pred = await triggerPrediction(match.id);
+    setPredResult(pred);
+  } catch { /* prediction will show on next load */ }
+  ```
+
+- [ ] **Step 3:** Test: vote on a match → Algorithm 1 ML Consensus row should appear immediately without needing a page reload.
 
 ---
 
@@ -621,6 +724,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | ML↔Backend link | All 3 algorithms flow: Frontend→Backend→ML→MongoDB→Response | ✅ Verified |
 | 3 | Type-check & lint pass | ✅ Complete |
 | 4 | E2E verification (browser) | ✅ Complete (3 bugs found — see Task 4.2 Step 5-6, Task 4.4 Step 2) |
+| 4-fix | E2E bug fixes (source filter, userVote restore, auto-trigger prediction) | ✅ Complete |
 | 5 | Auth session persistence (JWT lost on refresh) | ✅ Complete |
 | 6 | Rate limiting | ✅ Complete |
 | Admin | Dropped — admin features removed from scope | ❌ Removed |
@@ -630,9 +734,5 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 ---
 
-**Last Updated:** 2026-06-06
-**Current Blocker:** Phase 7 (production builds not yet verified). Phase 4 E2E is complete. Three bugs found during E2E to fix before production:
-
-1. **`playerController.ts` missing `source` filter** — add `if (source) filter.source = source;` so `?source=nepali` works; update `LineupBuilder.tsx` to fetch `source:'nepali'` only.
-2. **`userVote` not restored on reload** — `GET /votes/:matchId` only returns aggregates; need to return user's own vote when authed, or add `GET /votes/:matchId/my-vote`.
-3. **No "Run Prediction" UI button** — `triggerPrediction()` in `api.ts` is not wired to any button in `MatchDetails.tsx`; Algorithm 1 ML Consensus row only shows when prediction exists in DB.
+**Last Updated:** 2026-06-07
+**Current Blocker:** Phase 7 (production builds not yet verified). All E2E bugs fixed. Next: run `npm run build` in both `frontend/` and `backend/` to verify production builds pass.

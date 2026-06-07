@@ -1,13 +1,18 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { Player } from '../models/Player';
 
 export async function listPlayers(req: Request, res: Response): Promise<void> {
-  const { position, search, sortBy = 'eloRating', limit = '50', offset = '0' } = req.query as Record<string, string>;
+  const { position, search, gender, source, teamId, sortBy = 'eloRating', limit = '50', offset = '0' } = req.query as Record<string, string>;
   const filter: Record<string, unknown> = {};
   if (position) filter.position = position;
   if (search) filter.name = { $regex: search, $options: 'i' };
+  if (gender) filter.gender = gender;
+  if (source) filter.source = source;
+  if (teamId) filter.team = new mongoose.Types.ObjectId(teamId);
 
   const players = await Player.find(filter)
+    .populate('team', 'name')
     .sort({ [sortBy]: -1 })
     .skip(Number(offset))
     .limit(Number(limit))

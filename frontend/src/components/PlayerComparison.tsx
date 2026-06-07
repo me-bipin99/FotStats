@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Player } from '../types';
 import { getPlayers, comparePlayers as apiComparePlayers, type CompareResult } from '../services/api';
 import { Plus, Search } from 'lucide-react';
+import { getCountryDisplay } from '../utils/nationality';
 
 interface PlayerComparisonProps {
   selectedPlayers: Player[];
@@ -167,6 +168,12 @@ const DummyPlayerAvatar = ({ className = "w-13 h-13", gender = "male" }: { class
   );
 };
 
+const CLUB_PREFIX_RE = /^(FC|AC|AS|SS|SK|RB|VfL|VfB|SV|FSV|TSG|SC|CF|CD|UD|SD|F\.C\.|A\.C\.|A\.S\.)\s+/i;
+function shortClubName(club: string): string {
+  if (!club || club === '—') return '';
+  return club.replace(CLUB_PREFIX_RE, '').split(/\s+/)[0] || club;
+}
+
 // Custom shape FIFA/FUT card widget matching the exact modular styling
 const FUTCard = ({ player, side }: { player: Player; side?: 'green' | 'white' }) => {
   const shortName = player.name.split(' ').pop() || player.name;
@@ -194,12 +201,7 @@ const FUTCard = ({ player, side }: { player: Player; side?: 'green' | 'white' })
   };
   const displayPos = positionMap[player.position] || player.position;
 
-  // Shorten club name for elegant space distribution
-  const displayClubName = player.club
-    .replace('FC', '')
-    .replace('Club', '')
-    .trim()
-    .split(' ')[0];
+  const displayClubName = shortClubName(player.club) || '—';
 
   return (
     <div className={`relative w-[158px] h-[220px] rounded-[24px] p-2.5 flex flex-col justify-between select-none hover:scale-[1.03] transition duration-200 shrink-0 ${cardBgClass}`}>
@@ -233,7 +235,7 @@ const FUTCard = ({ player, side }: { player: Player; side?: 'green' | 'white' })
       <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold px-1.5 pb-1 select-none">
         <div className="flex items-center gap-1 min-w-0 max-w-[65%]">
           <span className="text-[10px] filter saturate-50 shrink-0" role="img" aria-label="club element">
-            {player.position === 'FW' ? '🔥' : player.position === 'GK' ? '🧤' : '🛡️'}
+            {player.position === 'FW' ? '' : player.position === 'GK' ? '' : ''}
           </span>
           <span className="truncate opacity-85 text-slate-350">{displayClubName}</span>
         </div>
@@ -489,9 +491,15 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
         <div className="grid grid-cols-3 gap-4 border-t border-slate-900/70 pt-4">
           <div>
             <span className="text-slate-500 block text-[10px] uppercase font-mono tracking-wider">Nationality</span>
-            <span className="font-extrabold text-slate-200 mt-1.5 flex items-center gap-1.5 text-xs">
-              <span>🇳🇵</span> <span className="font-mono text-[11.5px]">NPL</span>
-            </span>
+            {(() => {
+              const { flag, code } = getCountryDisplay(player.nationality);
+              return (
+                <span className="font-extrabold text-slate-200 mt-1.5 flex items-center gap-1.5 text-xs">
+                  <span>{flag}</span>
+                  <span className="font-mono text-[11.5px]">{code}</span>
+                </span>
+              );
+            })()}
           </div>
           <div>
             <span className="text-slate-500 block text-[10px] uppercase font-mono tracking-wider">Age</span>
@@ -555,7 +563,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                   <Plus className="w-4 h-4 text-emerald-400" />
                 </div>
                 <span className="text-xs font-bold text-slate-300">Compare Player A</span>
-                <span className="text-[10px] text-slate-500 font-mono mt-1">Click to select Gorkhali roster</span>
+                <span className="text-[10px] text-slate-500 font-mono mt-1">Click to select player</span>
               </button>
             </div>
           )}
@@ -586,7 +594,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500 text-[9px] font-mono bg-slate-950 border border-slate-900 px-1.5 py-0.5 rounded">{p.position}</span>
-                        <span>{p.name} <span className="text-slate-500 font-normal">({p.club.split(' ').shift()})</span></span>
+                        <span>{p.name}{shortClubName(p.club) ? <span className="text-slate-500 font-normal"> ({shortClubName(p.club)})</span> : null}</span>
                       </div>
                       <span className="text-emerald-400 font-mono font-bold text-[11px]">{Math.round(p.rating * 10)} OVR</span>
                     </div>
@@ -624,7 +632,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                   <Plus className="w-4 h-4 text-slate-400" />
                 </div>
                 <span className="text-xs font-bold text-slate-300">Compare Player B</span>
-                <span className="text-[10px] text-slate-500 font-mono mt-1">Click to select Gorkhali roster</span>
+                <span className="text-[10px] text-slate-500 font-mono mt-1">Click to select player</span>
               </button>
             </div>
           )}
@@ -655,7 +663,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500 text-[9px] font-mono bg-slate-950 border border-slate-900 px-1.5 py-0.5 rounded">{p.position}</span>
-                        <span>{p.name} <span className="text-slate-500 font-normal">({p.club.split(' ').shift()})</span></span>
+                        <span>{p.name}{shortClubName(p.club) ? <span className="text-slate-500 font-normal"> ({shortClubName(p.club)})</span> : null}</span>
                       </div>
                       <span className="text-slate-300 font-mono font-bold text-[11px]">{Math.round(p.rating * 10)} OVR</span>
                     </div>
@@ -672,7 +680,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
       {compareResult && (
         <div className="bg-[#151619] border border-emerald-800/40 rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-3">
-            <span className="text-slate-400 uppercase tracking-wider font-bold">Algorithm 2 · Cosine Similarity</span>
+            <span className="text-slate-400 uppercase tracking-wider font-bold"> Cosine Similarity</span>
             <span className="font-mono font-black text-emerald-400 text-lg">{compareResult.similarityScore.toFixed(1)}%</span>
           </div>
           <div className="flex gap-6">
