@@ -104,11 +104,22 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
     setLineupLoading(true);
     let cancelled = false;
 
+    const gender: 'M' | 'F' = match.category === 'WOMEN' ? 'F' : 'M';
+
+    // Fetch team-specific players by teamId (no source filter — international teams use source:'international').
+    // Fall back to all Nepali players of the right gender if the team roster is too thin.
+    const fetchPool = async (teamId: string): Promise<Player[]> => {
+      const { players } = await getPlayers({ teamId, limit: 50 });
+      if (players.length >= 11) return players;
+      const { players: fallback } = await getPlayers({ source: 'nepali', gender, limit: 120 });
+      return fallback;
+    };
+
     (async () => {
       try {
-        const [{ players: homePlayers }, { players: awayPlayers }] = await Promise.all([
-          getPlayers({ teamId: match.homeTeam.id, source: 'nepali', limit: 50 }),
-          getPlayers({ teamId: match.awayTeam.id, source: 'nepali', limit: 50 }),
+        const [homePlayers, awayPlayers] = await Promise.all([
+          fetchPool(match.homeTeam.id),
+          fetchPool(match.awayTeam.id),
         ]);
 
         const homeIds = homePlayers.map((p) => p.id);
@@ -134,7 +145,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
     })();
 
     return () => { cancelled = true; };
-  }, [match.id, match.status, match.homeTeam.id, match.awayTeam.id, match.homeFormation, match.awayFormation]);
+  }, [match.id, match.status, match.homeTeam.id, match.awayTeam.id, match.homeFormation, match.awayFormation, match.category]);
 
   const userVote: '1' | 'X' | '2' | null =
     voteOutcome === 'home_win' ? '1' : voteOutcome === 'draw' ? 'X' : voteOutcome === 'away_win' ? '2' : null;
@@ -204,9 +215,19 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         <div className="flex items-center justify-between gap-4 py-2">
           {/* Home team */}
           <div className="flex flex-col items-center flex-1 text-center">
-            <div 
-              className="w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg ring-4 ring-slate-800/80"
-              style={{ backgroundColor: match.homeTeam.color, border: `2px solid ${match.homeTeam.secondaryColor}` }}
+            {match.homeTeam.logo ? (
+              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center p-1.5">
+                <img
+                  src={match.homeTeam.logo}
+                  alt={match.homeTeam.name}
+                  className="max-w-full max-h-full object-contain drop-shadow-md"
+                  onError={(e) => { const el = e.currentTarget.closest('.team-badge-wrap') as HTMLElement; if (el) { el.style.display = 'none'; (el.nextElementSibling as HTMLElement)?.style.setProperty('display','flex'); } }}
+                />
+              </div>
+            ) : null}
+            <div
+              className="w-14 h-14 md:w-16 md:h-16 rounded-full items-center justify-center font-bold text-white text-xl shadow-lg ring-4 ring-slate-800/80"
+              style={{ backgroundColor: match.homeTeam.color, border: `2px solid ${match.homeTeam.secondaryColor}`, display: match.homeTeam.logo ? 'none' : 'flex' }}
             >
               {match.homeTeam.shorthand}
             </div>
@@ -254,9 +275,19 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
           {/* Away team */}
           <div className="flex flex-col items-center flex-1 text-center">
-            <div 
-              className="w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg ring-4 ring-slate-800/80"
-              style={{ backgroundColor: match.awayTeam.color, border: `2px solid ${match.awayTeam.secondaryColor}` }}
+            {match.awayTeam.logo ? (
+              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center p-1.5">
+                <img
+                  src={match.awayTeam.logo}
+                  alt={match.awayTeam.name}
+                  className="max-w-full max-h-full object-contain drop-shadow-md"
+                  onError={(e) => { const el = e.currentTarget.closest('.team-badge-wrap') as HTMLElement; if (el) { el.style.display = 'none'; (el.nextElementSibling as HTMLElement)?.style.setProperty('display','flex'); } }}
+                />
+              </div>
+            ) : null}
+            <div
+              className="w-14 h-14 md:w-16 md:h-16 rounded-full items-center justify-center font-bold text-white text-xl shadow-lg ring-4 ring-slate-800/80"
+              style={{ backgroundColor: match.awayTeam.color, border: `2px solid ${match.awayTeam.secondaryColor}`, display: match.awayTeam.logo ? 'none' : 'flex' }}
             >
               {match.awayTeam.shorthand}
             </div>
@@ -668,36 +699,38 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   )}
                 </div>
 
-                {/* Show Hover/Active Player Details inline */}
-                {hoveredPlayer && (
-                  <div className="bg-[#1C1F2A] border border-slate-800 p-3 rounded-lg flex items-center justify-between animate-fadeIn text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-300">
-                        {hoveredPlayer.name[0]}
+                {/* Show Hover/Active Player Details inline — fixed height prevents layout shift */}
+                <div className="h-14">
+                  {hoveredPlayer && (
+                    <div className="bg-[#1C1F2A] border border-slate-800 p-3 rounded-lg flex items-center justify-between animate-fadeIn text-xs h-full">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-300 shrink-0">
+                          {hoveredPlayer.name[0]}
+                        </div>
+                        <div>
+                          <h6 className="font-bold text-white leading-snug flex items-center gap-2">
+                            <span>{hoveredPlayer.name}</span>
+                            <span className="text-[10px] text-slate-500 font-mono">#{hoveredPlayer.number}</span>
+                          </h6>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-wider">{hoveredPlayer.positionDetail} &bull; {hoveredPlayer.club}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h6 className="font-bold text-white leading-snug flex items-center gap-2">
-                          <span>{hoveredPlayer.name}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">#{hoveredPlayer.number}</span>
-                        </h6>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wider">{hoveredPlayer.positionDetail} &bull; {hoveredPlayer.club}</p>
+
+                      <div className="flex items-center gap-4 text-right font-mono">
+                        <div className="text-xs">
+                          <span className="text-slate-500 uppercase text-[9px] block">Matches</span>
+                          <span className="text-slate-300 font-bold">{hoveredPlayer.matchesPlayed}</span>
+                        </div>
+                        <div className="text-xs">
+                          <span className="text-slate-500 uppercase text-[9px] block">Rating</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${getRatingColorClass(hoveredPlayer.rating)}`}>
+                            {hoveredPlayer.rating}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-4 text-right font-mono">
-                      <div className="text-xs">
-                        <span className="text-slate-500 uppercase text-[9px] block">Matches</span>
-                        <span className="text-slate-300 font-bold">{hoveredPlayer.matchesPlayed}</span>
-                      </div>
-                      <div className="text-xs">
-                        <span className="text-slate-500 uppercase text-[9px] block">Rating</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${getRatingColorClass(hoveredPlayer.rating)}`}>
-                          {hoveredPlayer.rating}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             ) : lineupLoading ? (
               <div className="py-12 text-center text-slate-500 border border-slate-850 border-dashed rounded-xl">

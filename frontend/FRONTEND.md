@@ -102,7 +102,7 @@ Key interfaces:
 
 ```typescript
 Player      // id, name, number, position, nationality?, rating, attributes (pace/shooting/passing/dribbling/defending/physical)
-Team        // id, name, shorthand, color, coach, stadium, formation (e.g. '4-3-3')
+Team        // id, name, shorthand, color, coach, stadium, formation, logo? (api-sports CDN — rendered in MatchFeed + MatchDetails; natural shape via object-contain wrapper, falls back to color circle if missing)
 Match       // id, category, status, homeTeam, awayTeam, homeFormation, awayFormation, homeLineup?, awayLineup?, predictionVotes
 LineupPosition  // player, x, y (pitch coordinates as %)
 MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
@@ -113,6 +113,8 @@ MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
 - LIVE/FINISHED: renders `match.homeLineup` / `match.awayLineup` (populated by backend from seed data)
 - UPCOMING: on mount, fetches players by teamId (`getPlayers({ teamId, source:'nepali' })`), calls `optimizeSquad` for both teams in parallel, converts result via `squadToLineup()` helper; shows "Predicting Lineup…" spinner while loading, then renders predicted XI with green "Predicted Lineup by Machine" badge
 - Falls back to "Lineups Unavailable" placeholder if ML returns no result
+- **Hovered player detail card** renders inside a fixed `h-14` wrapper below the pitch — the wrapper always occupies space so the card appearing/disappearing on hover does not cause layout shift (page shake).
+- **UPCOMING predicted lineup fallback:** `fetchPool(teamId)` queries by `teamId` only (no `source` filter — international teams store players as `source:'international'`). If fewer than 11 players are returned, it falls back to all Nepali players of the correct gender (`M`/`F` from `match.category`). This ensures `optimizeSquad` always receives a full pool and the "Predicted Lineup by Machine" badge renders correctly for all matches.
 
 **Pitch coordinate utility:** `src/utils/pitchCoords.ts` — `getFormationCoords(formation, players, isHome)` maps GK→DF→MF→FW ordered players to `{x,y}` percentage coordinates. Home team occupies left half (x: 3–47%), away mirrors right (x: 53–97%). Supports `4-3-3`, `4-4-2`, `4-2-3-1`, `3-5-2`; falls back to `4-3-3`.
 

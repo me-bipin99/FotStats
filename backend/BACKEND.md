@@ -135,6 +135,7 @@ src/
   color: string           // hex
   stadium?: string
   coach?: string
+  logo?: string           // URL — https://media.api-sports.io/football/teams/{id}.png (no auth needed)
   players: [Player._id]
   formation: string       // default '4-3-3'
   founded?: number

@@ -7,6 +7,7 @@ export interface ITeam extends Document {
   color: string;
   stadium: string;
   coach: string;
+  logo?: string;
   players: Schema.Types.ObjectId[];
   formation: string;
   createdAt: Date;
@@ -20,6 +21,7 @@ const teamSchema = new Schema<ITeam>(
     color: { type: String, default: '#DC2626' },
     stadium: { type: String },
     coach: { type: String },
+    logo: { type: String },
     players: [{ type: Schema.Types.ObjectId, ref: 'Player' }],
     formation: { type: String, default: '4-3-3' },
   },

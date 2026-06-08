@@ -293,9 +293,19 @@ export default function MatchFeed({
                 <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                   {/* Home Team */}
                   <div className="flex items-center gap-2">
-                    <div 
-                      className="w-5 h-5 rounded flex items-center justify-center text-white text-[9px] font-bold shadow shrink-0"
-                      style={{ backgroundColor: match.homeTeam.color }}
+                    {match.homeTeam.logo ? (
+                      <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                        <img
+                          src={match.homeTeam.logo}
+                          alt={match.homeTeam.shorthand}
+                          className="max-w-full max-h-full object-contain"
+                          onError={(e) => { const el = e.currentTarget.parentElement; if (el) { el.style.display = 'none'; (el.nextElementSibling as HTMLElement)?.style.setProperty('display','flex'); } }}
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      className="w-5 h-5 rounded items-center justify-center text-white text-[9px] font-bold shadow shrink-0"
+                      style={{ backgroundColor: match.homeTeam.color, display: match.homeTeam.logo ? 'none' : 'flex' }}
                     >
                       {match.homeTeam.shorthand[0]}
                     </div>
@@ -330,9 +340,19 @@ export default function MatchFeed({
                     }`}>
                       {match.awayTeam.shorthand}
                     </span>
-                    <div 
-                      className="w-5 h-5 rounded flex items-center justify-center text-white text-[9px] font-bold shadow shrink-0"
-                      style={{ backgroundColor: match.awayTeam.color }}
+                    {match.awayTeam.logo ? (
+                      <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                        <img
+                          src={match.awayTeam.logo}
+                          alt={match.awayTeam.shorthand}
+                          className="max-w-full max-h-full object-contain"
+                          onError={(e) => { const el = e.currentTarget.parentElement; if (el) { el.style.display = 'none'; (el.nextElementSibling as HTMLElement)?.style.setProperty('display','flex'); } }}
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      className="w-5 h-5 rounded items-center justify-center text-white text-[9px] font-bold shadow shrink-0"
+                      style={{ backgroundColor: match.awayTeam.color, display: match.awayTeam.logo ? 'none' : 'flex' }}
                     >
                       {match.awayTeam.shorthand[0]}
                     </div>

@@ -47,6 +47,7 @@ export interface ApiTeam {
   color: string;
   stadium?: string;
   coach?: string;
+  logo?: string;
   players?: ApiPlayer[];
   formation: string;
   founded?: number;
@@ -133,6 +134,7 @@ export function adaptTeam(t: ApiTeam): Team {
     stadium: t.stadium || '—',
     stadiumCapacity: '—',
     formation: t.formation || '4-3-3',
+    logo: t.logo,
   };
 }
 

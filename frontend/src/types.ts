@@ -2,7 +2,7 @@ export interface Team {
   id: string;
   name: string;
   shorthand: string;
-  logoUrl?: string; // We'll render beautiful vector/initial circles if empty
+  logo?: string;
   color: string; // Hex color for pitch representation
   secondaryColor: string;
   rating: number; // e.g. 7.1

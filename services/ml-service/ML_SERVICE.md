@@ -503,6 +503,17 @@ Run order: `seed_teams` → build `team_lookup` → `seed_players(team_lookup)` 
 3. If player is in `nepalisquad.csv` and no club matched → assign to "Nepal National Team" (M) or "Nepal Women's National Team" (F)
 4. European players: no `team` ref (not in our DB); `currentClub` text used for display only
 
+**Seeding is now fully CSV-free — all dummy data:**
+
+| Function | Output |
+|---|---|
+| `seed_generated_players(db)` | Drops `players`, generates **20 players per team** (3 GK / 6 DF / 6 MF / 5 FW). Nepal-country teams → `source:'nepali'`; India/Bhutan/etc. → `source:'international'`. |
+| `seed_european_generated(db, count=600)` | Generates **600 European dummy players** across 12 nations (England, Germany, Spain, France, Italy, Portugal, Netherlands, Brazil, Argentina, Belgium, Croatia, Denmark) for Algorithm 2 comparison pool. `source:'european'`. |
+
+**Final counts after seed:** 980 total players — 280 Nepali · 100 International · 600 European. 24 matches, every lineup seeded with 11 players per side.
+
+`TARGET_SQUAD = [("GK", 3), ("DF", 6), ("MF", 6), ("FW", 5)]` → 20 players per team. Frontend queries by `teamId` only (no source filter) so Nepali and International team players are both found correctly.
+
 ```bash
 cd services/ml-service && source venv/bin/activate
 # First time: train CatBoost model, then seed

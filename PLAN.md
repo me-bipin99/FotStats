@@ -60,7 +60,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | Frontend | `PlayerComparison.tsx` — Algorithm 2 UI | ✅ Done |
 | Frontend | `LineupBuilder.tsx` — Algorithm 3 UI | ✅ Done |
 | Frontend | `mockData.ts` — zero imports confirmed (ready to delete) | ✅ Verified |
-| Database | Seed data in MongoDB | ✅ Done (2879 players, 8 teams, 8 matches) |
+| Database | Seed data in MongoDB | ✅ Done (3086 players, 19 teams, 24 matches — all lineups predicted) |
 
 ### ❌ Not Yet Implemented
 
@@ -515,7 +515,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | ML algorithms | All 3 algorithms implemented | ✅ Complete |
 | Frontend integration | api.ts, AuthContext, all components API-connected | ✅ Complete |
 | 1 | `.env` files creation | ✅ Complete |
-| 2 | DB seeding | ✅ Complete (2879 players, 8 teams, 8 matches) |
+| 2 | DB seeding | ✅ Complete (3086 players, 19 teams, 24 matches — all lineups predicted) |
 | ML↔DB link | ML service `database.py` reads DB name from URI; `load_dotenv()` in `main.py` | ✅ Fixed |
 | ML↔Backend link | All 3 algorithms flow: Frontend→Backend→ML→MongoDB→Response | ✅ Verified |
 | 3 | Type-check & lint pass | ✅ Complete |
