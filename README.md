@@ -2,7 +2,7 @@
 
 A full-stack analytics platform for Nepali football. It combines community-driven match prediction, player performance comparison, and machine-learning-based lineup generation — all connected through a single MongoDB database shared across three services.
 
-> **Note:** This project is built as a college-level prototype. MongoDB is used as a convenience store for static player and match data. It is not yet wired for real-time data ingestion or live match feeds. See the Planned Improvements section for the roadmap.
+**Note:** This project is built as a college-level prototype. MongoDB is used as a convenience store for static player and match data. It is not yet wired for real-time data ingestion or live match feeds. See the Planned Improvements section for the roadmap.
 
 ---
 
