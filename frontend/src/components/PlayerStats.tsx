@@ -56,6 +56,7 @@ export default function PlayerStats() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [genderFilter, setGenderFilter] = useState<'ALL' | 'MEN' | 'WOMEN'>('ALL');
+  const [displayPlayer, setDisplayPlayer] = useState<(Player & { gender?: 'M' | 'F' }) | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchPlayers = (search: string, gender: 'ALL' | 'MEN' | 'WOMEN') => {
@@ -81,15 +82,11 @@ export default function PlayerStats() {
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
   }, [searchQuery, genderFilter]);
 
-  const selectedPlayer = players.find((p) => p.id === selectedPlayerId) || players[0];
+  const currentPlayer = players.find((p) => p.id === selectedPlayerId) || players[0];
 
-  if (!selectedPlayer && !loading) {
-    return (
-      <div className="bg-[#151619] border border-[#202124] rounded-xl p-12 text-center text-slate-500 text-sm">
-        No player data. Make sure the database is seeded.
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (currentPlayer) setDisplayPlayer(currentPlayer);
+  }, [currentPlayer]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -169,7 +166,11 @@ export default function PlayerStats() {
       </div>
 
       {/* Detail workspace */}
-      {selectedPlayer && (
+      {!displayPlayer ? (
+        <div className="md:col-span-2 bg-[#151619] border border-[#202124] rounded-xl flex items-center justify-center min-h-75">
+          <p className="text-sm text-slate-500">No player available for that name</p>
+        </div>
+      ) : (
         <div className="md:col-span-2 space-y-6">
           <div className="bg-[#151619] border border-[#202124] rounded-xl p-5 md:p-6 overflow-hidden relative shadow-xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
@@ -177,41 +178,41 @@ export default function PlayerStats() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
               <div className="flex items-center gap-4">
                 <div className={`w-16 h-16 rounded-2xl border-2 flex items-end justify-center shadow-lg overflow-hidden relative ${
-                  (selectedPlayer as any).gender === 'F'
+                  (displayPlayer as any).gender === 'F'
                     ? 'bg-gradient-to-tr from-pink-950 to-pink-900/60 border-pink-500/30'
                     : 'bg-gradient-to-tr from-[#0b241a] to-[#04120c] border-emerald-500/20'
                 }`}>
-                  <DummyPlayerAvatar className="w-[88%] h-[88%] absolute bottom-0 object-contain drop-shadow" gender={(selectedPlayer as any).gender === 'F' ? 'female' : 'male'} />
+                  <DummyPlayerAvatar className="w-[88%] h-[88%] absolute bottom-0 object-contain drop-shadow" gender={(displayPlayer as any).gender === 'F' ? 'female' : 'male'} />
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-sans font-bold text-lg text-white leading-tight">{selectedPlayer.name}</h3>
+                    <h3 className="font-sans font-bold text-lg text-white leading-tight">{displayPlayer.name}</h3>
                     <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-widest uppercase">
-                      {selectedPlayer.position}
+                      {displayPlayer.position}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-                    <span className="font-semibold text-emerald-400">{selectedPlayer.positionDetail}</span>
+                    <span className="font-semibold text-emerald-400">{displayPlayer.positionDetail}</span>
                     <span className="text-slate-600">&bull;</span>
-                    <span>{selectedPlayer.club}</span>
+                    <span>{displayPlayer.club}</span>
                   </p>
                 </div>
               </div>
               <div className="bg-[#0C1E14] border border-emerald-900/60 px-4 py-2.5 rounded-xl text-center self-start sm:self-auto shadow-md">
                 <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block mb-0.5">Rating</span>
-                <span className="text-xl font-mono font-black text-emerald-400 block leading-none">{selectedPlayer.rating}</span>
+                <span className="text-xl font-mono font-black text-emerald-400 block leading-none">{displayPlayer.rating}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 pt-5">
               <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Age</span>
-                <span className="text-sm font-mono font-bold text-slate-100">{selectedPlayer.age || '—'} {selectedPlayer.age ? 'Years' : ''}</span>
+                <span className="text-sm font-mono font-bold text-slate-100">{displayPlayer.age || '—'} {displayPlayer.age ? 'Years' : ''}</span>
               </div>
               <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Nationality</span>
                 {(() => {
-                  const { flag, code } = getCountryDisplay(selectedPlayer.nationality);
+                  const { flag, code } = getCountryDisplay(displayPlayer.nationality);
                   return (
                     <span className="text-sm font-bold text-slate-100 flex items-center justify-center gap-1.5">
                       <span>{flag}</span><span className="font-mono">{code}</span>
@@ -221,11 +222,11 @@ export default function PlayerStats() {
               </div>
               <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Foot</span>
-                <span className="text-sm font-bold text-slate-100">{selectedPlayer.preferredFoot}</span>
+                <span className="text-sm font-bold text-slate-100">{displayPlayer.preferredFoot}</span>
               </div>
               <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Height</span>
-                <span className="text-sm font-mono font-bold text-slate-100">{selectedPlayer.height}</span>
+                <span className="text-sm font-mono font-bold text-slate-100">{displayPlayer.height}</span>
               </div>
             </div>
           </div>
@@ -237,7 +238,7 @@ export default function PlayerStats() {
                 <span>Attributes Profile Matrix</span>
               </h4>
               <div className="space-y-3.5">
-                {Object.entries(selectedPlayer.attributes).map(([attr, val]) => (
+                {Object.entries(displayPlayer.attributes).map(([attr, val]) => (
                   <div key={attr} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-medium text-slate-400">{attr.toUpperCase()}</span>
@@ -260,20 +261,20 @@ export default function PlayerStats() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Matches (Caps)</span>
-                    <span className="text-xs font-mono font-bold text-slate-200">{selectedPlayer.matchesPlayed} games</span>
+                    <span className="text-xs font-mono font-bold text-slate-200">{displayPlayer.matchesPlayed} games</span>
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Goals Scored</span>
-                    <span className="text-xs font-mono font-extrabold text-emerald-400">{selectedPlayer.goals} Goals</span>
+                    <span className="text-xs font-mono font-extrabold text-emerald-400">{displayPlayer.goals} Goals</span>
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Assists Delivered</span>
-                    <span className="text-xs font-mono font-bold text-slate-200">{selectedPlayer.assists} Assists</span>
+                    <span className="text-xs font-mono font-bold text-slate-200">{displayPlayer.assists} Assists</span>
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Discipline</span>
                     <span className="text-xs font-mono font-bold text-slate-300">
-                      {selectedPlayer.yellowCards} 🟨 / {selectedPlayer.redCards} 🟥
+                      {displayPlayer.yellowCards} 🟨 / {displayPlayer.redCards} 🟥
                     </span>
                   </div>
                 </div>
@@ -281,10 +282,10 @@ export default function PlayerStats() {
               <div className="pt-4 mt-4 border-t border-slate-800/60">
                 <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-850">
                   <p className="text-[10.5px] italic text-slate-400 leading-relaxed">
-                    {selectedPlayer.position === 'FW' && `Known for explosive attacking play, ${selectedPlayer.name} serves as a pivotal spearhead for ${selectedPlayer.club} and the Gorkhali squad.`}
-                    {selectedPlayer.position === 'MF' && `Exhibiting sharp tactical passing and field control, ${selectedPlayer.name} acts as a vital transition axis on high-press scenarios.`}
-                    {selectedPlayer.position === 'DF' && `With premium physical endurance and clean clearances, ${selectedPlayer.name} represents a rock-steady protective shield at the back.`}
-                    {selectedPlayer.position === 'GK' && `A captaincy leader showing stellar reflexes and organizing elite low-block defenses for ${selectedPlayer.club}.`}
+                    {displayPlayer.position === 'FW' && `Known for explosive attacking play, ${displayPlayer.name} serves as a pivotal spearhead for ${displayPlayer.club} and the Gorkhali squad.`}
+                    {displayPlayer.position === 'MF' && `Exhibiting sharp tactical passing and field control, ${displayPlayer.name} acts as a vital transition axis on high-press scenarios.`}
+                    {displayPlayer.position === 'DF' && `With premium physical endurance and clean clearances, ${displayPlayer.name} represents a rock-steady protective shield at the back.`}
+                    {displayPlayer.position === 'GK' && `A captaincy leader showing stellar reflexes and organizing elite low-block defenses for ${displayPlayer.club}.`}
                   </p>
                 </div>
               </div>

@@ -1,141 +1,188 @@
 # FotNep Algorithms
 
-Three core machine learning algorithms powering the FotNep platform.
+Four algorithms power the platform. Algorithms 1–3 are request-time; Algorithm 4 runs at seed time only.
 
 ---
 
-## 1. Crowd Consensus Prediction
+## Algorithm 1: Crowd Consensus Prediction
 
-**Purpose:** Community-driven match outcome forecasting with reputation-weighted voting
+**File:** `services/ml-service/models/consensus.py`
+**Endpoint:** `POST /predict-match` (ML service, proxied through backend `POST /api/v1/predict-match`)
 
-**How it works:**
-- Users vote on match outcomes (Home Win, Draw, Away Win)
-- Each user's vote is weighted by their reputation score
-- High-reputation users have greater influence on predictions
-- Final prediction = weighted average of all community votes
-- Confidence score reflects vote distribution variance
+### How it works
 
-**Inputs:**
-- Match ID
-- User votes (outcome + user reputation)
-- Historical accuracy of users
+Users vote on a match outcome (home win, draw, away win). Each vote carries the voter's reputation score (0–100). The probability for each outcome equals the fraction of total reputation that voted for it. Confidence is derived from how uniform or concentrated the probability distribution is.
 
-**Outputs:**
-- Predicted winner probability distribution
-- Community confidence (0-100%)
-- Vote breakdown by outcome
+### Math
 
-**Use case:** Gauge community sentiment and expert opinion on matches before they're played
+```
+total_rep        = sum(reputation for all votes)
+prob(outcome)    = sum(reputation of votes for that outcome) / total_rep
+variance         = np.var([prob(home_win), prob(draw), prob(away_win)])
+confidence       = clamp(0, 100, round((1 - variance) * 100, 1))
+```
 
----
+Confidence approaches 100 when all votes agree (variance near 0) and approaches 0 when votes are perfectly split across three outcomes (variance = 2/9 ≈ 0.222).
 
-## 2. Player Performance Estimator
+### Input
 
-**Purpose:** Compare player statistics predicted by ML from available training data
+```json
+{
+  "matchId": "string",
+  "votes": [
+    { "userId": "string", "outcome": "home_win|draw|away_win", "reputation": 85 }
+  ]
+}
+```
 
-**How it works:**
-- ML model trained on player performance datasets (stats, position, team, game history)
-- Predicts missing or future player statistics based on patterns in training data
-- Enables head-to-head comparison between players with different career histories
-- Normalizes stats across different competitions and time periods
-- Generates similarity scores between any two players
+### Output
 
-**Inputs:**
-- Player 1 ID (name, position, stats)
-- Player 2 ID (name, position, stats)
-- Available historical data
+```json
+{
+  "matchId": "string",
+  "prediction": {
+    "homeWinProb": 0.5833,
+    "drawProb": 0.2222,
+    "awayWinProb": 0.1944
+  },
+  "confidence": 77.8,
+  "voteBreakdown": { "homeWin": 3, "draw": 1, "awayWin": 1 }
+}
+```
 
-**Outputs:**
-- Predicted stat breakdown for both players
-- Similarity score (0-100%)
-- Attribute-by-attribute comparison (pace, shooting, passing, dribbling, defending, physical)
-- Recommended tactical pairing insights
+### Backend flow
 
-**Use case:** Scout new players, find position alternatives, understand player strengths/weaknesses
-
----
-
-## 3. Optimal Squad Generator
-
-**Purpose:** Predict ideal match lineups based on historical performance and player availability
-
-**How it works:**
-- Analyzes past match lineups and outcomes
-- Learns which player combinations win most frequently
-- Considers player chemistry (players who've played together before)
-- Optimizes for formation (4-3-3, 4-2-3-1, 3-5-2, etc.)
-- Respects player availability constraints (injuries, suspensions)
-- Generates confidence scores for predicted lineups
-
-**Inputs:**
-- Available players
-- Match opponent (if known)
-- Formation preference
-- Historical match data
-- Player constraint flags (injured, suspended, etc.)
-
-**Outputs:**
-- Predicted optimal starting XI
-- Bench recommendations
-- Formation suggestion
-- Confidence score
-- Key tactical insights
-
-**Use case:** Tactical planning, squad rotation, injury management, youth integration
+`predictionController.triggerPrediction(matchId)` fetches all votes for the match from MongoDB (including each voter's reputation from the User collection), formats the payload, calls `mlIntegration.predictMatch()`, persists the result in the Prediction collection, and returns it. Requires at least one vote (400 if no votes, 503 if ML service is down).
 
 ---
 
-## Data Requirements
+## Algorithm 2: Player Performance Estimator
 
-All three algorithms rely on:
-- **Player Dataset:** 102 Nepali players with detailed stats
-- **Match History:** Past game results, lineups, scores, performances
-- **User Reputation System:** Tracks voting accuracy for Crowd Consensus
-- **Team Context:** Team colors, formations, competition level
+**File:** `services/ml-service/models/player_estimator.py`
+**Endpoint:** `POST /compare-players` (ML service, proxied through backend `POST /api/v1/compare-players`)
+
+### How it works
+
+Both players' six attributes are fetched from MongoDB. The six values are treated as vectors and compared with cosine similarity. A similarity score of 100 means the two players have identical attribute ratios; lower scores indicate different playing profiles. The top two attributes per player are returned as their strengths.
+
+### Math
+
+```
+stats_vector     = [pace, shooting, passing, dribbling, defending, physical]
+cosine_sim(a, b) = dot(a, b) / (norm(a) * norm(b))
+similarity       = round(cosine_sim * 100, 1)
+strengths        = top 2 attributes by raw value
+```
+
+### Input
+
+```json
+{ "playerAId": "mongo_object_id", "playerBId": "mongo_object_id" }
+```
+
+### Output
+
+```json
+{
+  "playerA": { "id": "...", "name": "...", "stats": { "pace": 72, ... } },
+  "playerB": { "id": "...", "name": "...", "stats": { "pace": 65, ... } },
+  "similarityScore": 99.1,
+  "attributeComparison": {
+    "pace": { "playerA": 72.0, "playerB": 65.0 },
+    "shooting": { "playerA": 61.0, "playerB": 58.0 }
+  },
+  "strengths": { "playerA": ["pace", "dribbling"], "playerB": ["defending", "physical"] }
+}
+```
+
+### Backend flow
+
+`predictionController.comparePlayersProxy(playerAId, playerBId)` calls `mlIntegration.comparePlayers()` which POSTs to the ML service. No DB persistence — result is returned directly to the frontend.
 
 ---
 
-## API Integration
+## Algorithm 3: Optimal Squad Generator
 
-Algorithms are exposed via `/api/v1/` endpoints:
-- `POST /api/v1/predict-match` — Crowd Consensus Prediction
-- `POST /api/v1/compare-players` — Player Performance Estimator
-- `POST /api/v1/optimize-squad` — Optimal Squad Generator
+**File:** `services/ml-service/models/squad_optimizer.py`
+**Endpoint:** `POST /optimize-squad` (ML service, proxied through backend `POST /api/v1/optimize-squad`)
 
-All endpoints require JWT authentication.
+### Current implementation
+
+Greedy ELO-ranked selection. For each formation slot, eligible players (after removing injured/suspended) are fetched from MongoDB, grouped by position, and sorted descending by `eloRating`. The top N per slot fill the starting XI.
+
+Full genetic algorithm optimization is planned as a future training-phase enhancement once sufficient match history is available.
+
+### Formation slot counts
+
+| Formation | GK | DF | MF | FW |
+|-----------|----|----|----|----|
+| 4-3-3     | 1  | 4  | 3  | 3  |
+| 4-4-2     | 1  | 4  | 4  | 2  |
+| 4-2-3-1   | 1  | 4  | 5  | 1  |
+| 3-5-2     | 1  | 3  | 5  | 2  |
+
+### Fitness function (ELO-based)
+
+```
+fitness = sum(eloRating for player in starting_xi) / (11 * 2400)
+confidence = clamp(0, 100, fitness * 100)
+```
+
+### Input
+
+```json
+{
+  "teamId": "string",
+  "availablePlayerIds": ["id1", "id2", ...],
+  "formationPreference": "4-3-3",
+  "constraints": { "injured": [], "suspended": [] }
+}
+```
+
+### Output
+
+```json
+{
+  "teamId": "string",
+  "startingXI": [
+    { "playerId": "...", "playerName": "...", "position": "GK", "bench": false }
+  ],
+  "bench": [
+    { "playerId": "...", "playerName": "...", "position": "MF", "bench": true }
+  ],
+  "formation": "4-3-3",
+  "confidence": 67.4,
+  "tacticalInsights": ["Lineup selected by ELO rating strength."],
+  "keyMissingPlayers": []
+}
+```
+
+### Backend flow
+
+`predictionController.optimizeSquadProxy()` receives the team ID, player ID list, formation, and constraints from the frontend. It calls `mlIntegration.optimizeSquad()` which POSTs directly to the ML service. Result is returned to the frontend without DB persistence.
 
 ---
 
-## Current Status
+## Algorithm 4: Player Attribute Imputer
 
-🚧 **In Development**
-- Algorithm 1: Basic voting system implemented
-- Algorithm 2: Prototype comparison engine ready
-- Algorithm 3: Formation optimizer being refined
+**File:** `services/ml-service/models/attribute_imputer.py`
+**Endpoint:** `POST /impute-attributes` (on-demand, primarily used at seed time)
 
----
-
-## 4. Player Attribute Imputer
-
-**Purpose:** Fill in missing physical attributes (height, weight, preferred foot, market value) for all players at seed time. Neither the Nepali CSV nor the European CSV contains these fields — all 4 are predicted from available data before `insert_many()` in `scripts/seed_db.py`.
-
-**Primary flow:** Called inside `scripts/seed_db.py` before each player document is inserted. A FastAPI endpoint `POST /impute-attributes` is also available for on-demand use.
-
-**Implementation:** `services/ml-service/models/attribute_imputer.py`
+Called inside `scripts/seed_db.py` before each player document is inserted. All four sub-algorithms run in sequence.
 
 ---
 
-### 4a. Height — Nationality + Position Average Lookup
+### 4a. Height — Nationality + Position Lookup Table
 
-**Type:** Rule-based lookup table. Deterministic, no training required.
+**Function:** `impute_height(nationality: str, position: str) -> int`
 
-**Logic:**
+Deterministic. Maps nationality string to one of five groups, then cross-references with position.
 
-1. Map `nationality` string → one of 5 groups: `nepali` / `south_asian` / `european` / `african` / `south_american` / `default`
-2. Cross-reference with position (`GK` / `DF` / `MF` / `FW`)
-3. Return pre-computed average height in cm
+```
+groups: nepali / south_asian / european / african / south_american / default
+```
 
-**Height table (cm):**
+Height table (cm):
 
 | Group          | GK  | DF  | MF  | FW  |
 |----------------|-----|-----|-----|-----|
@@ -146,125 +193,84 @@ All endpoints require JWT authentication.
 | South American | 185 | 180 | 176 | 174 |
 | Default        | 185 | 180 | 176 | 174 |
 
-**Rationale:** Goalkeepers average 6–10 cm taller than forwards due to positional selection. Nepali/South Asian players average ~10 cm shorter than Europeans due to population and nutritional factors.
-
-**Nationality detection:** FBref stores nationality as `"eng ENG"` — detection checks `.split()` tokens against keyword sets (e.g. `{"eng", "fra", "ger", …}` for European). Falls back to `"default"` when unrecognised.
-
-**Function:** `impute_height(nationality: str, position: str) -> int`
+Nationality detection checks `.lower().split()` tokens against keyword sets: `_SOUTH_ASIAN`, `_EUROPEAN`, `_AFRICAN`, `_SOUTH_AMERICAN`. Falls back to `"default"` when unrecognised.
 
 ---
 
-### 4b. Weight — BMI-Based Estimation from Height
-
-**Type:** Deterministic formula. Derived from the imputed (or known) height.
-
-**Formula:**
-
-```text
-weight_kg = round(bmi_target × (height_cm / 100)²)
-```
-
-**Position BMI targets:**
-
-| Position | BMI  | Rationale                           |
-|----------|------|-------------------------------------|
-| GK       | 24.0 | Larger frame, physical aerial duels |
-| DF       | 23.5 | Strong but mobile                   |
-| MF       | 22.5 | Balance of endurance and strength   |
-| FW       | 22.0 | Lean for explosive pace             |
-
-**Example:** 178 cm MF → `round(22.5 × 1.78²)` = `round(71.3)` = **71 kg**
+### 4b. Weight — BMI Formula from Height
 
 **Function:** `impute_weight(height_cm: int, position: str) -> int`
 
+```
+weight_kg = round(bmi_target * (height_cm / 100) ** 2)
+```
+
+Position BMI targets: GK=24.0, DF=23.5, MF=22.5, FW=22.0
+
+Example: 171 cm MF → `round(22.5 * 1.71²)` = **66 kg**
+
 ---
 
-### 4c. Preferred Foot — Position-Based Probability Distribution
-
-**Type:** Probabilistic assignment, deterministic per player across runs.
-
-**Probability table:**
-
-| Position | Right | Left |
-|----------|-------|------|
-| GK       | 88%   | 12%  |
-| DF       | 80%   | 20%  |
-| MF       | 77%   | 23%  |
-| FW       | 76%   | 24%  |
-
-**Determinism guarantee:**
-
-- Seed = `int(hashlib.md5(player_name.encode("utf-8")).hexdigest()[:8], 16)`
-- Uses a per-player `random.Random(seed)` instance — does **not** disturb `random.seed(42)` used for European stat variance in `seed_db.py`
-- `hashlib.md5` is platform-independent (unlike Python's built-in `hash()`)
-- Same name + position → same foot on every re-seed
+### 4c. Preferred Foot — Position-Weighted Probabilistic Assignment
 
 **Function:** `impute_preferred_foot(player_name: str, position: str) -> str`
+
+Deterministic per player name. Seed is derived from `MD5(player_name)[:8]` hex to integer, used in a local `random.Random` instance that does not affect the global RNG.
+
+Probability of right foot by position: GK=88%, DF=80%, MF=77%, FW=76%.
 
 ---
 
 ### 4d. Market Value — CatBoost Regressor
 
-**Type:** Trained ML model (supervised regression). Requires `scripts/train_imputer.py` to run before seeding.
+**Function:** `impute_market_value(features: dict, model) -> int`
 
-**Features (12):**
+**Training script:** `scripts/train_imputer.py` — reads both CSV files, generates synthetic labels using the formula below, trains a `CatBoostRegressor`, saves to `trained_models/market_value_catboost.pkl`.
 
-| Feature        | Type  | Description             |
-|----------------|-------|-------------------------|
-| `age`          | int   | Player age              |
-| `position_enc` | int   | GK=0, DF=1, MF=2, FW=3  |
-| `eloRating`    | float | Computed ELO score      |
-| `appearances`  | int   | Career appearances      |
-| `goals`        | int   | Career goals            |
-| `assists`      | int   | Career assists          |
-| `pace`         | float | 0–100 attribute         |
-| `shooting`     | float | 0–100 attribute         |
-| `passing`      | float | 0–100 attribute         |
-| `dribbling`    | float | 0–100 attribute         |
-| `defending`    | float | 0–100 attribute         |
-| `physical`     | float | 0–100 attribute         |
+**Model config:** `iterations=500, learning_rate=0.05, depth=6, loss_function="RMSE", random_seed=42`
 
-**Synthetic training label formula** (applied to all CSV players to generate labeled training data):
+**Feature vector (12 inputs):**
 
-```text
-base         = max(0, eloRating − 1400) × 800
-age_factor   = 1.0                                      if age ≤ 24
-             = clamp(0.20, 1.0 − (age − 24) × 0.04)   if 24 < age ≤ 32
-             = clamp(0.20, 0.68 − (age − 32) × 0.06)  if age > 32
-perf_factor  = clamp(1.0, 2.5, 1.0 + g/app×0.30 + a/app×0.20)
-market_value = clamp(0, 15_000_000, base × age_factor × perf_factor)
+| Index | Feature        | Description                  |
+|-------|----------------|------------------------------|
+| 0     | age            | Player age                   |
+| 1     | position_enc   | GK=0, DF=1, MF=2, FW=3       |
+| 2     | eloRating      | Computed ELO score           |
+| 3     | appearances    | Career appearances           |
+| 4     | goals          | Career goals                 |
+| 5     | assists        | Career assists               |
+| 6–11  | pace…physical  | Six attribute scores (0–100) |
+
+**Synthetic label formula:**
+
+```
+base         = max(0, eloRating - 1400) * 800
+age_factor   = 1.0                                    if age <= 24
+             = clamp(0.20, 1.0 - (age-24)*0.04)      if 24 < age <= 32
+             = clamp(0.20, 0.68 - (age-32)*0.06)     if age > 32
+perf_factor  = clamp(1.0, 2.5, 1.0 + goals/apps*0.30 + assists/apps*0.20)
+market_value = clamp(0, 15_000_000, base * age_factor * perf_factor)
 ```
 
-**Calibration examples:**
+Calibration examples:
+- ELO 1600, age 24, no performance data: base €160,000 x 1.0 x 1.0 = **€160,000**
+- ELO 1720, age 22, 0.4 g/game: base €256,000 x 1.0 x 1.12 = **~€287,000**
 
-- ELO 1600, age 24, avg performance → base 160 000 € × 1.0 × 1.0 = **€160 000**
-- ELO 1700, age 22, 0.3 g/game → base 240 000 € × 1.0 × 1.09 = **≈€261 600**
-
-**Model config:** `CatBoostRegressor(iterations=500, learning_rate=0.05, depth=6, loss_function="RMSE", random_seed=42)`
-
-**Persistence:** Saved as `services/ml-service/trained_models/market_value_catboost.pkl`. Auto-loaded by `config.model_loader.ModelLoader` singleton which globs `trained_models/*.pkl` on first use.
-
-**Fallback:** If pkl does not exist at seed time, `marketValue` retains the CSV value (or 0). A `WARNING` is printed to stderr.
-
-**Function:** `impute_market_value(features: dict, model) -> int`
+Fallback: returns 0 when `model is None` (pkl not yet trained). The backfill script `scripts/backfill_market_values.py` can fix 0-valued records without re-seeding.
 
 ---
 
-### Required Run Order
+### Required run order
 
 ```bash
-# 1. Install CatBoost (first time only)
-pip install catboost==1.2.5
-
-# 2. Train CatBoost from CSVs (no DB required — reads same CSV files as seed_db.py)
+# 1. Train CatBoost (only needed when CSV data changes)
 cd services/ml-service && source venv/bin/activate
 python scripts/train_imputer.py
-# → writes trained_models/market_value_catboost.pkl
+# writes: trained_models/market_value_catboost.pkl
 
-# 3. Seed database (runs all 4 imputations, including CatBoost)
+# 2. Seed database (runs all four imputations per player)
 python scripts/seed_db.py
-# → every player document now has height, weight, preferredFoot, marketValue
-```
 
-Re-run `train_imputer.py` only when the CSV data changes significantly.
-After step 3, all ~2879 player documents have all 4 attributes populated.
+# 3. Backfill if any marketValue=0 records remain
+python scripts/backfill_market_values.py
+```

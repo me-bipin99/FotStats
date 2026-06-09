@@ -135,6 +135,7 @@ export function adaptTeam(t: ApiTeam): Team {
     stadiumCapacity: '—',
     formation: t.formation || '4-3-3',
     logo: t.logo,
+    country: t.country,
   };
 }
 
@@ -278,7 +279,7 @@ export async function getPlayers(params?: {
   position?: string;
   search?: string;
   gender?: 'M' | 'F';
-  source?: 'nepali' | 'european';
+  source?: string; // 'nepali' | 'european' | country name e.g. 'india', 'bhutan'
   teamId?: string;
   limit?: number;
   offset?: number;

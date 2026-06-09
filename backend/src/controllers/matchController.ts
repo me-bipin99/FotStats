@@ -137,7 +137,7 @@ export async function resolveMatch(req: AuthRequest, res: Response): Promise<voi
 
   const match = await Match.findByIdAndUpdate(
     req.params.id,
-    { status: 'completed', result },
+    { status: 'completed', outcome: result },
     { new: true }
   ).populate('homeTeam').populate('awayTeam').lean();
 

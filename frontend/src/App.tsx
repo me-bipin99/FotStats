@@ -59,9 +59,9 @@ export default function App() {
   const handleClearCompareSlot = (slot: 'A' | 'B') => {
     setComparisonPlayers((prev) => {
       const next = [...prev];
-      if (slot === 'A') { next[0] = next[1]; next[1] = undefined as any; }
+      if (slot === 'A') next[0] = undefined as any;
       else next[1] = undefined as any;
-      return next.filter(Boolean);
+      return next;
     });
   };
 
@@ -95,7 +95,7 @@ export default function App() {
               </span>
             </div>
             <div className="flex items-center gap-2 font-mono text-[10px] text-slate-500 cursor-default">
-              <span>⚽ FotNep Version v1.4</span>
+              <span>⚽ FotNep Version v1.5</span>
             </div>
           </div>
         )}

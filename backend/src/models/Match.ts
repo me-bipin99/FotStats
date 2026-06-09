@@ -21,6 +21,7 @@ export interface IMatch extends Document {
     homeScore: number;
     awayScore: number;
   };
+  outcome?: 'home_win' | 'draw' | 'away_win';
   createdAt: Date;
 }
 
@@ -49,6 +50,7 @@ const matchSchema = new Schema<IMatch>(
       homeScore: Number,
       awayScore: Number,
     },
+    outcome: { type: String, enum: ['home_win', 'draw', 'away_win'] },
   },
   { timestamps: true }
 );

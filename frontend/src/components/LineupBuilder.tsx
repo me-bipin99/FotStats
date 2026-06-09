@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Player } from '../types';
 import { getPlayers, optimizeSquad } from '../services/api';
-import { Sparkles, RefreshCw, Layers, Plus, X, Search, ShieldAlert, BadgeCheck, Save, Clipboard, ChevronDown, Award, Users, Info } from 'lucide-react';
+import { Sparkles, RefreshCw, Layers, Plus, X, Search, ShieldAlert, Save, Clipboard, ChevronDown, Award, Users, Info } from 'lucide-react';
 
 // Helper to identify female players in our Nepali and SAFF dataset
 const isFemalePlayer = (player: Player) => {
@@ -252,7 +252,6 @@ export default function LineupBuilder() {
     'all-men': {}, 'nep-men': {}, 'nep-women': {},
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [showNotification, setShowNotification] = useState<string | null>(null);
   const [playerFilter, setPlayerFilter] = useState<PlayerFilter>('nep-men');
   const [loadingFilter, setLoadingFilter] = useState<PlayerFilter | null>(null);
 
@@ -328,7 +327,6 @@ export default function LineupBuilder() {
       if (player) defaults[idx + 12] = player;
     });
     setAssignedPlayers(defaults);
-    triggerAlert(`${label} · ${result.formation} · conf ${result.confidence.toFixed(0)}%`);
   };
 
   const handleLoadDefaults = async () => {
@@ -337,7 +335,7 @@ export default function LineupBuilder() {
     try {
       await fillLineupFromPlayers(allPlayers, FILTER_LABELS[playerFilter]);
     } catch {
-      triggerAlert('Could not reach ML service — try again');
+      // silent — ML unavailable
     } finally {
       setAutoFilling(false);
     }
@@ -359,15 +357,10 @@ export default function LineupBuilder() {
       const players = await fetchBalancedPool(base);
       setAllPlayers(players);
     } catch {
-      triggerAlert('Could not load players — try again');
+      // silent — player fetch failed
     } finally {
       setLoadingFilter(null);
     }
-  };
-
-  const triggerAlert = (msg: string) => {
-    setShowNotification(msg);
-    setTimeout(() => setShowNotification(null), 3000);
   };
 
   const calculateSynergyBreakdown = () => {
@@ -508,13 +501,6 @@ export default function LineupBuilder() {
 
   return (
     <div className="space-y-5">
-
-      {showNotification && (
-        <div className="bg-emerald-950/40 border border-emerald-500/35 rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs text-emerald-400 animate-slide-in">
-          <BadgeCheck className="w-4 h-4 shrink-0" />
-          <span>{showNotification}</span>
-        </div>
-      )}
 
       {/* Main Pitch view & selector split - Larger Pitch Column allocation */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] xl:grid-cols-[1.65fr_1fr] gap-6 items-stretch">

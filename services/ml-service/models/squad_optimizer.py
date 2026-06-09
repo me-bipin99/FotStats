@@ -95,5 +95,5 @@ def optimize_squad(req: OptimizeSquadRequest):
         "confidence": confidence,
         "tacticalInsights": ["Lineup selected by ELO rating strength. Full genetic optimization available after training."],
         "keyMissingPlayers": [{"playerId": pid, "reason": "injured" if pid in req.constraints.injured else "suspended"}
-                              for pid in excluded],
+                              for pid in sorted(excluded)],
     }

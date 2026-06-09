@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (email: string, password: string, name: string) => {
     await apiRegister(email, password, name);
+    // Does not auto-login — Header.tsx switches to sign-in tab and shows success banner
   }, []);
 
   const logout = useCallback(() => {

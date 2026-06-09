@@ -609,6 +609,12 @@ def seed_generated_players(db):
                 _height = impute_height(nationality, pos)
                 _weight = impute_weight(_height, pos)
                 _foot = impute_preferred_foot(name, pos)
+                _elo = _elo_from_stats(stats)
+                _mv = impute_market_value(
+                    {"age": age, "position": pos, "eloRating": _elo,
+                     "appearances": apps, "goals": goals, "assists": assists, **stats},
+                    _mv_model,
+                )
 
                 generated.append({
                     "name": name,
@@ -620,7 +626,7 @@ def seed_generated_players(db):
                     "weight": _weight,
                     "preferredFoot": _foot,
                     "currentClub": team["name"],
-                    "marketValue": 0,
+                    "marketValue": _mv,
                     "stats": stats,
                     "careerStats": {
                         "appearances": apps,
@@ -629,8 +635,8 @@ def seed_generated_players(db):
                         "yellowCards": random.randint(0, max(0, apps // 8)),
                         "redCards": random.randint(0, 2),
                     },
-                    "eloRating": _elo_from_stats(stats),
-                    "source": "nepali" if is_nepal_country else "international",
+                    "eloRating": _elo,
+                    "source": "nepali" if is_nepal_country else country.lower(),
                     "generated": True,
                     "team": team["_id"],
                     "createdAt": datetime.utcnow(),

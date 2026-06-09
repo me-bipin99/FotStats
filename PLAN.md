@@ -417,23 +417,48 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 ---
 
+## Phase 10 — Opponent Player Seeding + ML Lineup Prediction
+
+> International opponent teams (India, Bhutan, Bangladesh, Pakistan) had no players in the DB, so upcoming match lineups fell back to Nepali players for both sides. Fixed by seeding those teams and correcting the fallback logic.
+
+### Task 10.1: Seed missing opponent players
+
+**Files:** `services/ml-service/scripts/seed_db.py`, `services/ml-service/scripts/seed_missing_players.py` (new)
+
+- [x] **Step 1:** `seed_db.py` `seed_generated_players()` now uses `source: country.lower()` (e.g. `'india'`) instead of `'international'` for non-Nepali teams
+- [x] **Step 2:** New standalone script `seed_missing_players.py` — additive top-up that generates 15-20 players per position for any team with fewer than 15 players; never drops existing data
+
+  ```bash
+  cd services/ml-service && source venv/bin/activate
+  python scripts/seed_missing_players.py
+  ```
+
+---
+
+### Task 10.2: Fix upcoming match lineup prediction for international teams
+
+**Files:** `frontend/src/types.ts`, `frontend/src/services/api.ts`, `frontend/src/components/MatchDetails.tsx`
+
+- [x] **Step 1:** Added `country?: string` to `Team` interface in `types.ts`
+- [x] **Step 2:** `adaptTeam()` in `api.ts` now passes through `t.country`
+- [x] **Step 3:** `getPlayers` `source` param widened from `'nepali' | 'european'` to `string`
+- [x] **Step 4:** `fetchPool` in `MatchDetails.tsx` changed signature from `(teamId: string)` to `(team: Team)`; fallback now uses `team.country.toLowerCase()` for international teams instead of always falling back to `'nepali'`
+- [x] **Step 5:** Changed `homeLineup`/`awayLineup` resolution: UPCOMING matches now always use ML prediction (ignore pre-seeded DB lineup); `isPredicted` is always `true` for UPCOMING → badge always shows
+- [x] **Step 6:** Verified in browser — Brigade Boys Club vs Chyasal Youth Club and Nepal Women vs Bhutan both show full 11-player predicted pitches with **"PREDICTED LINEUP BY MACHINE"** badge ✅
+- [x] **Step 7:** Fixed match-switch flicker — replaced three separate lineup states (`predictedHome`, `predictedAway`, `lineupLoading`) with a single `predCache` object keyed by `matchId`; stale content never renders on switch ✅
+
+---
+
 ## Phase 7 — Production Build Verification
 
 ### Task 7.1: Frontend production build
 
-- [ ] **Step 1:**
-
-  ```bash
-  cd frontend && npm run build
-
-  ```
-  Expected: `dist/` created, no TypeScript or Vite errors.
+- [x] **Step 1:** `cd frontend && npm run build` — passes clean, no errors or warnings. Output: `dist/index.html`, `dist/assets/index-*.css` (80 kB), `dist/assets/index-*.js` (493 kB). Fixed duplicate `cod` key in `nationality.ts` that produced a build warning.
 
 - [ ] **Step 2:** Preview the build
 
   ```bash
   cd frontend && npm run preview
-
   ```
   Open `http://localhost:4173` and verify the app loads.
 
@@ -441,19 +466,12 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
 ### Task 7.2: Backend production build
 
-- [ ] **Step 1:**
-
-  ```bash
-  cd backend && npm run build
-
-  ```
-  Expected: `dist/` created, no TypeScript errors.
+- [x] **Step 1:** `cd backend && npm run build` — passes clean, no TypeScript errors. Output: `dist/` compiled.
 
 - [ ] **Step 2:** Run compiled output
 
   ```bash
   cd backend && PORT=3001 npm start
-
   ```
   Expected: `Backend running on http://localhost:3001`
 
@@ -524,11 +542,37 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | 5 | Auth session persistence (JWT lost on refresh) | ✅ Complete |
 | 6 | Rate limiting | ✅ Complete |
 | Admin | Dropped — admin features removed from scope | ❌ Removed |
-| 7 | Production builds | ⏳ Upcoming |
+| 7 | Production builds | ✅ Complete (build passes; preview not yet smoke-tested) |
 | 8 | Cleanup | ✅ Complete (mockData deleted, security checklist is pre-deploy only) |
 | 9 | Match resolution + reputation | ✅ Complete |
 
 ---
 
-**Last Updated:** 2026-06-07
-**Current Blocker:** Phase 7 (production builds not yet verified). All feature code complete. Only remaining work before deploy: run `npm run build` in both `frontend/` and `backend/`, then apply Phase 8.2 security checklist (CORS lock-down, rotate JWT_SECRET, remove demo creds from seed script).
+## Phase 11 — Code Review Bug Fixes (2026-06-09)
+
+Bugs found during a full-codebase code review and fixed in session.
+
+### 11.1 Frontend fixes
+
+- [x] `PlayerComparison.tsx` — SVG path had invalid `P` command (`"M 29 33 P\nC 28..."`) which caused the male avatar hair path to fail silently. Removed the `P` token; path is now valid SVG.
+- [x] `PlayerComparison.tsx` — layout shift: empty player slot was `h-[210px]` while the populated state was taller. Added `min-h-[270px]` to both the outer wrapper and the empty placeholder so height is consistent whether a player is selected or not.
+- [x] `context/AuthContext.tsx` — `register()` does not auto-login. It calls the API and discards the return value. `Header.tsx` handles the post-registration UX: shows a success banner and switches to the sign-in tab so the user logs in manually.
+- [x] `utils/nationality.ts` — expanded `TO_ISO2` lookup table to ~80 3-letter football/FIFA prefixes (e.g. `esp→ES`, `ger→DE`, `ned→NL`, `hrv→HR`, `dnk→DK`). European players stored as `"esp ESP"` were resolving to `null` and showing a globe icon; now show the correct country flag.
+
+### 11.2 Backend fixes
+
+- [x] `backend/src/models/Match.ts` — added `outcome?: 'home_win' | 'draw' | 'away_win'` to both `IMatch` interface and Mongoose schema. Previously `resolveMatch()` was writing a string to the `result: { homeScore, awayScore }` subdocument field, silently corrupting the type.
+- [x] `backend/src/controllers/matchController.ts` — `resolveMatch()` now sets `{ status: 'completed', outcome: result }` instead of `{ status: 'completed', result }`, using the correct dedicated field.
+- [x] `backend/src/controllers/predictionController.ts` — `triggerPrediction()` was spreading the full ML response object `...(result as object)` into the Prediction upsert. The ML response includes `matchId` as a string which would overwrite the ObjectId `matchId` in the filter on upsert. Fixed with explicit destructuring of `{ prediction: pred, confidence, voteBreakdown }`.
+
+### 11.3 ML service fixes
+
+- [x] `services/ml-service/models/squad_optimizer.py` — `keyMissingPlayers` list iteration order was non-deterministic because `excluded` is a Python `set`. Changed `for pid in excluded` to `for pid in sorted(excluded)` for consistent output.
+- [x] `services/ml-service/scripts/seed_db.py` — `seed_generated_players()` hardcoded `"marketValue": 0` for all generated (non-European) players. Fixed to call `impute_market_value()` so Nepali and South Asian players get ML-computed market values at seed time.
+- [x] `services/ml-service/scripts/seed_missing_players.py` — same hardcoded 0 fix applied; now calls `impute_market_value()` for every generated player.
+- [x] `services/ml-service/scripts/backfill_market_values.py` (new one-time script) — ran once to backfill all existing players with `marketValue == 0`; updated 380 players (Nepali avg ~€194k, South Asian avg ~€181–202k).
+
+---
+
+**Last Updated:** 2026-06-09
+**Current Blocker:** Phase 8.2 pre-production security checklist. Builds pass clean (`frontend` and `backend`). Remaining work before deploy: CORS lock-down (both Express and FastAPI), rotate JWT_SECRET, remove demo credentials from seed script/database.

@@ -11,6 +11,7 @@ export interface Team {
   stadium: string;
   stadiumCapacity: string;
   formation: string; // e.g. '4-3-3'
+  country?: string; // e.g. 'Nepal', 'India' — used to pick player source for ML lineup prediction
 }
 
 export interface PlayerAttributes {

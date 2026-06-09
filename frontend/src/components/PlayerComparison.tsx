@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Player } from '../types';
 import { getPlayers, comparePlayers as apiComparePlayers, type CompareResult } from '../services/api';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import { getCountryDisplay } from '../utils/nationality';
 
 interface PlayerComparisonProps {
@@ -9,35 +9,6 @@ interface PlayerComparisonProps {
   onSelectPlayer: (player: Player, slot: 'A' | 'B') => void;
   onClearSlot: (slot: 'A' | 'B') => void;
 }
-
-// Minimal Football Jersey Component
-const SoccerJersey = ({ number, color = '#242936', accentColor = '#3a3f50' }: { number: number; color?: string; accentColor?: string }) => {
-  return (
-    <svg className="w-11 h-11 drop-shadow-xl select-none" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M30 15 L42 15 L45 22 L55 22 L58 15 L70 15 L82 28 L72 35 L72 85 L28 85 L28 35 L18 28 Z"
-        fill={color}
-        stroke={accentColor}
-        strokeWidth="3.5"
-        strokeLinejoin="round"
-      />
-      <path d="M18 28 L28 35" stroke={accentColor} strokeWidth="2.5" />
-      <path d="M82 28 L72 35" stroke={accentColor} strokeWidth="2.5" />
-      <text
-        x="50"
-        y="56"
-        fill="#FFFFFF"
-        fontSize="24"
-        fontWeight="900"
-        fontFamily="sans-serif"
-        textAnchor="middle"
-        dominantBaseline="central"
-      >
-        {number}
-      </text>
-    </svg>
-  );
-};
 
 // Helper to identify female players in our Nepali and SAFF dataset
 const isFemalePlayer = (player: Player) => {
@@ -147,8 +118,8 @@ const DummyPlayerAvatar = ({ className = "w-13 h-13", gender = "male" }: { class
       <path d="M 72 35 C 72 38, 70 40, 70 35" stroke="#F4DFC8" strokeWidth="2" strokeLinecap="round" />
 
       {/* Smooth matching swept brown hair precisely conforming to the original attachment shape */}
-      <path d="M 29 33 P
-               C 28 21, 35 12, 50 11 
+      <path d="M 29 33
+               C 28 21, 35 12, 50 11
                C 65 10, 71 21, 71 30 
                C 70 24, 66 18, 58 18 
                C 52 18, 48 24, 40 23 
@@ -468,23 +439,19 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
 
     return (
       <div className="flex-1 flex flex-col justify-between h-full space-y-5 py-0.5">
-        {/* Row 1: Club and shirt */}
+        {/* Row 1: Name and deselect */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-slate-950 border border-slate-900 shadow shadow-slate-950 shrink-0">
-              <span className={`font-mono font-black text-[11px] ${isSlotA ? 'text-emerald-400' : 'text-slate-300'}`}>
-                👤
-              </span>
-            </div>
-            <div className="text-left">
-              <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider block">Athlete Name</span>
-              <span className="text-sm font-extrabold text-slate-100 mt-0.5 block truncate max-w-[150px]">{player.name}</span>
-            </div>
+          <div className="text-left">
+            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider block">Athlete Name</span>
+            <span className="text-sm font-extrabold text-slate-100 mt-0.5 block truncate max-w-37.5">{player.name}</span>
           </div>
-          {/* Symmetrical jersey block content */}
-          <div className="shrink-0">
-            <SoccerJersey number={player.number} color={isSlotA ? '#131422' : '#222329'} accentColor={isSlotA ? '#10b981' : '#d1d5db'} />
-          </div>
+          <button
+            onClick={() => onClearSlot(isSlotA ? 'A' : 'B')}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-900 border border-slate-800 hover:border-red-500/50 hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition shrink-0"
+            title="Deselect player"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* Row 2: Nationality, Age, Preferred Foot */}
@@ -537,7 +504,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 bg-[#151619] p-5 md:p-6 border border-[#202124] rounded-2xl shadow-xl">
         
         {/* CANDIDATE A BLOCK */}
-        <div className="relative">
+        <div className="relative min-h-[270px]">
           {playerA ? (
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               {/* Outer card + change trigger info */}
@@ -554,7 +521,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {renderBioGrid(playerA, true)}
             </div>
           ) : (
-            <div className="h-[210px] border-2 border-dashed border-slate-900 hover:border-emerald-500/20 bg-slate-950/20 rounded-2xl flex flex-col items-center justify-center text-center p-6 transition">
+            <div className="h-full min-h-[270px] border-2 border-dashed border-slate-900 hover:border-emerald-500/20 bg-slate-950/20 rounded-2xl flex flex-col items-center justify-center text-center p-6 transition">
               <button
                 onClick={() => { setSlotAPickerOpen((prev) => !prev); setSlotBPickerOpen(false); }}
                 className="flex flex-col items-center cursor-pointer"
@@ -606,7 +573,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
         </div>
 
         {/* CANDIDATE B BLOCK */}
-        <div className="relative">
+        <div className="relative min-h-[270px]">
           {playerB ? (
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               {/* Outer card + change trigger info */}
@@ -623,7 +590,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {renderBioGrid(playerB, false)}
             </div>
           ) : (
-            <div className="h-[210px] border-2 border-dashed border-slate-900 hover:border-slate-500/20 bg-slate-950/20 rounded-2xl flex flex-col items-center justify-center text-center p-6 transition">
+            <div className="h-full min-h-[270px] border-2 border-dashed border-slate-900 hover:border-slate-500/20 bg-slate-950/20 rounded-2xl flex flex-col items-center justify-center text-center p-6 transition">
               <button
                 onClick={() => { setSlotBPickerOpen((prev) => !prev); setSlotAPickerOpen(false); }}
                 className="flex flex-col items-center cursor-pointer"

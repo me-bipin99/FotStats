@@ -55,7 +55,7 @@ Source files:
 | `height` | 🧮 Derived | `impute_height("Nepali", position)` — nationality+position lookup table |
 | `weight` | 🧮 Derived | `impute_weight(height, position)` — BMI formula |
 | `preferredFoot` | 🧮 Derived | `impute_preferred_foot(name, position)` — position-weighted, MD5-seeded |
-| `marketValue` | 🤖 ML | CSV value if non-zero; else `impute_market_value()` — CatBoost regressor |
+| `marketValue` | 🤖 ML | CSV market value if present and non-zero; else `impute_market_value()` — CatBoost regressor (trained separately via `train_imputer.py`); always ML-imputed at seed time |
 
 ### European Players (`source: "european"`)
 
@@ -80,7 +80,7 @@ Source file: `data/players_data-2025_2026.csv` — ~2780 players (top 5 European
 | `height` | 🧮 Derived | `impute_height(nationality, position)` — nationality+position lookup table |
 | `weight` | 🧮 Derived | `impute_weight(height, position)` — BMI formula |
 | `preferredFoot` | 🧮 Derived | `impute_preferred_foot(name, position)` — position-weighted, MD5-seeded |
-| `marketValue` | 🤖 ML | `impute_market_value()` — CatBoost regressor (0 if model not yet trained) |
+| `marketValue` | 🤖 ML | `impute_market_value()` — CatBoost regressor; always ML-imputed at seed time (not hardcoded 0) |
 
 ---
 
@@ -144,8 +144,7 @@ All 8 fixtures are hardcoded in `seed_matches()`. Run the seed again to reset to
 | `venue` | ✅ Auto | Hardcoded stadium name |
 | `homeFormation` / `awayFormation` | ✅ Auto | Hardcoded per match |
 | `result` | ✅ Auto | Hardcoded for completed matches only |
-| `voteCounts` | ✅ Auto | Hardcoded demo votes for completed matches |
-| `homeLineup` / `awayLineup` | ❌ Missing | Empty `[]` at seed — filled via Algorithm 3 or manually |
+| `homeLineup` / `awayLineup` | ❌ Missing | Empty `[]` at seed — filled at request time via Algorithm 3 (GET /matches/:id populates predicted lineup for upcoming matches) |
 | Match prediction | 🤖 ML | Computed on demand via `POST /predict-match` (Algorithm 1) |
 
 ---
@@ -196,11 +195,11 @@ python scripts/train_imputer.py
 #    Populates height, weight, preferredFoot, marketValue via Algorithm 4
 python scripts/seed_db.py
 
-# 3. Verify counts
+# 3. Verify counts (after seed_db.py + seed_missing_players.py)
 # Expected output:
-#   Players : 2879+  (102 Nepali + ~2780 European)
-#   Teams   : 8
-#   Matches : 8
+#   Players : 3086+  (Nepali + South Asian generated + ~2780 European)
+#   Teams   : 19
+#   Matches : 24
 #   Users   : 2
 
 # 4. Spot-check team assignment
@@ -238,5 +237,5 @@ To add a new player field:
 
 ---
 
-**Last Updated:** 2026-06-07
-**Seed produces:** ~2879 players · 8 teams · 8 matches · 2 users
+**Last Updated:** 2026-06-09
+**Seed produces:** ~3086 players · 19 teams · 24 matches · 2 users (after running `seed_db.py` + `seed_missing_players.py`). Market values are ML-imputed at seed time for all players; run `backfill_market_values.py` once to fix any existing players with `marketValue == 0`.

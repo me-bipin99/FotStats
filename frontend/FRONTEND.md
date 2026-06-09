@@ -69,6 +69,8 @@ src/
 
 **Tailwind v4:** Configured via `@tailwindcss/vite` plugin (no `tailwind.config.ts`). Theme tokens set inside `@theme {}` in `index.css`.
 
+**Scrollbar layout shift fix:** `html { overflow-y: scroll; }` is set in `index.css` so the scrollbar gutter is always reserved. Without this, switching from the stats page (tall content, scrollbar visible) to shorter pages caused the sticky navbar to shift ~15px horizontally as the scrollbar appeared/disappeared.
+
 ## Navigation & State
 
 `App.tsx` manages all top-level state:
@@ -83,6 +85,8 @@ const [selectedMatchId, setSelectedMatchId] = useState<string>('');
 const [comparisonPlayers, setComparisonPlayers] = useState<Player[]>([]);
 ```
 
+`comparisonPlayers` is a two-slot array where index `0` = slot A, index `1` = slot B. `handleClearCompareSlot` nulls out only the specified index — it does **not** shift the other player or call `filter(Boolean)`, so clearing slot A leaves slot B intact at index 1.
+
 On mount, `App.tsx` calls `getMatches({ limit: 50 })` from `api.ts` and auto-selects the first match. No React Router — tab switching is done via `setActiveTab`.
 
 ## Auth
@@ -93,7 +97,7 @@ Auth state lives in `src/context/AuthContext.tsx` using real JWT:
 - On mount, reads `FOTNEP_TOKEN` from `localStorage`, calls `GET /auth/me`, and restores the user — session survives page refresh
 - `useAuth()` hook exposes `{ user, isLoggedIn, login, register, logout }`
 - Token is stored under key `FOTNEP_TOKEN` in localStorage
-- **`register` does NOT auto-login** — it calls the API and returns; on success `Header.tsx` switches to the sign-in tab and shows a success banner. The user must sign in manually after registering.
+- **`register` does NOT auto-login** — `AuthContext.register()` calls the API and returns; it discards the token. On success, `Header.tsx` sets `signupSuccess = true`, switches `authMode` to `'signin'`, and shows a "Registered! Account created. Please sign in." banner. The user must sign in manually after registering.
 - Duplicate email → backend returns 409 `"An account with this email already exists"`. Duplicate username → `"Username is already taken"`. Both surface as `authError` in the signup form.
 
 ## Types (src/types.ts)
@@ -102,7 +106,7 @@ Key interfaces:
 
 ```typescript
 Player      // id, name, number, position, nationality?, rating, attributes (pace/shooting/passing/dribbling/defending/physical)
-Team        // id, name, shorthand, color, coach, stadium, formation, logo? (api-sports CDN — rendered in MatchFeed + MatchDetails; natural shape via object-contain wrapper, falls back to color circle if missing)
+Team        // id, name, shorthand, color, coach, stadium, formation, logo?, country? (passed through from ApiTeam; used by MatchDetails fetchPool to choose the right player source for ML lineup prediction)
 Match       // id, category, status, homeTeam, awayTeam, homeFormation, awayFormation, homeLineup?, awayLineup?, predictionVotes
 LineupPosition  // player, x, y (pitch coordinates as %)
 MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
@@ -111,14 +115,20 @@ MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
 **Lineup display logic in `MatchDetails.tsx`:**
 
 - LIVE/FINISHED: renders `match.homeLineup` / `match.awayLineup` (populated by backend from seed data)
-- UPCOMING: on mount, fetches players by teamId (`getPlayers({ teamId, source:'nepali' })`), calls `optimizeSquad` for both teams in parallel, converts result via `squadToLineup()` helper; shows "Predicting Lineup…" spinner while loading, then renders predicted XI with green "Predicted Lineup by Machine" badge
-- Falls back to "Lineups Unavailable" placeholder if ML returns no result
+- UPCOMING: always uses ML prediction (`predictedHome` / `predictedAway`) — never uses the pre-seeded lineup from DB, even if one exists. On mount fetches players by teamId, calls `optimizeSquad` for both teams via `Promise.allSettled`, converts result via `squadToLineup()`. Shows "Predicting Lineup…" spinner while loading, then renders predicted XI with green **"PREDICTED LINEUP BY MACHINE"** badge at pitch bottom.
+- `isPredicted` is `true` for all UPCOMING matches (badge always shows)
+- **No-flicker switching:** lineup state is a single `predCache` object `{ matchId, home, away }`. `predictedHome`/`predictedAway` are derived as `null` whenever `predCache.matchId !== match.id`, and `lineupLoading` is derived as `match.status === 'UPCOMING' && predCache.matchId !== match.id` — so the moment a new match is selected, stale content is never shown and the spinner appears in the same render cycle, not a frame later.
+- Falls back to "Lineups Unavailable" only when both ML calls fail
 - **Hovered player detail card** renders inside a fixed `h-14` wrapper below the pitch — the wrapper always occupies space so the card appearing/disappearing on hover does not cause layout shift (page shake).
-- **UPCOMING predicted lineup fallback:** `fetchPool(teamId)` queries by `teamId` only (no `source` filter — international teams store players as `source:'international'`). If fewer than 11 players are returned, it falls back to all Nepali players of the correct gender (`M`/`F` from `match.category`). This ensures `optimizeSquad` always receives a full pool and the "Predicted Lineup by Machine" badge renders correctly for all matches.
+- **UPCOMING predicted lineup fallback:** `fetchPool(team)` queries by `teamId` first; if fewer than 11 players are returned it falls back using `team.country`: Nepal teams fall back to `source: 'nepali'`; international teams (India, Bhutan, etc.) fall back to `source: team.country.toLowerCase()` (e.g. `'india'`, `'bhutan'`). This matches how `seed_missing_players.py` stores player source values. Both `getPlayers` and the backend `listPlayers` accept any string for `source`.
 
 **Pitch coordinate utility:** `src/utils/pitchCoords.ts` — `getFormationCoords(formation, players, isHome)` maps GK→DF→MF→FW ordered players to `{x,y}` percentage coordinates. Home team occupies left half (x: 3–47%), away mirrors right (x: 53–97%). Supports `4-3-3`, `4-4-2`, `4-2-3-1`, `3-5-2`; falls back to `4-3-3`.
 
 **`Player.nationality`** is the raw string from the DB — either `"Nepali"` (Nepali players) or `"xx XXX"` format (European dataset, e.g. `"us USA"`, `"eng ENG"`). `adaptPlayer()` in `api.ts` passes it through directly. The `club` field is set to the populated team name, or `'—'` when no team is available (nationality no longer bleeds into the club field).
+
+`PlayerComparison.tsx` — the two player slot blocks (`CANDIDATE A` / `CANDIDATE B`) both have `min-h-[270px]` on their outer wrapper. The empty dashed placeholder also uses `h-full min-h-[270px]` so both empty and populated states occupy the same height, preventing layout shift when a player is selected or deselected.
+
+`PlayerComparison.tsx` bio grid (`renderBioGrid`) no longer shows the 👤 icon box before the player name, and the `SoccerJersey` SVG has been removed. In its place is a small circular X button (top-right of the bio row) that calls `onClearSlot('A'|'B')` to deselect the player and return the slot to the empty picker state.
 
 `PlayerComparison.tsx` exposes a `shortClubName(club)` helper that strips common prefixes (`FC`, `AC`, `AS`, `RB`, `VfL`, etc.) and returns the first meaningful word — used in both the FUTCard footer and the player-picker dropdown. The dropdown hides the club token entirely when no club is available (i.e. `shortClubName` returns `''`). `PlayerStats.tsx` shows the full `player.club` string in the detail pane — no truncation.
 
@@ -126,7 +136,7 @@ MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
 
 `ApiPlayer` now includes four imputed physical fields (all optional): `height` (cm), `weight` (kg), `preferredFoot` (`'Right' | 'Left' | 'Both'`), `marketValue` (€). `adaptPlayer()` surfaces them with graceful fallbacks: `height` → `"178 cm"` or `'—'`; `weight` → `"71 kg"` or `'—'`; `marketValue` → `"€18,400"` or `'—'`; `preferredFoot` → value from DB or `'Right'` default. These fields are populated at seed time by Algorithm 4 (`services/ml-service/models/attribute_imputer.py`).
 
-**`src/utils/nationality.ts`** — shared `getCountryDisplay(nationality?)` utility. Parses the raw DB nationality string and returns `{ flag: string; code: string }` — a Unicode flag emoji + 3-letter country code. Used by both `PlayerComparison.tsx` and `PlayerStats.tsx`. Special cases handled: `eng/sco/wal/nir` → 🇬🇧, `Nepali/Nepal` → 🇳🇵, standard ISO alpha-2 prefixes → emoji via Regional Indicator codepoints.
+**`src/utils/nationality.ts`** — shared `getCountryDisplay(nationality?)` utility. Parses the raw DB nationality string and returns `{ flag: string; code: string }` — a Unicode flag emoji + 3-letter country code. Used by both `PlayerComparison.tsx` and `PlayerStats.tsx`. Maintains a `TO_ISO2` lookup table covering ~80 3-letter football/FIFA prefixes (e.g. `esp`→`ES`, `ger`→`DE`, `fra`→`FR`, `ned`→`NL`, `hrv`→`HR`, `dnk`→`DK`, UK home nations→`GB`, etc.) so that generated players stored as `"esp ESP"` or `"ger GER"` resolve to the correct flag emoji. 2-letter ISO prefixes (e.g. `"es ESP"`, `"fr FRA"`) are handled directly without a table lookup.
 
 ## Available Scripts
 
@@ -180,13 +190,17 @@ The active filter is highlighted in emerald. `loadingFilter` tracks which button
 
 **Pitch + bench colors:** Driven by `playerFilter === 'nep-women'` (not `isFemalePlayer()`). Nep Women filter → pink gradients for pitch bubbles and bench cards + female avatar. All Men / Nep Men → emerald. The `isFemalePlayer` helper is retained only for the synergy cohesion calculation.
 
-**"Tactics Dashboard Active" idle state:** When no slot is selected the sidebar shows this heading, a description, and the Auto Pick XI button. The icon box that previously held a `Clipboard` icon has been removed.
+**"Tactics Dashboard Active" idle state:** When no slot is selected the sidebar shows this heading, a description, and the Auto Pick XI button. The icon box that previously held a `Clipboard` icon has been removed. The `showNotification` toast banner (showed formation + confidence % after auto-fill) has been removed — the auto-fill result is visible directly on the pitch with no extra UI.
 
 **Drafting panel player list height:** The scrollable player list uses `max-h-[calc(100vh-290px)]` (viewport-relative) instead of a fixed `max-h-[350px]`, so it fills the available panel height on any screen size.
 
 **Drafting list deduplication:** The player picker shown when a slot is selected excludes any player already assigned to another slot on the pitch or bench. `assignedPlayerIds` (a `Set` of ids from `assignedPlayers`) is computed before filtering and used as the first filter predicate.
 
 **Position-priority sort:** When a pitch slot is selected, the picker sorts players by positional relevance first, then by rating descending within each group. Priority order per slot role (defined in `POSITION_PRIORITY` constant): FW → MF,DF,GK | MF → FW,DF,GK | DF → MF,FW,GK | GK → DF,MF,FW. Sub slots have no role constraint — sorted by rating only.
+
+### PlayerStats empty search state
+
+When a search returns no results, `PlayerStats.tsx` keeps the sidebar (search input + filter buttons) fully visible and shows a "No player available for that name" message in the detail panel instead of replacing the whole component. The early-return fallback that hid everything was removed; the detail panel now uses a ternary — empty state when `!selectedPlayer`, full profile when a player is selected.
 
 ### PlayerStats category filter
 

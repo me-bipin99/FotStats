@@ -40,9 +40,14 @@ export async function triggerPrediction(req: Request, res: Response): Promise<vo
     return;
   }
 
+  const { prediction: pred, confidence, voteBreakdown } = result as {
+    prediction: { homeWinProb: number; drawProb: number; awayWinProb: number };
+    confidence: number;
+    voteBreakdown: { homeWin: number; draw: number; awayWin: number };
+  };
   const prediction = await Prediction.findOneAndUpdate(
     { matchId },
-    { ...(result as object), timestamp: new Date() },
+    { prediction: pred, confidence, voteBreakdown, timestamp: new Date() },
     { upsert: true, new: true }
   );
 

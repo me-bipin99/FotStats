@@ -75,9 +75,16 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
   const [voteCounts, setVoteCounts] = useState({ home_win: 0, draw: 0, away_win: 0 });
   const [predResult, setPredResult] = useState<PredictionResult | null>(null);
   const [voting, setVoting] = useState(false);
-  const [predictedHome, setPredictedHome] = useState<TeamLineup | null>(null);
-  const [predictedAway, setPredictedAway] = useState<TeamLineup | null>(null);
-  const [lineupLoading, setLineupLoading] = useState(false);
+  // Single object keyed by matchId — avoids stale-content flicker when switching matches.
+  // lineupLoading is derived: true whenever the current match hasn't been predicted yet.
+  const [predCache, setPredCache] = useState<{
+    matchId: string;
+    home: TeamLineup | null;
+    away: TeamLineup | null;
+  }>({ matchId: '', home: null, away: null });
+  const predictedHome = predCache.matchId === match.id ? predCache.home : null;
+  const predictedAway = predCache.matchId === match.id ? predCache.away : null;
+  const lineupLoading = match.status === 'UPCOMING' && predCache.matchId !== match.id;
 
   useEffect(() => {
     setVoteOutcome(null);
@@ -86,7 +93,6 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
       .then(data => {
         setVoteCounts({ home_win: data.home_win, draw: data.draw, away_win: data.away_win });
         if (data.userVote) setVoteOutcome(data.userVote as 'home_win' | 'draw' | 'away_win');
-        // Trigger prediction whenever votes exist, even before user casts one
         if (data.home_win + data.draw + data.away_win > 0) {
           triggerPrediction(match.id).then(setPredResult).catch(() => {});
         }
@@ -99,48 +105,51 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
   useEffect(() => {
     if (match.status !== 'UPCOMING') return;
-    setPredictedHome(null);
-    setPredictedAway(null);
-    setLineupLoading(true);
     let cancelled = false;
+    const matchId = match.id;
 
     const gender: 'M' | 'F' = match.category === 'WOMEN' ? 'F' : 'M';
 
-    // Fetch team-specific players by teamId (no source filter — international teams use source:'international').
-    // Fall back to all Nepali players of the right gender if the team roster is too thin.
-    const fetchPool = async (teamId: string): Promise<Player[]> => {
-      const { players } = await getPlayers({ teamId, limit: 50 });
+    const fetchPool = async (team: typeof match.homeTeam): Promise<Player[]> => {
+      const { players } = await getPlayers({ teamId: team.id, limit: 50 });
       if (players.length >= 11) return players;
-      const { players: fallback } = await getPlayers({ source: 'nepali', gender, limit: 120 });
+      const fallbackSource = team.country && team.country !== 'Nepal'
+        ? team.country.toLowerCase()
+        : 'nepali';
+      const { players: fallback } = await getPlayers({ source: fallbackSource, gender, limit: 120 });
       return fallback;
     };
 
     (async () => {
       try {
         const [homePlayers, awayPlayers] = await Promise.all([
-          fetchPool(match.homeTeam.id),
-          fetchPool(match.awayTeam.id),
+          fetchPool(match.homeTeam),
+          fetchPool(match.awayTeam),
         ]);
 
         const homeIds = homePlayers.map((p) => p.id);
         const awayIds = awayPlayers.map((p) => p.id);
 
-        const [homeSquad, awaySquad] = await Promise.all([
+        const [homeResult, awayResult] = await Promise.allSettled([
           homeIds.length
-            ? optimizeSquad({ teamId: match.homeTeam.id, availablePlayerIds: homeIds, formationPreference: match.homeFormation })
+            ? optimizeSquad({ teamId: match.homeTeam.id, availablePlayerIds: homeIds, formationPreference: match.homeFormation || '4-3-3' })
             : Promise.resolve(null),
           awayIds.length
-            ? optimizeSquad({ teamId: match.awayTeam.id, availablePlayerIds: awayIds, formationPreference: match.awayFormation })
+            ? optimizeSquad({ teamId: match.awayTeam.id, availablePlayerIds: awayIds, formationPreference: match.awayFormation || '4-3-3' })
             : Promise.resolve(null),
         ]);
 
         if (cancelled) return;
-        if (homeSquad) setPredictedHome(squadToLineup(homeSquad, homePlayers, true));
-        if (awaySquad) setPredictedAway(squadToLineup(awaySquad, awayPlayers, false));
+        const homeSquad = homeResult.status === 'fulfilled' ? homeResult.value : null;
+        const awaySquad = awayResult.status === 'fulfilled' ? awayResult.value : null;
+        setPredCache({
+          matchId,
+          home: homeSquad ? squadToLineup(homeSquad, homePlayers, true) : null,
+          away: awaySquad ? squadToLineup(awaySquad, awayPlayers, false) : null,
+        });
       } catch {
-        // silently fall through — pitch shows unavailable placeholder
-      } finally {
-        if (!cancelled) setLineupLoading(false);
+        // pool fetch failed — mark as done so spinner stops
+        if (!cancelled) setPredCache({ matchId, home: null, away: null });
       }
     })();
 
@@ -192,9 +201,10 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
     return selectedPlayers.some((p) => p.id === playerId);
   };
 
-  const homeLineup = match.homeLineup ?? predictedHome;
-  const awayLineup = match.awayLineup ?? predictedAway;
-  const isPredicted = match.status === 'UPCOMING' && !match.homeLineup;
+  // Upcoming matches always use ML prediction (ignore any pre-seeded lineup in DB)
+  const homeLineup = match.status === 'UPCOMING' ? predictedHome : (match.homeLineup ?? null);
+  const awayLineup = match.status === 'UPCOMING' ? predictedAway : (match.awayLineup ?? null);
+  const isPredicted = match.status === 'UPCOMING';
 
   return (
     <div className="bg-[#151619] border border-slate-800/60 rounded-xl overflow-hidden shadow-xl flex flex-col h-full">
