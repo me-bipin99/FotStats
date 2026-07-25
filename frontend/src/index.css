@@ -5,6 +5,16 @@
   --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Space Grotesk', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --color-slate-850: #172033;
+
+  /* Nepal-flag-sampled brand blue — replaces emerald as the primary interactive accent */
+  --color-brand-300: #7c9bd9;
+  --color-brand-400: #567abb;
+  --color-brand-500: #1e4fa3;
+  --color-brand-600: #1a438b;
+  --color-brand-800: #122f62;
+  --color-brand-900: #0d2449;
+  --color-brand-950: #091831;
 }
 
 html {
