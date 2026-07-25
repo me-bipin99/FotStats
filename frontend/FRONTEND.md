@@ -182,6 +182,8 @@ Matches have `category: 'MEN' | 'WOMEN' | 'DOMESTIC'` derived from the competiti
 
 **Match card (MatchFeed):** team logo `<img>`s are shown when `match.homeTeam.logo` / `match.awayTeam.logo` is set, falling back to the color-coded shorthand-letter badge on load error (`onError` swaps to the sibling badge div). The per-card "Votes: N" footer badge (`predictionVotes` total) has been removed.
 
+**`MatchFeed.tsx` converted (brand-blue pass):** every `emerald-{N}` → `brand-{N}`: the `DOMESTIC` category filter's active/hover color (its broken `hover:text-emerald-350` also normalized in the same swap), search-input focus ring, the `ALL/FINISHED/UPCOMING` active status tab (`bg-brand-500 text-white`, not `text-black` — see the text-pairing note above), selected match-card border/shadow, the LIVE badge, the upcoming-match date text, and the winning-team score highlight. The `MEN`'s `rose` and `WOMEN`'s `amber` category colors are unchanged — that's a pre-existing 3-way category scheme, not part of the brand/data swap. The score/kickoff-time box's background+border was also dropped in favor of plain centered text (declutter pass, same visual role as the earlier logo/vote-count cleanup).
+
 **Status filter tabs (MatchFeed):** the `LIVE` tab has been removed from the filter row — only `All` / `Finished` / `Upcoming` are shown, since live-match tracking is not yet implemented. `FilterStatus` type still includes `'LIVE'` (matches can still carry that status and show the pulsing live badge on their card), but it's no longer a selectable filter tab.
 
 ### LineupBuilder player pool filter
