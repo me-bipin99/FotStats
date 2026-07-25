@@ -506,17 +506,17 @@ export default function LineupBuilder() {
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] xl:grid-cols-[1.65fr_1fr] gap-6 items-stretch">
         
         {/* Pitch Canvas container */}
-        <div className="bg-[#151619] border border-[#202124] rounded-2xl p-4 md:p-6 shadow-2xl relative overflow-hidden flex flex-col items-center">
+        <div className="bg-[#151619] border border-[#202124] rounded-xl p-4 md:p-6 shadow-2xl relative overflow-hidden flex flex-col items-center">
           
           {/* Controls Bar */}
-          <div className="w-full flex justify-between items-center bg-slate-950 border border-slate-850 p-3 rounded-xl mb-6 z-10 gap-3 flex-wrap">
+          <div className="w-full flex justify-between items-center bg-slate-950 border-b border-slate-850 pb-3 mb-6 z-10 gap-3 flex-wrap">
             <div className="flex items-center gap-2.5">
               <span className="text-xs text-slate-400 font-extrabold uppercase tracking-wider">Formation:</span>
               <div className="relative">
                 <select
                   value={activeFormation}
                   onChange={(e) => { setActiveFormation(e.target.value); setAssignedPlayers({}); }}
-                  className="bg-[#0c0d12] border border-slate-800 hover:border-emerald-500/50 text-slate-100 font-extrabold text-xs px-3.5 py-1.5 pr-9 rounded-xl appearance-none outline-none cursor-pointer transition duration-200"
+                  className="bg-[#0c0d12] border border-slate-800 hover:border-brand-500/50 text-slate-100 font-extrabold text-xs px-3.5 py-1.5 pr-9 rounded-xl appearance-none outline-none cursor-pointer transition duration-200"
                 >
                   {Object.keys(FORMATIONS).map((form) => (
                     <option key={form} value={form} className="bg-slate-950 text-slate-200 font-bold">
@@ -540,7 +540,7 @@ export default function LineupBuilder() {
                     disabled={!!loadingFilter || autoFilling}
                     className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                       playerFilter === f
-                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'
+                        ? 'bg-brand-500/20 text-brand-400 border-brand-500/50'
                         : 'bg-slate-900 hover:bg-slate-850 text-slate-400 border-slate-800/80 hover:text-slate-200'
                     }`}
                   >
@@ -565,7 +565,7 @@ export default function LineupBuilder() {
             {/* Texture Pitch Lines */}
             <div className="absolute inset-x-0 inset-y-0 opacity-15 pointer-events-none border-x border-dashed border-white/40" />
             <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white/20 -translate-x-1/2 pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 w-28 h-28 border-2 border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 w-28 h-28 border-2 border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" /> {/* unslop-ignore: literal pitch center-circle marking */}
             <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-white/30 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
             
             {/* Goal Posts & Boxes */}
@@ -592,12 +592,12 @@ export default function LineupBuilder() {
                   {assignedPlayer ? (
                     <div className="flex flex-col items-center">
                       {/* Football Star Bubble */}
-                      <div className={`relative w-11 h-11 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center font-bold text-center text-xs md:text-sm shadow-xl transition overflow-hidden group-hover:scale-105 ${
+                      <div className={`relative w-11 h-11 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center font-bold text-center text-xs md:text-sm shadow-xl transition overflow-hidden motion-safe:group-hover:scale-105 ${
                         isSelected
-                          ? 'bg-emerald-500 text-black border-white'
+                          ? 'bg-brand-500 text-white border-white'
                           : playerFilter === 'nep-women'
                           ? 'bg-gradient-to-br from-pink-600 to-pink-500 text-white border-pink-400'
-                          : 'bg-gradient-to-br from-emerald-600 to-emerald-400 text-white border-emerald-400'
+                          : 'bg-gradient-to-br from-brand-600 to-brand-400 text-white border-brand-400'
                       }`}>
                         
                         {/* Jersey Number overlay */}
@@ -606,14 +606,14 @@ export default function LineupBuilder() {
                         </span>
 
                         {/* rating pill */}
-                        <span className="absolute -bottom-1 tracking-tighter text-[8px] font-mono font-black bg-black border border-slate-800 text-amber-400 px-1 rounded-full scale-90">
+                        <span className="absolute -bottom-1 tracking-tighter text-[8px] font-mono font-black bg-black border border-slate-800 text-amber-400 px-1 rounded-md scale-90">
                           {assignedPlayer.rating}
                         </span>
 
                         {/* Top right remove handle on hover */}
-                        <button 
+                        <button
                           onClick={(e) => handleClearSlot(slot.id, e)}
-                          className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 hover:scale-110 bg-black/80 rounded-full p-1 text-red-400 border border-red-500/20 transition duration-150"
+                          className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 hover:scale-110 bg-black/80 rounded-full p-1 text-red-400 border border-red-500/20 transition duration-150" // unslop-ignore: circular icon button, not a decorative pill default
                         >
                           <X className="w-2.5 h-2.5" />
                         </button>
@@ -627,10 +627,10 @@ export default function LineupBuilder() {
                   ) : (
                     <div className="flex flex-col items-center">
                       {/* Empty Plus Slot bubble */}
-                      <div className={`w-10 h-10 rounded-full border border-dashed flex items-center justify-center transition ${
-                        isSelected 
-                          ? 'bg-emerald-500/20 border-emerald-400 scale-105 text-emerald-400 ring-2 ring-emerald-500/25'
-                          : 'bg-slate-950/60 border-white hover:bg-slate-900 text-white hover:border-emerald-500/40'
+                      <div /* unslop-ignore: circular avatar placeholder, not a decorative pill default */ className={`w-10 h-10 rounded-full border border-dashed flex items-center justify-center transition ${
+                        isSelected
+                          ? 'bg-brand-500/20 border-brand-400 scale-105 text-brand-400 ring-2 ring-brand-500/25'
+                          : 'bg-slate-950/60 border-white hover:bg-slate-900 text-white hover:border-brand-500/40'
                       }`}>
                         <Plus className="w-4 h-4 animate-pulse" />
                       </div>
@@ -649,7 +649,7 @@ export default function LineupBuilder() {
           <div className="w-full mt-6 bg-slate-950/60 border border-slate-900 rounded-xl p-4 md:p-5 shadow-lg relative z-10">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 font-mono font-black rounded border border-emerald-500/20 uppercase tracking-wider">Bench</span>
+                <span className="px-2 py-0.5 text-[10px] bg-brand-500/10 text-brand-400 font-mono font-black rounded border border-brand-500/20 uppercase tracking-wider">Bench</span>
                 <h4 className="text-xs font-extrabold text-slate-100 uppercase tracking-widest font-sans">Substitutes (Max 5)</h4>
               </div>
               <span className="text-[9.5px] text-slate-500 font-mono">Click slots below to select subs</span>
@@ -668,22 +668,22 @@ export default function LineupBuilder() {
                     className={`group relative rounded-xl p-3 flex flex-col items-center justify-between min-h-[96px] cursor-pointer transition border select-none ${
                       assignedPlayer
                         ? isSelected
-                          ? 'bg-emerald-950/40 border-emerald-400 shadow-md scale-[1.02]'
+                          ? 'bg-brand-950/40 border-brand-400 shadow-md scale-[1.02]'
                           : isWomen
                           ? 'bg-gradient-to-b from-pink-950/20 to-pink-950/5 border-pink-500/20 hover:border-pink-500/40'
-                          : 'bg-gradient-to-b from-emerald-950/20 to-emerald-950/5 border-emerald-500/20 hover:border-emerald-500/40'
+                          : 'bg-gradient-to-b from-brand-950/20 to-brand-950/5 border-brand-500/20 hover:border-brand-500/40'
                         : isSelected
-                        ? 'bg-emerald-500/10 border-emerald-400 scale-[1.02]'
+                        ? 'bg-brand-500/10 border-brand-400 scale-[1.02]'
                         : 'bg-slate-950/40 border-slate-850 hover:bg-slate-900 hover:border-slate-800'
                     }`}
                   >
                     {assignedPlayer ? (
                       <div className="w-full flex flex-col items-center relative">
                         {/* Little avatar elements matching male/female design */}
-                        <div className={`w-9 h-9 rounded-full border flex items-end justify-center overflow-hidden mb-1 relative ${
+                        <div /* unslop-ignore: circular avatar, not a decorative pill default */ className={`w-9 h-9 rounded-full border flex items-end justify-center overflow-hidden mb-1 relative ${
                           isWomen
                             ? 'bg-gradient-to-b from-pink-900/40 to-pink-950 border-pink-500/20'
-                            : 'bg-gradient-to-b from-emerald-900/40 to-emerald-950 border-emerald-500/20'
+                            : 'bg-gradient-to-b from-brand-900/40 to-brand-950 border-brand-500/20'
                         }`}>
                           <DummyPlayerAvatar
                             className="w-[90%] h-[90%] absolute bottom-0 object-contain drop-shadow"
@@ -701,7 +701,7 @@ export default function LineupBuilder() {
                           <span className="font-mono text-[8px] font-black text-slate-500 uppercase tracking-wide bg-slate-900 px-1 rounded border border-slate-850">
                             {assignedPlayer.position}
                           </span>
-                          <span className="text-[8.5px] font-mono font-black text-amber-450">
+                          <span className="text-[8.5px] font-mono font-black text-amber-500">
                             ⭐{assignedPlayer.rating}
                           </span>
                         </div>
@@ -709,7 +709,7 @@ export default function LineupBuilder() {
                         {/* Close clear button handle */}
                         <button
                           onClick={(e) => handleClearSlot(subSlot.id, e)}
-                          className="absolute -top-4 right-0 lg:opacity-0 lg:group-hover:opacity-100 bg-black/80 rounded-full p-1 text-red-400 border border-red-500/20 transition duration-150 cursor-pointer"
+                          className="absolute -top-4 right-0 lg:opacity-0 lg:group-hover:opacity-100 bg-black/80 rounded-full p-1 text-red-400 border border-red-500/20 transition duration-150 cursor-pointer" // unslop-ignore: circular icon button, not a decorative pill default
                           title="Remove substitute"
                         >
                           <X className="w-2.5 h-2.5" />
@@ -717,8 +717,8 @@ export default function LineupBuilder() {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center my-auto">
-                        <div className={`w-6 h-6 rounded-full border border-dashed flex items-center justify-center mb-1 text-slate-500 transition ${
-                          isSelected ? 'border-emerald-400 text-emerald-400 bg-emerald-500/15' : 'border-slate-700 hover:border-slate-500'
+                        <div /* unslop-ignore: circular placeholder, not a decorative pill default */ className={`w-6 h-6 rounded-full border border-dashed flex items-center justify-center mb-1 text-slate-500 transition ${
+                          isSelected ? 'border-brand-400 text-brand-400 bg-brand-500/15' : 'border-slate-700 hover:border-slate-500'
                         }`}>
                           <Plus className="w-3.5 h-3.5" />
                         </div>
@@ -735,16 +735,16 @@ export default function LineupBuilder() {
         </div>
 
         {/* SIDEBAR DRAFT SELECTOR PANEL */}
-        <div className="bg-[#151619] border border-[#202124] rounded-2xl p-5 flex flex-col h-auto min-h-[550px] justify-between shadow-2xl relative">
+        <div className="bg-[#151619] border border-[#202124] rounded-xl p-5 flex flex-col h-auto min-h-[550px] justify-between shadow-2xl relative">
           
           {selectedSlotId !== null ? (
             <div className="flex flex-col h-full justify-between">
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
                   <div className="text-left">
-                    <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase block">DRAFTING POSITION</span>
+                    <span className="text-[10px] font-mono font-bold text-brand-400 uppercase block">DRAFTING POSITION</span>
                     <h4 className="text-xs font-bold text-white">
-                      Select player for: <span className="text-emerald-400">
+                      Select player for: <span className="text-brand-400">
                         {selectedSlotId >= 12 
                           ? `Substitute ${selectedSlotId - 11}` 
                           : activeSlots.find(s => s.id === selectedSlotId)?.label}
@@ -767,7 +767,7 @@ export default function LineupBuilder() {
                     placeholder="Type player name..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg py-1.5 pl-8 pr-3 text-xs text-white outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg py-1.5 pl-8 pr-3 text-xs text-white outline-none focus:border-brand-500"
                   />
                 </div>
 
@@ -789,7 +789,7 @@ export default function LineupBuilder() {
                             <p className="text-xs font-semibold text-slate-100">{p.name}</p>
                             <p className="text-[9.5px] text-slate-500 truncate">{p.position} &bull; {p.club}</p>
                           </div>
-                          <div className="font-mono text-xs font-bold text-emerald-400 uppercase shrink-0">
+                          <div className="font-mono text-xs font-bold text-brand-400 uppercase shrink-0">
                             OVR {p.rating}
                           </div>
                         </button>
@@ -809,7 +809,7 @@ export default function LineupBuilder() {
                 
                 <button 
                   onClick={handleLoadDefaults}
-                  className="mt-5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold font-sans text-xs px-4.5 py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-150"
+                  className="mt-5 bg-brand-500 hover:bg-brand-400 text-white font-extrabold font-sans text-xs px-4.5 py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-brand-500/10 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-150"
                 >
                   <span>Auto Pick XI</span>
                 </button>
@@ -821,19 +821,19 @@ export default function LineupBuilder() {
                 
                 {/* Team Synergy rating */}
                 <div className="bg-slate-950/85 border border-slate-900 rounded-xl p-4 shadow-inner relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-xl rounded-full" />
-                  
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 blur-xl rounded-full" /> {/* unslop-ignore: decorative blur orb, meant to be circular */}
+
                   <div className="flex justify-between items-center z-10 relative">
                     <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-mono text-emerald-400 font-bold">TACTICAL CALIBRATION</span>
-                      <span className="text-xs font-bold text-slate-350">Synergy Index</span>
+                      <span className="text-[10px] font-mono text-brand-400 font-bold">TACTICAL CALIBRATION</span>
+                      <span className="text-xs font-bold text-slate-400">Synergy Index</span>
                     </div>
-                    <span className="text-xl font-black text-emerald-400 font-mono tracking-tight">{synergyRating}%</span>
+                    <span className="text-xl font-black text-brand-400 font-mono tracking-tight">{synergyRating}%</span>
                   </div>
 
                   <div className="w-full bg-slate-900 h-2 rounded-full mt-2.5 overflow-hidden border border-slate-800">
-                    <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500" 
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-500" // unslop-ignore: progress-bar fill, conventional fully-rounded caps
                       style={{ width: `${synergyRating}%` }}
                     />
                   </div>
@@ -842,7 +842,7 @@ export default function LineupBuilder() {
                   <div className="mt-3.5 space-y-1.5 pt-3 border-t border-slate-900/60 text-[10px]">
                     <div className="flex justify-between items-center text-slate-400">
                       <span className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {/* unslop-ignore: one of 4 categorical legend colors (matched to blue/pink/amber below) — kept green so it stays distinct from the blue dot, not a brand accent */}
                         Base OVR Power (50% max)
                       </span>
                       <span className="font-mono text-slate-200">{synergyBreakdown.strength}%</span>
@@ -879,7 +879,7 @@ export default function LineupBuilder() {
                   </div>
                   <div className="flex items-center gap-2 justify-between text-[10.5px]">
                     <span className="text-slate-400 font-medium">Subs Average:</span>
-                    <span className="font-mono font-bold text-amber-450 font-medium">⭐ {synergyBreakdown.avgSubsRating > 0 ? (synergyBreakdown.avgSubsRating).toFixed(1) : '0.0'}</span>
+                    <span className="font-mono font-bold text-amber-500 font-medium">⭐ {synergyBreakdown.avgSubsRating > 0 ? (synergyBreakdown.avgSubsRating).toFixed(1) : '0.0'}</span>
                   </div>
                 </div>
 

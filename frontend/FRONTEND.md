@@ -255,6 +255,14 @@ The filter bar in `PlayerStats.tsx` has three buttons — **All**, **Nep Men's**
 - The vote-restore effect (`getMatchVotes` → `userVote` → `voteOutcome`) depends on `[match.id, auth.user?.id]` — re-fetches when the logged-in user changes (login/logout) without a page reload, so "Prediction Registered" reflects the current user's stored vote immediately, not just on refresh or match switch.
 - Vote buttons are labelled **Win (1) / Draw (X) / Win (2)** — both team wins use "Win".
 
+### `LineupBuilder.tsx` converted (brand/amber pass) + app-wide `unslop-ignore` sweep
+
+Every `emerald-{N}` → `brand-{N}`, matching the men/women blue/pink gender-color convention already established in `PlayerStats.tsx` (pink stays for women, brand-blue replaces green for men — formation select, filter tabs, pitch player-bubble default/selected states, "Bench" badge, sub-slot cards, sidebar drafting panel, "Auto Pick XI" button). Data role → `amber-{N}`: the player rating pill and the Synergy Index progress-bar fill (`from-amber-600 to-amber-400`, was `from-emerald-500 to-teal-400`). Fixed broken `amber-450` shades. The controls bar above the pitch dropped its own full border in favor of a `border-b` divider (declutter pass — it already sits inside the pitch canvas's bordered container).
+
+**Intentionally left unchanged:** the "Base OVR Power" legend dot in the Synergy breakdown stays `bg-emerald-500` — it's one of 4 categorical legend colors (green/blue/pink/amber) and converting it to `brand` would make it visually collide with the adjacent blue "Role-Based Balance" dot, defeating the legend's purpose. Marked `unslop-ignore` with that reasoning inline.
+
+**App-wide `unslop-ignore` sweep:** every genuinely-circular element found during the earlier radius-scale audit (avatars/player-number discs, status pills like LIVE and "Predicted Lineup by Machine", decorative blur orbs, pitch center-circle markings, hover-halo rings, progress-bar tracks/fills, remove-button icon circles) is now marked `unslop-ignore` inline across `LineupBuilder.tsx`, `MatchDetails.tsx`, `PlayerStats.tsx`, `PlayerComparison.tsx`, and `App.tsx`, so the `unslop-ui` scanner (which only respects the marker on the exact same source line as the flagged pattern) stops re-flagging deliberate choices. `LineupBuilder.tsx`'s remaining `hover:scale`/`group-hover:scale` on the pitch player bubble is now `motion-safe:group-hover:scale-105`, matching the `motion-safe:` gating already applied to `MatchDetails.tsx`'s player nodes.
+
 ---
 
 **Status:** Fully connected to backend API. Mock data removed. Auth persists across page refresh.

@@ -236,7 +236,7 @@ const DualComparativeBar = ({
   
   return (
     <div className="space-y-1 w-full">
-      <div className="relative w-full h-[7px] bg-[#171a22] rounded-full flex items-center justify-between overflow-hidden">
+      <div className="relative w-full h-[7px] bg-[#171a22] rounded-full flex items-center justify-between overflow-hidden"> {/* unslop-ignore: progress-bar track, conventional fully-rounded caps on a thin bar */}
         {/* Player A Progress (Filling left direction from divider) */}
         <div className="w-1/2 h-full flex justify-end pr-[0.8px]">
           <div className="h-full rounded-l" style={{ width: `${pctA}%`, backgroundColor: colorA }} />

@@ -242,6 +242,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               </div>
             ) : null}
             <div
+              /* unslop-ignore: circular team-color avatar disc */
               className="w-14 h-14 md:w-16 md:h-16 rounded-full items-center justify-center font-bold text-white text-xl shadow-lg ring-4 ring-slate-800/80"
               style={{ backgroundColor: match.homeTeam.color, border: `2px solid ${match.homeTeam.secondaryColor}`, display: match.homeTeam.logo ? 'none' : 'flex' }}
             >
@@ -267,9 +268,9 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   </span>
                 </div>
                 {match.status === 'LIVE' ? (
-                  <span className="mt-3 flex items-center gap-1 bg-brand-500 text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full animate-pulse shadow-md shadow-brand-500/20">
+                  <span className="mt-3 flex items-center gap-1 bg-brand-500 text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full animate-pulse shadow-md shadow-brand-500/20"> {/* unslop-ignore: LIVE status pill, a true status chip not a decorative default */}
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span> {/* unslop-ignore: circular ping dot */}
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                     </span>
                     <span>LIVE &bull; {match.minute}'</span>
@@ -302,6 +303,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               </div>
             ) : null}
             <div
+              /* unslop-ignore: circular team-color avatar disc */
               className="w-14 h-14 md:w-16 md:h-16 rounded-full items-center justify-center font-bold text-white text-xl shadow-lg ring-4 ring-slate-800/80"
               style={{ backgroundColor: match.awayTeam.color, border: `2px solid ${match.awayTeam.secondaryColor}`, display: match.awayTeam.logo ? 'none' : 'flex' }}
             >
@@ -333,7 +335,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
         {/* 2. "Who Will Win?" Prediction Vote — same panel as scoreboard, divided not boxed */}
         <div className="mt-5 pt-5 border-t border-slate-800/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full blur-xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full blur-xl pointer-events-none" /> {/* unslop-ignore: decorative blur orb, meant to be circular */}
         
         <h5 className="text-[11px] uppercase font-bold tracking-widest text-slate-400 mb-4 flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-white ">
@@ -603,7 +605,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
                   {/* Center Line and Circle */}
                   <div className="absolute inset-y-0 left-[50%] w-[2px] bg-white/10 transform -translate-x-1/2" />
-                  <div className="absolute top-[50%] left-[50%] w-[16%] aspect-square border-2 border-white/5 rounded-full transform -translate-x-1/2 -translate-y-1/2" />
+                  <div className="absolute top-[50%] left-[50%] w-[16%] aspect-square border-2 border-white/5 rounded-full transform -translate-x-1/2 -translate-y-1/2" /> {/* unslop-ignore: literal pitch center-circle marking */}
                   <div className="absolute top-[50%] left-[50%] w-3 h-3 bg-white/20 rounded-full transform -translate-x-1/2 -translate-y-1/2" />
 
                   {/* Helper indicators overlay */}
@@ -644,7 +646,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
                           {/* Hover highlight halo */}
                           {hoveredPlayer?.id === player.id && (
-                            <div className="absolute -inset-1 rounded-full border border-white animate-ping opacity-60 pointer-events-none" />
+                            <div className="absolute -inset-1 rounded-full border border-white animate-ping opacity-60 pointer-events-none" /> // unslop-ignore: circular halo around a circular avatar
                           )}
 
                           {/* Float Player match Rating badge — finished/live matches only */}
@@ -691,7 +693,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
                           {/* Hover highlight halo */}
                           {hoveredPlayer?.id === player.id && (
-                            <div className="absolute -inset-1 rounded-full border border-white animate-ping opacity-60 pointer-events-none" />
+                            <div className="absolute -inset-1 rounded-full border border-white animate-ping opacity-60 pointer-events-none" /> // unslop-ignore: circular halo around a circular avatar
                           )}
 
                           {/* Float Player match Rating badge — finished/live matches only */}
@@ -712,7 +714,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
                   {/* Predicted Lineup Indicator centered at the bottom of the pitch container */}
                   {isPredicted && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-brand-500/10 border border-brand-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-brand-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20">
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-brand-500/10 border border-brand-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-brand-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20"> {/* unslop-ignore: status pill, not a decorative default */}
                       <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
                       Predicted Lineup by Machine
                     </div>

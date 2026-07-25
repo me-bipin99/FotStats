@@ -173,7 +173,7 @@ export default function PlayerStats() {
       ) : (
         <div className="md:col-span-2 space-y-6">
           <div className="bg-[#151619] border border-[#202124] rounded-xl p-5 md:p-6 overflow-hidden relative shadow-xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-2xl pointer-events-none" /> {/* unslop-ignore: decorative blur orb, meant to be circular */}
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
               <div className="flex items-center gap-4">
@@ -245,7 +245,7 @@ export default function PlayerStats() {
                       <span className="font-mono font-bold text-slate-100">{val} / 100</span>
                     </div>
                     <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-850/40">
-                      <div className="h-full bg-amber-600 rounded-full transition-all duration-300" style={{ width: `${val}%` }} />
+                      <div className="h-full bg-amber-600 rounded-full transition-all duration-300" style={{ width: `${val}%` }} /> {/* unslop-ignore: progress-bar fill, conventional fully-rounded caps */}
                     </div>
                   </div>
                 ))}
