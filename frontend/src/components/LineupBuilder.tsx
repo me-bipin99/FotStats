@@ -509,7 +509,7 @@ export default function LineupBuilder() {
         <div className="bg-[#151619] border border-[#202124] rounded-xl p-4 md:p-6 shadow-2xl relative overflow-hidden flex flex-col items-center">
           
           {/* Controls Bar */}
-          <div className="w-full flex justify-between items-center bg-slate-950 border-b border-slate-850 pb-3 mb-6 z-10 gap-3 flex-wrap">
+          <div className="w-full flex justify-between items-center bg-slate-950 border border-slate-850 p-3 rounded-xl mb-6 z-10 gap-3 flex-wrap">
             <div className="flex items-center gap-2.5">
               <span className="text-xs text-slate-400 font-extrabold uppercase tracking-wider">Formation:</span>
               <div className="relative">
