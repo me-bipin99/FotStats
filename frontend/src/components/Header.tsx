@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Clock,
-  Home,
-  ArrowLeftRight,
-  TrendingUp,
-  Layers,
   User,
   LogOut,
   Trophy,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, MotionConfig } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { getLeaderboard } from '../services/api';
 
@@ -34,7 +29,6 @@ interface LeaderboardEntry {
 
 export default function Header({ activeTab, onChangeTab }: HeaderProps) {
   const auth = useAuth();
-  const [systime, setSystime] = useState<string>('08:45:00 UTC');
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -51,14 +45,6 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
   const [signupPassword, setSignupPassword] = useState('');
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      setSystime(now.toISOString().substring(11, 19) + ' UTC');
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     if (dropdownOpen && auth.isLoggedIn) {
@@ -123,10 +109,10 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
   const wrong = total - correct;
 
   const navItems = [
-    { id: 'home', label: 'Matches', icon: Home },
-    { id: 'compare', label: 'Compare', icon: ArrowLeftRight },
-    { id: 'stats', label: 'Stats', icon: TrendingUp },
-    { id: 'lineups', label: 'Lineups', icon: Layers },
+    { id: 'home', label: 'Matches' },
+    { id: 'compare', label: 'Compare' },
+    { id: 'stats', label: 'Stats' },
+    { id: 'lineups', label: 'Lineups' },
   ] as const;
 
   return (
@@ -158,7 +144,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-sans font-extrabold text-xl tracking-tight text-white">
-                  Fot<span className="text-emerald-500 font-normal">nep</span>
+                  Fot<span className="text-brand-500 font-normal">nep</span>
                 </span>
               </div>
               <p className="font-mono text-[9px] text-slate-500 uppercase tracking-widest leading-none mt-0.5">
@@ -166,31 +152,24 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
               </p>
             </div>
           </div>
-
-          <div className="md:hidden flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 rounded px-2.5 py-1 text-slate-400 text-xs font-mono">
-            <Clock className="w-3.5 h-3.5 text-emerald-500" />
-            <span>{systime}</span>
-          </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex items-center justify-center gap-1 self-center md:self-auto">
           {navItems.map((item) => {
-            const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => onChangeTab(item.id)}
                 className={`flex flex-col items-center justify-center gap-1 py-1.5 px-3 md:px-4 rounded-lg transition-all duration-150 cursor-pointer select-none text-center min-w-[64px] sm:min-w-[72px] md:min-w-[80px] ${
-                  isActive ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-200 hover:bg-slate-900/40'
+                  isActive ? 'text-brand-400' : 'text-slate-300 hover:text-slate-200 hover:bg-slate-900/40'
                 }`}
               >
-                <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className={`text-[9.5px] font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-emerald-400 font-black' : 'text-slate-500'}`}>
+                <span className={`text-[9.5px] font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-brand-400 font-black' : 'text-slate-500'}`}>
                   {item.label}
                 </span>
-                {isActive && <span className="w-4 h-0.5 bg-emerald-500 rounded-full" />}
+                {isActive && <span className="w-4 h-0.5 bg-brand-500 rounded-full" />}
               </button>
             );
           })}
@@ -198,27 +177,23 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
 
         {/* User / Auth */}
         <div className="hidden md:flex items-center gap-4 shrink-0 justify-end">
-          <div className="flex items-center gap-2 bg-slate-900/40 border border-slate-850 px-3 py-1.5 rounded-md">
-            <Clock className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="font-mono text-xs text-slate-300">{systime}</span>
-          </div>
-
           <div className="flex items-center gap-2.5 relative">
             <div
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className={`h-8 w-8 rounded-full border flex items-center justify-center font-bold text-[11px] cursor-pointer transition-all duration-200 select-none ${
                 auth.isLoggedIn
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50'
-                  : 'bg-emerald-500/15 border-emerald-500/30 text-[#e2e8f0] hover:bg-emerald-500/25 hover:border-emerald-500/50'
+                  ? 'bg-brand-500/10 border-brand-500/30 text-brand-400 hover:bg-brand-500/20 hover:border-brand-500/50'
+                  : 'bg-brand-500/15 border-brand-500/30 text-[#e2e8f0] hover:bg-brand-500/25 hover:border-brand-500/50'
               }`}
             >
-              {auth.isLoggedIn ? getInitials(currentUser!.name) : <User className="w-4 h-4 text-emerald-400" />}
+              {auth.isLoggedIn ? getInitials(currentUser!.name) : <User className="w-4 h-4 text-brand-400" />}
             </div>
 
             {dropdownOpen && (
               <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setDropdownOpen(false)} />
             )}
 
+            <MotionConfig reducedMotion="user">
             <AnimatePresence>
               {dropdownOpen && (
                 <motion.div
@@ -232,7 +207,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                     <div className="space-y-3.5">
                       <div className="pb-3 border-b border-slate-800/80 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center font-black text-emerald-400 text-xs">
+                          <div className="w-8 h-8 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-black text-brand-400 text-xs">
                             {getInitials(currentUser!.name)}
                           </div>
                           <div>
@@ -242,7 +217,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                         </div>
                         <div className="text-right">
                           <span className="text-[9px] block text-slate-500 uppercase font-black tracking-wider leading-none">Power</span>
-                          <span className="text-xs font-extrabold text-emerald-400 font-mono">x{userWeight}</span>
+                          <span className="text-xs font-extrabold text-brand-400 font-mono">x{userWeight}</span>
                         </div>
                       </div>
 
@@ -253,7 +228,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                         </div>
                         <div className="bg-[#0c0d10] border border-slate-850 p-2 rounded-lg text-center">
                           <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Predict Win</p>
-                          <p className="text-sm font-black text-emerald-500 font-mono mt-0.5">
+                          <p className="text-sm font-black text-brand-500 font-mono mt-0.5">
                             {total > 0 ? `${Math.round((correct / total) * 100)}%` : '0%'}
                           </p>
                         </div>
@@ -261,7 +236,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
 
                       <div className="space-y-2 pt-1">
                         <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                          <Trophy className="w-3.5 h-3.5 text-emerald-400" />
+                          <Trophy className="w-3.5 h-3.5 text-brand-400" />
                           Leaderboard Standings
                         </p>
                         <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
@@ -274,7 +249,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                                 <div
                                   key={user._id}
                                   className={`flex items-center justify-between p-1.5 rounded-lg border text-[10.5px] ${
-                                    isCurrent ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-[#0d0e10]/65 border-slate-900'
+                                    isCurrent ? 'bg-brand-500/10 border-brand-500/30' : 'bg-[#0d0e10]/65 border-slate-900'
                                   }`}
                                 >
                                   <div className="flex items-center gap-1.5 min-w-0">
@@ -287,7 +262,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                                     }`}>
                                       {idx + 1}
                                     </span>
-                                    <span className={`truncate ${isCurrent ? 'text-emerald-400 font-extrabold' : 'text-slate-300'}`}>
+                                    <span className={`truncate ${isCurrent ? 'text-brand-400 font-extrabold' : 'text-slate-300'}`}>
                                       @{user.name}
                                     </span>
                                   </div>
@@ -312,8 +287,8 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                   ) : (
                     <div className="space-y-3.5">
                       <div className="text-center space-y-1 pb-1">
-                        <div className="mx-auto flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 shadow-inner mb-1.5">
-                          <Trophy className="w-4 h-4 text-emerald-400" />
+                        <div className="mx-auto flex items-center justify-center w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/25 shadow-inner mb-1.5">
+                          <Trophy className="w-4 h-4 text-brand-400" />
                         </div>
                         <h3 className="text-xs font-black text-slate-100 tracking-tight">User Profile</h3>
                         <p className="text-[10px] text-slate-500">Access precision predictive weighted index.</p>
@@ -324,7 +299,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                           type="button"
                           onClick={() => { setAuthMode('signin'); setAuthError(''); setSignupSuccess(false); setAuthSuccess(false); }}
                           className={`flex-1 text-center py-1 text-[9px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                            authMode === 'signin' ? 'bg-emerald-500 text-black shadow font-black' : 'text-slate-400 hover:text-white'
+                            authMode === 'signin' ? 'bg-brand-500 text-white shadow font-black' : 'text-slate-400 hover:text-white'
                           }`}
                         >
                           Sign In
@@ -333,7 +308,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                           type="button"
                           onClick={() => { setAuthMode('signup'); setAuthError(''); setSignupSuccess(false); setAuthSuccess(false); }}
                           className={`flex-1 text-center py-1 text-[9px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                            authMode === 'signup' ? 'bg-emerald-500 text-black shadow font-black' : 'text-slate-400 hover:text-white'
+                            authMode === 'signup' ? 'bg-brand-500 text-white shadow font-black' : 'text-slate-400 hover:text-white'
                           }`}
                         >
                           Sign Up
@@ -347,14 +322,14 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                       )}
 
                       {signupSuccess && (
-                        <div className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 px-2.5 py-2 rounded-lg text-[10px] font-medium leading-relaxed text-center shadow-md">
-                          🎉 <strong>Registered!</strong> Account created. Please sign in.
+                        <div className="bg-brand-500/15 border border-brand-500/30 text-brand-400 px-2.5 py-2 rounded-lg text-[10px] font-medium leading-relaxed text-center shadow-md">
+                          <strong>Registered!</strong> Account created. Please sign in.
                         </div>
                       )}
 
                       {authSuccess && (
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-center animate-pulse">
-                          🎉 Authenticated successfully!
+                        <div className="bg-brand-500/10 border border-brand-500/20 text-brand-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-center animate-pulse">
+                          Authenticated successfully!
                         </div>
                       )}
 
@@ -368,7 +343,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                               placeholder="admin@fotnep.com"
                               value={loginEmail}
                               onChange={(e) => setLoginEmail(e.target.value)}
-                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
+                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
                             />
                           </div>
                           <div>
@@ -379,13 +354,13 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                               placeholder="••••••••"
                               value={loginPassword}
                               onChange={(e) => setLoginPassword(e.target.value)}
-                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
+                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
                             />
                           </div>
                           <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-black py-1.5 px-3 rounded-lg text-xs font-black transition-all active:scale-95 cursor-pointer uppercase tracking-wider"
+                            className="w-full bg-brand-500 hover:bg-brand-400 disabled:opacity-60 text-white py-1.5 px-3 rounded-lg text-xs font-black transition-all active:scale-95 cursor-pointer uppercase tracking-wider"
                           >
                             {isSubmitting ? 'Signing in…' : 'Sign In'}
                           </button>
@@ -400,7 +375,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                               placeholder="e.g. football_expert_99"
                               value={signupUsername}
                               onChange={(e) => setSignupUsername(e.target.value)}
-                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
+                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
                             />
                           </div>
                           <div>
@@ -411,7 +386,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                               placeholder="fan@fotnep.com"
                               value={signupEmail}
                               onChange={(e) => setSignupEmail(e.target.value)}
-                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
+                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
                             />
                           </div>
                           <div>
@@ -422,13 +397,13 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                               placeholder="••••••••"
                               value={signupPassword}
                               onChange={(e) => setSignupPassword(e.target.value)}
-                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
+                              className="w-full bg-[#0A0B0E] border border-slate-850 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 placeholder:text-slate-500"
                             />
                           </div>
                           <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-black py-1.5 px-3 rounded-lg text-xs font-black transition-all active:scale-95 cursor-pointer uppercase tracking-wider"
+                            className="w-full bg-brand-500 hover:bg-brand-400 disabled:opacity-60 text-white py-1.5 px-3 rounded-lg text-xs font-black transition-all active:scale-95 cursor-pointer uppercase tracking-wider"
                           >
                             {isSubmitting ? 'Creating account…' : 'Sign Up'}
                           </button>
@@ -439,6 +414,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                 </motion.div>
               )}
             </AnimatePresence>
+            </MotionConfig>
           </div>
         </div>
 

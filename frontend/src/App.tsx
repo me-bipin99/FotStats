@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import MatchFeed from './components/MatchFeed';
 import MatchDetails from './components/MatchDetails';
@@ -65,6 +65,10 @@ export default function App() {
     });
   };
 
+  const handleVoteCountsChange = useCallback((matchId: string, counts: { home: number; draw: number; away: number }) => {
+    setMatches((prev) => prev.map((m) => (m.id === matchId ? { ...m, predictionVotes: counts } : m)));
+  }, []);
+
   const handleSelectPlayerFromTacticalPitch = (player: Player) => {
     setComparisonPlayers((prev) => {
       if (prev.some((p) => p?.id === player.id)) return prev;
@@ -77,7 +81,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0e10] text-slate-200 flex flex-col font-sans select-none antialiased selection:bg-emerald-500/20 selection:text-emerald-400">
+    <div className="min-h-screen bg-[#0d0e10] text-slate-200 flex flex-col font-sans select-none antialiased selection:bg-brand-500/20 selection:text-brand-400">
 
       <Header activeTab={activeTab} onChangeTab={setActiveTab} />
 
@@ -87,10 +91,10 @@ export default function App() {
           <div className="bg-[#151619] border border-slate-800/60 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs shadow-md">
             <div className="flex items-center gap-2.5">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
               </span>
-              <span className="text-slate-450">
+              <span className="text-slate-500">
                 Welcome to the <strong>FotNep Match Center</strong>. Highlighting live scopes, tactics planners, and biometric comparisons.
               </span>
             </div>
@@ -110,7 +114,7 @@ export default function App() {
                   <p className="text-slate-500 mb-3">{matchesError}</p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="flex items-center gap-1.5 mx-auto text-emerald-400 hover:text-emerald-300 transition"
+                    className="flex items-center gap-1.5 mx-auto text-brand-400 hover:text-brand-300 transition"
                   >
                     <RefreshCw className="w-3 h-3" /> Retry
                   </button>
@@ -139,6 +143,7 @@ export default function App() {
                   match={selectedMatch}
                   selectedPlayers={comparisonPlayers}
                   onSelectPlayerForComparison={handleSelectPlayerFromTacticalPitch}
+                  onVoteCountsChange={handleVoteCountsChange}
                 />
               ) : (
                 <div className="bg-[#151619] border border-slate-800/60 rounded-xl p-12 text-center text-slate-500 text-sm">
@@ -169,11 +174,11 @@ export default function App() {
         <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>&copy; 2026 FotNep &bull; analytical app. All rights reserved.</p>
           <div className="flex gap-4.5 font-medium text-slate-500">
-            <span className="hover:text-red-400 cursor-pointer text-slate-400 hover:text-emerald-450">Privacy Policy</span>
+            <span className="hover:text-red-400 cursor-pointer text-slate-400 hover:text-brand-500">Privacy Policy</span>
             <span>&middot;</span>
-            <span className="hover:text-red-400 cursor-pointer text-slate-400 hover:text-emerald-450">Terms of Service</span>
+            <span className="hover:text-red-400 cursor-pointer text-slate-400 hover:text-brand-500">Terms of Service</span>
             <span>&middot;</span>
-            <span className="hover:text-red-400 cursor-pointer text-slate-400 hover:text-emerald-450 font-bold">Contact For  API</span>
+            <span className="hover:text-red-400 cursor-pointer text-slate-400 hover:text-brand-500 font-bold">Contact For  API</span>
           </div>
         </div>
       </footer>
