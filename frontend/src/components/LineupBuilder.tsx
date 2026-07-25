@@ -516,6 +516,7 @@ export default function LineupBuilder() {
                 <select
                   value={activeFormation}
                   onChange={(e) => { setActiveFormation(e.target.value); setAssignedPlayers({}); }}
+                  style={{ colorScheme: 'dark' }}
                   className="bg-[#0c0d12] border border-slate-800 hover:border-brand-500/50 text-slate-100 font-extrabold text-xs px-3.5 py-1.5 pr-9 rounded-xl appearance-none outline-none cursor-pointer transition duration-200"
                 >
                   {Object.keys(FORMATIONS).map((form) => (

@@ -79,6 +79,8 @@ src/
 
 **Scrollbar layout shift fix:** `html { overflow-y: scroll; }` is set in `index.css` so the scrollbar gutter is always reserved. Without this, switching from the stats page (tall content, scrollbar visible) to shorter pages caused the sticky navbar to shift ~15px horizontally as the scrollbar appeared/disappeared.
 
+**Dark-mode native form controls:** `html { color-scheme: dark; }` is set in `index.css`. Without it, browsers render native `<select>`/checkbox/etc. widgets with a light UA color scheme regardless of custom `background-color`/`text-color` classes — this was causing `LineupBuilder.tsx`'s formation `<select>` to show as a jarring white pill instead of the intended dark styling. The `<select>` also carries a redundant inline `style={{ colorScheme: 'dark' }}` as a belt-and-suspenders fix scoped to that element.
+
 ## Navigation & State
 
 `App.tsx` manages all top-level state:
