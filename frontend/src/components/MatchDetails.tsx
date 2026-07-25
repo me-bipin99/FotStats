@@ -63,9 +63,10 @@ interface MatchDetailsProps {
   match: Match;
   selectedPlayers: Player[];
   onSelectPlayerForComparison: (player: Player) => void;
+  onVoteCountsChange: (matchId: string, counts: { home: number; draw: number; away: number }) => void;
 }
 
-export default function MatchDetails({ match, selectedPlayers, onSelectPlayerForComparison }: MatchDetailsProps) {
+export default function MatchDetails({ match, selectedPlayers, onSelectPlayerForComparison, onVoteCountsChange }: MatchDetailsProps) {
   const auth = useAuth();
   const loggedInUser = auth.user?.name ?? null;
 
@@ -92,6 +93,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
     getMatchVotes(match.id)
       .then(data => {
         setVoteCounts({ home_win: data.home_win, draw: data.draw, away_win: data.away_win });
+        onVoteCountsChange(match.id, { home: data.home_win, draw: data.draw, away: data.away_win });
         if (data.userVote) setVoteOutcome(data.userVote as 'home_win' | 'draw' | 'away_win');
         if (data.home_win + data.draw + data.away_win > 0) {
           triggerPrediction(match.id).then(setPredResult).catch(() => {});
@@ -101,7 +103,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
     getPrediction(match.id)
       .then(result => { if (result) setPredResult(result); })
       .catch(() => {});
-  }, [match.id]);
+  }, [match.id, auth.user?.id]);
 
   useEffect(() => {
     if (match.status !== 'UPCOMING') return;
@@ -173,17 +175,21 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
     const outcome = outcomeMap[choice];
     // Optimistic update — bars respond immediately
     setVoteOutcome(outcome);
-    setVoteCounts(prev => ({ ...prev, [outcome]: prev[outcome] + 1 }));
+    const optimisticCounts = { ...voteCounts, [outcome]: voteCounts[outcome] + 1 };
+    setVoteCounts(optimisticCounts);
+    onVoteCountsChange(match.id, { home: optimisticCounts.home_win, draw: optimisticCounts.draw, away: optimisticCounts.away_win });
     setVoting(true);
     try {
       await castVote(match.id, outcome);
       const data = await getMatchVotes(match.id);
       setVoteCounts({ home_win: data.home_win, draw: data.draw, away_win: data.away_win });
+      onVoteCountsChange(match.id, { home: data.home_win, draw: data.draw, away: data.away_win });
       triggerPrediction(match.id).then(setPredResult).catch(() => {});
     } catch {
       // Roll back optimistic update
       setVoteOutcome(null);
-      setVoteCounts(prev => ({ ...prev, [outcome]: Math.max(0, prev[outcome] - 1) }));
+      setVoteCounts(voteCounts);
+      onVoteCountsChange(match.id, { home: voteCounts.home_win, draw: voteCounts.draw, away: voteCounts.away_win });
     } finally {
       setVoting(false);
     }
@@ -191,10 +197,10 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
   // Function to define color based on player rating
   const getRatingColorClass = (rating: number) => {
-    if (rating >= 8.0) return 'bg-emerald-700 text-white font-bold'; // Elegant Green
-    if (rating >= 7.0) return 'bg-emerald-500 text-black font-extrabold'; // Lime/Light Green
-    if (rating >= 6.0) return 'bg-slate-700 text-slate-200 font-semibold'; // Slate Grey
-    return 'bg-rose-500/80 text-white font-medium'; // Rose Red
+    if (rating >= 10.0) return 'bg-blue-500 text-white font-black'; // Perfect 10 — Blue
+    if (rating >= 7.0) return 'bg-emerald-500 text-black font-extrabold'; // 7+ — Green
+    if (rating >= 5.0) return 'bg-yellow-500 text-black font-bold'; // 5–6.9 — Yellow
+    return 'bg-rose-500 text-white font-medium'; // Below 5 — Red
   };
 
   const isPlayerSelected = (playerId: string) => {
@@ -211,7 +217,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
       {/* 1. Scoreline and Match Banner */}
       <div className="p-4 md:p-6 bg-gradient-to-b from-[#212228] to-[#151619] border-b border-[#202124] relative">
         <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
-          <span className="bg-emerald-500/10 text-white font-bold px-2 py-0.5 rounded flex items-center gap-1.5 border border-emerald-500/15">
+          <span className="bg-brand-500/10 text-white font-bold px-2 py-0.5 rounded flex items-center gap-1.5 border border-brand-500/15">
             <Award className="w-3.5 h-3.5" />
             <span className="uppercase tracking-wider">{match.competition}</span>
           </span>
@@ -261,7 +267,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   </span>
                 </div>
                 {match.status === 'LIVE' ? (
-                  <span className="mt-3 flex items-center gap-1 bg-emerald-500 text-black text-[11px] font-extrabold px-2.5 py-1 rounded-full animate-pulse shadow-md shadow-emerald-500/20">
+                  <span className="mt-3 flex items-center gap-1 bg-brand-500 text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full animate-pulse shadow-md shadow-brand-500/20">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
@@ -269,15 +275,15 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                     <span>LIVE &bull; {match.minute}'</span>
                   </span>
                 ) : (
-                  <span className="mt-3 bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 text-[10px] font-extrabold px-2.5 py-1 rounded-md tracking-wider uppercase flex items-center gap-1">
-                    <Check className="w-3 h-3 text-emerald-400" /> Finished
+                  <span className="mt-3 bg-slate-800/60 border border-slate-700/60 text-slate-300 text-[10px] font-extrabold px-2.5 py-1 rounded-md tracking-wider uppercase flex items-center gap-1">
+                    <Check className="w-3 h-3 text-slate-300" /> Finished
                   </span>
                 )}
               </div>
             ) : (
               <div className="flex flex-col items-center bg-[#0d0e10]/80 border border-slate-800/80 px-4 py-2.5 rounded-xl">
                 <p className="text-[11px] text-slate-500 uppercase font-bold tracking-widest font-mono">KICK OFF</p>
-                <p className="text-xl md:text-2xl font-mono font-black text-emerald-450 mt-1">{match.time}</p>
+                <p className="text-xl md:text-2xl font-mono font-black text-brand-500 mt-1">{match.time}</p>
                 <span className="text-[10px] text-slate-400 font-mono mt-1.5 px-2 py-0.5 bg-slate-900 rounded-md border border-slate-800/60 font-semibold">Scheduled</span>
               </div>
             )}
@@ -311,7 +317,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         {/* Stadium and Venue info footer */}
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-4 pt-4 border-t border-slate-800/40 text-xs text-slate-400">
           <span className="flex items-center gap-1 truncate">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <MapPin className="w-3.5 h-3.5 text-brand-400 shrink-0" />
             <span>{match.venue}</span>
           </span>
           {match.homeTeam.id === 'nepal' && (
@@ -319,16 +325,15 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
           )}
           {match.homeTeam.id === 'nepal' && (
             <span className="flex items-center gap-1 text-slate-400">
-              <Users className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <Users className="w-3.5 h-3.5 text-brand-400 shrink-0" />
               <span>Cap: {match.homeTeam.stadiumCapacity}</span>
             </span>
           )}
         </div>
-      </div>
 
-      {/* 2. "Who Will Win?" Prediction Vote (Simplified & De-cluttered) */}
-      <div className="m-4 p-5 bg-[#101115] border border-slate-800/80 rounded-xl relative overflow-hidden shadow-xl">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+        {/* 2. "Who Will Win?" Prediction Vote — same panel as scoreboard, divided not boxed */}
+        <div className="mt-5 pt-5 border-t border-slate-800/60 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full blur-xl pointer-events-none" />
         
         <h5 className="text-[11px] uppercase font-bold tracking-widest text-slate-400 mb-4 flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-white ">
@@ -356,11 +361,11 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 {/* Home */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-mono font-bold">
-                    <span className="text-slate-350 truncate">{match.homeTeam.shorthand}</span>
-                    <span className="text-emerald-450">{pc1}%</span>
+                    <span className="text-slate-400 truncate">{match.homeTeam.shorthand}</span>
+                    <span className="text-brand-500">{pc1}%</span>
                   </div>
                   <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-emerald-500 h-full transition-all duration-700" style={{ width: `${pc1}%` }} />
+                    <div className="bg-brand-500 h-full transition-all duration-700" style={{ width: `${pc1}%` }} />
                   </div>
                 </div>
                 {/* Draw */}
@@ -373,8 +378,8 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 {/* Away */}
                 <div className="space-y-1 text-right">
                   <div className="flex justify-between text-[11px] font-mono font-bold flex-row-reverse">
-                    <span className="text-slate-350 truncate">{match.awayTeam.shorthand}</span>
-                    <span className="text-rose-450">{pc2}%</span>
+                    <span className="text-slate-400 truncate">{match.awayTeam.shorthand}</span>
+                    <span className="text-rose-500">{pc2}%</span>
                   </div>
                   <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
                     <div className="bg-rose-500 h-full transition-all duration-700 ml-auto" style={{ width: `${pc2}%` }} />
@@ -383,7 +388,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               </div>
 
               <div className="bg-slate-900/60 border border-slate-800/80 px-2.5 py-1.5 rounded-lg text-[10.5px] text-slate-400 leading-normal">
-                Final Result: <strong className="text-white">{match.homeScore ?? 0} - {match.awayScore ?? 0}</strong> &bull; Crowd majority predicted <strong className="text-emerald-400">{pc1 > pc2 && pc1 > pcX ? match.homeTeam.shorthand : pc2 > pc1 && pc2 > pcX ? match.awayTeam.shorthand : 'Draw'}</strong>. (Voting inactive for completed matches).
+                Final Result: <strong className="text-white">{match.homeScore ?? 0} - {match.awayScore ?? 0}</strong> &bull; Crowd majority predicted <strong className="text-brand-400">{pc1 > pc2 && pc1 > pcX ? match.homeTeam.shorthand : pc2 > pc1 && pc2 > pcX ? match.awayTeam.shorthand : 'Draw'}</strong>. (Voting inactive for completed matches).
               </div>
             </div>
           </div>
@@ -392,8 +397,8 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
           <div className="space-y-4">
             <div className="p-3 bg-[#0c0d10] border border-slate-850 rounded-xl space-y-3.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-emerald-445 uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-445" /> Prediction Registered
+                <span className="text-[10px] text-brand-400 uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" /> Prediction Registered
                 </span>
                 <span className="text-[9.5px] text-slate-500 font-mono">Live Forecast</span>
               </div>
@@ -403,11 +408,11 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 {/* Home */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-mono font-bold">
-                    <span className="text-slate-350 truncate">{match.homeTeam.shorthand}</span>
-                    <span className="text-emerald-450">{pc1}%</span>
+                    <span className="text-slate-400 truncate">{match.homeTeam.shorthand}</span>
+                    <span className="text-brand-500">{pc1}%</span>
                   </div>
                   <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-emerald-500 h-full transition-all duration-700" style={{ width: `${pc1}%` }} />
+                    <div className="bg-brand-500 h-full transition-all duration-700" style={{ width: `${pc1}%` }} />
                   </div>
                 </div>
                 {/* Draw */}
@@ -420,8 +425,8 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 {/* Away */}
                 <div className="space-y-1 text-right">
                   <div className="flex justify-between text-[11px] font-mono font-bold flex-row-reverse">
-                    <span className="text-slate-350 truncate">{match.awayTeam.shorthand}</span>
-                    <span className="text-rose-450">{pc2}%</span>
+                    <span className="text-slate-400 truncate">{match.awayTeam.shorthand}</span>
+                    <span className="text-rose-500">{pc2}%</span>
                   </div>
                   <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
                     <div className="bg-rose-500 h-full transition-all duration-700 ml-auto" style={{ width: `${pc2}%` }} />
@@ -429,7 +434,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 </div>
               </div>
 
-              <div className="bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 rounded-lg text-[10.5px] text-slate-300">
+              <div className="bg-brand-500/5 border border-brand-500/20 px-3 py-2 rounded-lg text-[10.5px] text-slate-300">
                 You predicted <strong>{userVote === '1' ? match.homeTeam.name : userVote === '2' ? match.awayTeam.name : 'Draw'}</strong> to win. Accuracy weight applied.
               </div>
             </div>
@@ -439,7 +444,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
           <div className="space-y-3.5">
             {!loggedInUser && (
               <div className="bg-slate-900/50 border border-slate-850 p-2.5 rounded-lg text-[11px] text-slate-400 flex items-center gap-2">
-                <Info className="w-4 h-4 text-emerald-400 shrink-0" />
+                <Info className="w-4 h-4 text-brand-400 shrink-0" />
                 <span>Please <strong>Sign In</strong> from the top navbar profile menu to register your prediction vote.</span>
               </div>
             )}
@@ -449,11 +454,11 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               <div className="grid grid-cols-[1fr_80px_1fr] gap-2 items-center px-1">
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-mono font-bold">
-                    <span className="text-slate-350 truncate">{match.homeTeam.shorthand}</span>
-                    <span className="text-emerald-450">{pc1}%</span>
+                    <span className="text-slate-400 truncate">{match.homeTeam.shorthand}</span>
+                    <span className="text-brand-500">{pc1}%</span>
                   </div>
                   <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-emerald-500 h-full transition-all duration-700" style={{ width: `${pc1}%` }} />
+                    <div className="bg-brand-500 h-full transition-all duration-700" style={{ width: `${pc1}%` }} />
                   </div>
                 </div>
                 <div className="space-y-1 text-center font-bold">
@@ -464,8 +469,8 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 </div>
                 <div className="space-y-1 text-right">
                   <div className="flex justify-between text-[11px] font-mono font-bold flex-row-reverse">
-                    <span className="text-slate-350 truncate">{match.awayTeam.shorthand}</span>
-                    <span className="text-rose-450">{pc2}%</span>
+                    <span className="text-slate-400 truncate">{match.awayTeam.shorthand}</span>
+                    <span className="text-rose-500">{pc2}%</span>
                   </div>
                   <div className="w-full bg-[#07080a] h-1.5 rounded-full overflow-hidden">
                     <div className="bg-rose-500 h-full transition-all duration-700 ml-auto" style={{ width: `${pc2}%` }} />
@@ -479,9 +484,9 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               <button
                 onClick={() => handleVoteChoice('1')}
                 disabled={!loggedInUser || !!voting}
-                className="bg-emerald-500/5 border border-emerald-500/15 hover:border-emerald-500/40 disabled:opacity-40 disabled:hover:border-emerald-500/15 p-3.5 rounded-xl hover:bg-emerald-500/10 text-center transition-all cursor-pointer group active:scale-95"
+                className="bg-brand-500/5 border border-brand-500/15 hover:border-brand-500/40 disabled:opacity-40 disabled:hover:border-brand-500/15 p-3.5 rounded-xl hover:bg-brand-500/10 text-center transition-all cursor-pointer group active:scale-95"
               >
-                <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-1 font-bold">Win (1)</div>
+                <div className="text-[10px] font-mono text-brand-400 uppercase tracking-widest mb-1 font-bold">Win (1)</div>
                 <div className="text-xs font-black text-slate-200 truncate group-hover:text-white">
                   {match.homeTeam.shorthand}
                 </div>
@@ -517,15 +522,16 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         {/* Algorithm 1 prediction row — shown pre-vote and post-vote for any non-finished match */}
         {match.status !== 'FINISHED' && predResult && (
           <div className="flex items-center justify-between text-[10px] text-slate-500 px-1 mt-3 pt-3 border-t border-slate-800/60">
-            <span className="font-bold uppercase tracking-wider text-whitw-200 ">ML Consensus</span>
+            <span className="font-bold uppercase tracking-wider text-slate-200">ML Consensus</span>
             <span className="font-mono">
-              H <span className="text-emerald-400 font-bold">{Math.round(predResult.prediction.homeWinProb * 100)}%</span>
+              H <span className="text-brand-400 font-bold">{Math.round(predResult.prediction.homeWinProb * 100)}%</span>
               &nbsp;· D <span className="text-slate-400 font-bold">{Math.round(predResult.prediction.drawProb * 100)}%</span>
               &nbsp;· A <span className="text-rose-400 font-bold">{Math.round(predResult.prediction.awayWinProb * 100)}%</span>
               &nbsp;· conf <span className="text-amber-400 font-bold">{predResult.confidence.toFixed(0)}%</span>
             </span>
           </div>
         )}
+        </div>
       </div>
 
       {/* 3. Details Navigation Tabs */}
@@ -535,7 +541,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
             onClick={() => setActiveTab('lineup')}
             className={`py-3 text-xs font-bold uppercase tracking-wider relative transition-all ${
               activeTab === 'lineup' 
-                ? 'text-emerald-400 border-b-2 border-emerald-500 font-extrabold' 
+                ? 'text-brand-400 border-b-2 border-brand-500 font-extrabold'
                 : 'text-slate-500 hover:text-slate-300'
             }`}
           >
@@ -546,7 +552,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               onClick={() => setActiveTab('stats')}
               className={`py-3 text-xs font-bold uppercase tracking-wider relative transition-all ${
                 activeTab === 'stats' 
-                  ? 'text-emerald-400 border-b-2 border-emerald-500 font-extrabold' 
+                  ? 'text-brand-400 border-b-2 border-brand-500 font-extrabold'
                   : 'text-slate-500 hover:text-slate-300'
               }`}
             >
@@ -557,7 +563,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
             onClick={() => setActiveTab('info')}
             className={`py-3 text-xs font-bold uppercase tracking-wider relative transition-all ${
               activeTab === 'info' 
-                ? 'text-emerald-400 border-b-2 border-emerald-500 font-extrabold' 
+                ? 'text-brand-400 border-b-2 border-brand-500 font-extrabold'
                 : 'text-slate-500 hover:text-slate-300'
             }`}
           >
@@ -602,7 +608,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
                   {/* Helper indicators overlay */}
                   <div className="absolute top-2.5 left-3.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
                     <span>{match.homeTeam.shorthand} ({homeLineup.formation})</span>
                   </div>
                   <div className="absolute top-2.5 right-3.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 justify-end">
@@ -624,10 +630,10 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                           onClick={() => onSelectPlayerForComparison(player)}
                           onMouseEnter={() => setHoveredPlayer(player)}
                           onMouseLeave={() => setHoveredPlayer(null)}
-                          className={`relative w-8 h-8 rounded-full flex items-center justify-center font-bold font-mono text-xs cursor-pointer shadow-lg transition-all duration-300 hover:scale-120 ${
-                            isSel 
-                              ? 'ring-4 ring-offset-2 ring-emerald-500 scale-110' 
-                              : 'ring-2 ring-[#0A0B0E] group-hover:ring-emerald-400/30'
+                          className={`relative w-8 h-8 rounded-full flex items-center justify-center font-bold font-mono text-xs cursor-pointer shadow-lg transition-all duration-300 motion-safe:hover:scale-120 ${
+                            isSel
+                              ? 'ring-4 ring-offset-2 ring-brand-500 scale-110'
+                              : 'ring-2 ring-[#0A0B0E] group-hover:ring-brand-400/30'
                           }`}
                           style={{ 
                             backgroundColor: match.homeTeam.color, 
@@ -641,14 +647,16 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                             <div className="absolute -inset-1 rounded-full border border-white animate-ping opacity-60 pointer-events-none" />
                           )}
 
-                          {/* Float Player match Rating badge */}
-                          <div className={`absolute -bottom-1 -right-1 px-1 py-0.5 rounded text-[8px] font-black font-sans leading-none flex items-center shadow-md scale-95 select-none ${getRatingColorClass(player.rating)}`}>
-                            {player.rating.toFixed(1)}
-                          </div>
+                          {/* Float Player match Rating badge — finished/live matches only */}
+                          {!isPredicted && (
+                            <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 rounded text-[10px] font-black font-sans leading-none flex items-center shadow-md select-none ${getRatingColorClass(player.rating)}`}>
+                              {player.rating.toFixed(1)}
+                            </div>
+                          )}
                         </div>
 
                         {/* Player name indicator */}
-                        <span className="mt-1.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200 font-semibold text-[8px] tracking-tight text-center max-w-[70px] truncate leading-none shadow">
+                        <span className="mt-1.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200 font-semibold text-[10.5px] tracking-tight text-center max-w-[80px] truncate leading-none shadow">
                           {player.name.split(' ').pop()}
                         </span>
                       </div>
@@ -669,10 +677,10 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                           onClick={() => onSelectPlayerForComparison(player)}
                           onMouseEnter={() => setHoveredPlayer(player)}
                           onMouseLeave={() => setHoveredPlayer(null)}
-                          className={`relative w-8 h-8 rounded-full flex items-center justify-center font-bold font-mono text-xs cursor-pointer shadow-lg transition-all duration-300 hover:scale-120 ${
-                            isSel 
-                              ? 'ring-4 ring-offset-2 ring-rose-500 scale-110' 
-                              : 'ring-2 ring-[#0A0B0E] group-hover:ring-rose-450/45'
+                          className={`relative w-8 h-8 rounded-full flex items-center justify-center font-bold font-mono text-xs cursor-pointer shadow-lg transition-all duration-300 motion-safe:hover:scale-120 ${
+                            isSel
+                              ? 'ring-4 ring-offset-2 ring-rose-500 scale-110'
+                              : 'ring-2 ring-[#0A0B0E] group-hover:ring-rose-500/45'
                           }`}
                           style={{ 
                             backgroundColor: match.awayTeam.color, 
@@ -686,14 +694,16 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                             <div className="absolute -inset-1 rounded-full border border-white animate-ping opacity-60 pointer-events-none" />
                           )}
 
-                          {/* Float Player match Rating badge */}
-                          <div className={`absolute -bottom-1 -right-1 px-1 py-0.5 rounded text-[8px] font-bold font-sans leading-none flex items-center shadow-md scale-95 select-none ${getRatingColorClass(player.rating)}`}>
-                            {player.rating.toFixed(1)}
-                          </div>
+                          {/* Float Player match Rating badge — finished/live matches only */}
+                          {!isPredicted && (
+                            <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold font-sans leading-none flex items-center shadow-md select-none ${getRatingColorClass(player.rating)}`}>
+                              {player.rating.toFixed(1)}
+                            </div>
+                          )}
                         </div>
 
                         {/* Player name indicator */}
-                        <span className="mt-1.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200 font-semibold text-[8px] tracking-tight text-center max-w-[70px] truncate leading-none shadow">
+                        <span className="mt-1.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200 font-semibold text-[10.5px] tracking-tight text-center max-w-[80px] truncate leading-none shadow">
                           {player.name.split(' ').pop()}
                         </span>
                       </div>
@@ -702,8 +712,8 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
                   {/* Predicted Lineup Indicator centered at the bottom of the pitch container */}
                   {isPredicted && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-brand-500/10 border border-brand-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-brand-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
                       Predicted Lineup by Machine
                     </div>
                   )}
@@ -744,7 +754,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               </>
             ) : lineupLoading ? (
               <div className="py-12 text-center text-slate-500 border border-slate-850 border-dashed rounded-xl">
-                <Loader2 className="w-7 h-7 text-emerald-500 mx-auto mb-2 animate-spin" />
+                <Loader2 className="w-7 h-7 text-brand-500 mx-auto mb-2 animate-spin" />
                 <p className="text-sm font-semibold text-slate-300">Predicting Lineup...</p>
                 <p className="text-xs text-slate-500 mt-1">Machine is selecting the optimal XI from available players.</p>
               </div>
@@ -774,7 +784,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                   <span className="text-slate-400 font-mono">{match.stats.possession[1]}%</span>
                 </div>
                 <div className="h-2 bg-[#0A0B0E] rounded-full overflow-hidden flex">
-                  <div className="bg-emerald-500 h-full rounded-l-full" style={{ width: `${match.stats.possession[0]}%` }} />
+                  <div className="bg-brand-500 h-full rounded-l-full" style={{ width: `${match.stats.possession[0]}%` }} />
                   <div className="bg-rose-500 h-full rounded-r-full" style={{ width: `${match.stats.possession[1]}%` }} />
                 </div>
               </div>
@@ -788,7 +798,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 </div>
                 <div className="h-2 bg-[#0A0B0E] rounded-full overflow-hidden flex">
                   <div 
-                    className="bg-emerald-500 h-full rounded-l-full" 
+                    className="bg-brand-500 h-full rounded-l-full"
                     style={{ width: `${(match.stats.shots[0] / (match.stats.shots[0] + match.stats.shots[1])) * 100}%` }} 
                   />
                   <div 
@@ -807,7 +817,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 </div>
                 <div className="h-2 bg-[#0A0B0E] rounded-full overflow-hidden flex">
                   <div 
-                    className="bg-emerald-500 h-full rounded-l-full" 
+                    className="bg-brand-500 h-full rounded-l-full"
                     style={{ width: `${(match.stats.shotsOnTarget[0] / (match.stats.shotsOnTarget[0] + match.stats.shotsOnTarget[1])) * 100}%` }} 
                   />
                   <div 
@@ -826,7 +836,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 </div>
                 <div className="h-2 bg-[#0A0B0E] rounded-full overflow-hidden flex">
                   <div 
-                    className="bg-emerald-500 h-full rounded-l-full" 
+                    className="bg-brand-500 h-full rounded-l-full"
                     style={{ width: `${(match.stats.corners[0] / (match.stats.corners[0] + match.stats.corners[1])) * 100}%` }} 
                   />
                   <div 
@@ -841,9 +851,9 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 <div className="bg-[#12141C] p-3 rounded-lg border border-slate-800 text-center">
                   <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Fouls Committed</span>
                   <div className="flex items-center justify-around mt-1.5 font-mono">
-                    <span className="text-emerald-400 font-bold text-lg">{match.stats.fouls[0]}</span>
+                    <span className="text-brand-400 font-bold text-lg">{match.stats.fouls[0]}</span>
                     <span className="text-slate-700">vs</span>
-                    <span className="text-rose-450 font-bold text-lg">{match.stats.fouls[1]}</span>
+                    <span className="text-rose-500 font-bold text-lg">{match.stats.fouls[1]}</span>
                   </div>
                 </div>
 
@@ -856,7 +866,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                       <span className="w-2.5 h-3.5 bg-rose-600 rounded-sm shadow-sm ml-1" />
                       <span className="font-bold text-slate-300">{match.stats.redCards[0]}</span>
                     </div>
-                    <span className="text-slate-750 font-mono">vs</span>
+                    <span className="text-slate-800 font-mono">vs</span>
                     <div className="flex items-center gap-1 font-mono text-xs">
                       <span className="w-2.5 h-3.5 bg-amber-500 rounded-sm shadow-sm opacity-90" />
                       <span className="font-bold text-slate-300">{match.stats.yellowCards[1]}</span>
@@ -877,7 +887,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
           <div className="space-y-4 animate-fadeIn max-w-xl mx-auto w-full">
             <div className="bg-[#12141C] border border-slate-800 p-4 rounded-xl space-y-4.5">
               <h5 className="text-[11px] uppercase tracking-widest font-black text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-1.5">
-                <Info className="w-4 h-4 text-emerald-500" />
+                <Info className="w-4 h-4 text-brand-500" />
                 Team Comparatives & Venue Info
               </h5>
 
@@ -899,7 +909,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
                 </div>
                 <div>
                   <span className="text-slate-500 block mb-1">Seating Capacity</span>
-                  <span className="text-slate-250 font-semibold font-mono">{match.homeTeam.stadiumCapacity}</span>
+                  <span className="text-slate-300 font-semibold font-mono">{match.homeTeam.stadiumCapacity}</span>
                 </div>
 
                 {match.homeTeam.fifaRank && (
@@ -919,8 +929,8 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
             </div>
 
             {/* General Disclaimer */}
-            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-3 text-[10px] text-slate-500 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            <div className="bg-brand-500/5 border border-brand-500/10 rounded-lg p-3 text-[10px] text-slate-500 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
               <span>
                 <strong>FotNep Analytics Board Notice:</strong> This match prototype uses simulated live coordinates from Nepal's actual national soccer matches and A-Division league results. All market values, player ages, and tactical lineups are calibrated against current season datasets.
               </span>
