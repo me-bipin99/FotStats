@@ -106,7 +106,7 @@ export default function PlayerStats() {
               placeholder="Search star... (e.g. Kiran, Bista)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 rounded-lg py-1.5 pl-9 pr-3 text-xs text-slate-250 outline-none placeholder:text-slate-600 transition"
+              className="w-full bg-slate-950 border border-slate-800 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/50 rounded-lg py-1.5 pl-9 pr-3 text-xs text-slate-300 outline-none placeholder:text-slate-600 transition"
             />
           </div>
 
@@ -116,7 +116,7 @@ export default function PlayerStats() {
                 key={cat}
                 onClick={() => setGenderFilter(cat)}
                 className={`flex-1 py-1 text-center rounded transition ${
-                  genderFilter === cat ? 'bg-emerald-500 text-black' : 'text-slate-400 hover:text-slate-200'
+                  genderFilter === cat ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {cat === 'ALL' ? 'All' : cat === 'MEN' ? "Nep Men's" : "Nep W"}
@@ -139,19 +139,19 @@ export default function PlayerStats() {
                   key={player.id}
                   onClick={() => setSelectedPlayerId(player.id)}
                   className={`w-full text-left p-3 flex items-center justify-between transition-all duration-150 ${
-                    isSelected ? 'bg-emerald-500/10 border-r-2 border-emerald-400' : 'hover:bg-slate-900/30'
+                    isSelected ? 'bg-brand-500/10 border-r-2 border-brand-400' : 'hover:bg-slate-900/30'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className={`w-8 h-8 rounded-full flex items-end justify-center shrink-0 overflow-hidden relative ${
                       isWomen
                         ? 'bg-gradient-to-b from-pink-900/60 to-pink-950 border border-pink-500/15'
-                        : 'bg-gradient-to-b from-emerald-900/60 to-emerald-950 border border-emerald-500/15'
+                        : 'bg-gradient-to-b from-brand-900/60 to-brand-950 border border-brand-500/15'
                     }`}>
                       <DummyPlayerAvatar className="w-[95%] h-[95%] absolute bottom-0 object-contain" gender={isWomen ? 'female' : 'male'} />
                     </div>
                     <div className="truncate">
-                      <p className={`text-xs font-semibold ${isSelected ? 'text-emerald-400' : 'text-slate-200'}`}>{player.name}</p>
+                      <p className={`text-xs font-semibold ${isSelected ? 'text-brand-400' : 'text-slate-200'}`}>{player.name}</p>
                       <p className="text-[10px] text-slate-500 truncate">
                         {player.position} &bull; {getCountryDisplay(player.nationality).flag} {getCountryDisplay(player.nationality).code}
                       </p>
@@ -173,43 +173,43 @@ export default function PlayerStats() {
       ) : (
         <div className="md:col-span-2 space-y-6">
           <div className="bg-[#151619] border border-[#202124] rounded-xl p-5 md:p-6 overflow-hidden relative shadow-xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-2xl pointer-events-none" />
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
               <div className="flex items-center gap-4">
                 <div className={`w-16 h-16 rounded-2xl border-2 flex items-end justify-center shadow-lg overflow-hidden relative ${
                   (displayPlayer as any).gender === 'F'
                     ? 'bg-gradient-to-tr from-pink-950 to-pink-900/60 border-pink-500/30'
-                    : 'bg-gradient-to-tr from-[#0b241a] to-[#04120c] border-emerald-500/20'
+                    : 'bg-gradient-to-tr from-[#0a1830] to-[#0a0e16] border-brand-500/20'
                 }`}>
                   <DummyPlayerAvatar className="w-[88%] h-[88%] absolute bottom-0 object-contain drop-shadow" gender={(displayPlayer as any).gender === 'F' ? 'female' : 'male'} />
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-sans font-bold text-lg text-white leading-tight">{displayPlayer.name}</h3>
-                    <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-widest uppercase">
+                    <span className="bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-widest uppercase">
                       {displayPlayer.position}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-                    <span className="font-semibold text-emerald-400">{displayPlayer.positionDetail}</span>
+                    <span className="font-semibold text-brand-400">{displayPlayer.positionDetail}</span>
                     <span className="text-slate-600">&bull;</span>
                     <span>{displayPlayer.club}</span>
                   </p>
                 </div>
               </div>
-              <div className="bg-[#0C1E14] border border-emerald-900/60 px-4 py-2.5 rounded-xl text-center self-start sm:self-auto shadow-md">
+              <div className="bg-[#0a1424] border border-brand-900/60 px-4 py-2.5 rounded-xl text-center self-start sm:self-auto shadow-md">
                 <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block mb-0.5">Rating</span>
-                <span className="text-xl font-mono font-black text-emerald-400 block leading-none">{displayPlayer.rating}</span>
+                <span className="text-xl font-mono font-black text-brand-400 block leading-none">{displayPlayer.rating}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 pt-5">
-              <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 pt-5 divide-x divide-slate-800/60 sm:divide-x">
+              <div className="p-3 text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Age</span>
                 <span className="text-sm font-mono font-bold text-slate-100">{displayPlayer.age || '—'} {displayPlayer.age ? 'Years' : ''}</span>
               </div>
-              <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
+              <div className="p-3 text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Nationality</span>
                 {(() => {
                   const { flag, code } = getCountryDisplay(displayPlayer.nationality);
@@ -220,11 +220,11 @@ export default function PlayerStats() {
                   );
                 })()}
               </div>
-              <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
+              <div className="p-3 text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Foot</span>
                 <span className="text-sm font-bold text-slate-100">{displayPlayer.preferredFoot}</span>
               </div>
-              <div className="bg-slate-900/35 border border-slate-850/50 p-3 rounded-lg text-center">
+              <div className="p-3 text-center">
                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Height</span>
                 <span className="text-sm font-mono font-bold text-slate-100">{displayPlayer.height}</span>
               </div>
@@ -245,7 +245,7 @@ export default function PlayerStats() {
                       <span className="font-mono font-bold text-slate-100">{val} / 100</span>
                     </div>
                     <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-850/40">
-                      <div className="h-full bg-emerald-500 rounded-full transition-all duration-300" style={{ width: `${val}%` }} />
+                      <div className="h-full bg-amber-600 rounded-full transition-all duration-300" style={{ width: `${val}%` }} />
                     </div>
                   </div>
                 ))}
@@ -265,7 +265,7 @@ export default function PlayerStats() {
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Goals Scored</span>
-                    <span className="text-xs font-mono font-extrabold text-emerald-400">{displayPlayer.goals} Goals</span>
+                    <span className="text-xs font-mono font-extrabold text-brand-400">{displayPlayer.goals} Goals</span>
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Assists Delivered</span>
@@ -273,8 +273,9 @@ export default function PlayerStats() {
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Discipline</span>
-                    <span className="text-xs font-mono font-bold text-slate-300">
-                      {displayPlayer.yellowCards} 🟨 / {displayPlayer.redCards} 🟥
+                    <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1">
+                      <span className="w-2 h-2.5 bg-amber-500 rounded-sm shadow-sm" /> {displayPlayer.yellowCards}
+                      <span className="w-2 h-2.5 bg-rose-600 rounded-sm shadow-sm ml-1.5" /> {displayPlayer.redCards}
                     </span>
                   </div>
                 </div>

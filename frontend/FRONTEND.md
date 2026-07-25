@@ -230,6 +230,8 @@ The active filter is highlighted in emerald. `loadingFilter` tracks which button
 
 When a search returns no results, `PlayerStats.tsx` keeps the sidebar (search input + filter buttons) fully visible and shows a "No player available for that name" message in the detail panel instead of replacing the whole component. The early-return fallback that hid everything was removed; the detail panel now uses a ternary — empty state when `!selectedPlayer`, full profile when a player is selected.
 
+**`PlayerStats.tsx` converted (brand/amber pass):** every `emerald-{N}` → `brand-{N}` (search focus ring, gender filter active tab — `bg-brand-500 text-white`, selected-player row/name, avatar gradient for male players — pairs with the existing pink treatment for female players as a deliberate blue/pink gender color code, position badge, rating box, "Goals Scored" value). The attribute progress-bar fill is the one data element in this file → `bg-amber-600` (data-accent role, not brand). Fixed a broken `text-slate-250` on the search input. The 4-tile bio grid (Age/Nationality/Foot/Height) drops its per-tile border+background in favor of a single `divide-x` on the shared grid row (declutter pass). The 🟨/🟥 emoji in the Discipline row are replaced with the same small colored-rectangle indicators `MatchDetails.tsx`'s stats tab already uses for cards (`bg-amber-500`/`bg-rose-600` rounded-sm swatches) — emoji-as-icon tell removal, consistent with the rest of the app.
+
 ### PlayerStats category filter
 
 The filter bar in `PlayerStats.tsx` has three buttons — **All**, **Nep Men's**, **Nep W** — mapped to internal state `'ALL' | 'MEN' | 'WOMEN'`.
