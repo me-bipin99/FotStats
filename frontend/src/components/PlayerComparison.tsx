@@ -153,16 +153,16 @@ const FUTCard = ({ player, side }: { player: Player; side?: 'green' | 'white' })
 
   // Backing color theme - green for the active left slot, white/slate for the right slot
   const cardBgClass = isGreen
-    ? "bg-gradient-to-b from-[#092e21] to-[#0a1210] border border-[#10b981]/60 shadow-[0_4px_25px_rgba(16,185,129,0.22)]"
+    ? "bg-gradient-to-b from-[#0a1830] to-[#0a0e16] border border-[#1e4fa3]/60 shadow-[0_4px_25px_rgba(30,79,163,0.22)]"
     : "bg-gradient-to-b from-[#2d2d30] to-[#0d0d0f] border border-[#e2e8f0]/40 shadow-[0_4px_25px_rgba(255,255,255,0.12)]";
 
   // Avatar backdrop gradient styling
   const avatarBoxBg = isGreen
-    ? "bg-gradient-to-b from-[#047857]/45 via-[#064e3b]/25 to-[#022c22]/60"
+    ? "bg-gradient-to-b from-[#1a438b]/45 via-[#122f62]/25 to-[#091831]/60"
     : "bg-gradient-to-b from-[#64748b]/40 via-[#334155]/20 to-[#1e293b]/55";
 
   // Rating and position layout metadata
-  const ratingTextClass = isGreen ? "text-emerald-400" : "text-white";
+  const ratingTextClass = isGreen ? "text-brand-400" : "text-white";
 
   const positionMap = {
     'GK': 'GK',
@@ -180,11 +180,8 @@ const FUTCard = ({ player, side }: { player: Player; side?: 'green' | 'white' })
       <div 
         className={`w-full aspect-[4/3.3] rounded-[18px] relative overflow-hidden flex items-end justify-center ${avatarBoxBg}`}
       >
-        {/* Subtle radial shine overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.15),transparent_70%)] pointer-events-none" />
-        
         {/* Rating badge inset on top-left of the container */}
-        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-[2px] px-1.5 py-0.5 rounded-full border border-white/10 flex items-center gap-0.5 text-[8.5px] font-mono font-black placeholder-white leading-none">
+        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-[2px] px-1.5 py-0.5 rounded-md border border-white/10 flex items-center gap-0.5 text-[8.5px] font-mono font-black placeholder-white leading-none">
           <span className={ratingTextClass}>⭐ {Math.round(player.rating * 10)}</span>
         </div>
 
@@ -205,15 +202,12 @@ const FUTCard = ({ player, side }: { player: Player; side?: 'green' | 'white' })
       {/* Footer detailing: Identity values */}
       <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold px-1.5 pb-1 select-none">
         <div className="flex items-center gap-1 min-w-0 max-w-[65%]">
-          <span className="text-[10px] filter saturate-50 shrink-0" role="img" aria-label="club element">
-            {player.position === 'FW' ? '' : player.position === 'GK' ? '' : ''}
-          </span>
-          <span className="truncate opacity-85 text-slate-350">{displayClubName}</span>
+          <span className="truncate opacity-85 text-slate-400">{displayClubName}</span>
         </div>
 
         <span className={`font-mono text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
-          isGreen 
-            ? "text-emerald-450 bg-emerald-950/60 border border-emerald-900/30" 
+          isGreen
+            ? "text-brand-500 bg-brand-950/60 border border-brand-900/30"
             : "text-slate-300 bg-slate-900/60 border border-slate-800/40"
         }`}>
           {displayPos}
@@ -228,7 +222,7 @@ const DualComparativeBar = ({
   valA, 
   valB, 
   max = 100, 
-  colorA = '#10b981', // Brand Emerald Green
+  colorA = '#1e4fa3', // Brand Nepal Blue
   colorB = '#e2e8f0'  // Gorgeous soft white/grey
 }: { 
   valA: number; 
@@ -481,15 +475,15 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
         {/* Row 3: Weight, Height, Market Value */}
         <div className="grid grid-cols-3 gap-4 border-t border-slate-900/70 pt-4">
           <div>
-            <span className="text-slate-550 block text-[10px] uppercase font-mono tracking-wider">Weight</span>
+            <span className="text-slate-600 block text-[10px] uppercase font-mono tracking-wider">Weight</span>
             <span className="font-bold text-slate-200 mt-1.5 font-mono text-xs">{player.weight || '75kg'}</span>
           </div>
           <div>
-            <span className="text-slate-550 block text-[10px] uppercase font-mono tracking-wider">Height</span>
+            <span className="text-slate-600 block text-[10px] uppercase font-mono tracking-wider">Height</span>
             <span className="font-bold text-slate-200 mt-1.5 font-mono text-xs">{player.height || '178cm'}</span>
           </div>
           <div>
-            <span className="text-slate-550 block text-[10px] uppercase font-mono tracking-wider">Market Value</span>
+            <span className="text-slate-600 block text-[10px] uppercase font-mono tracking-wider">Market Value</span>
             <span className="font-extrabold text-amber-500 mt-1.5 font-mono text-xs block">{player.marketValue}</span>
           </div>
         </div>
@@ -501,7 +495,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
     <div className="space-y-6">
       
       {/* SECTION 1: SIDE-BY-SIDE H2H PROFILES */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 bg-[#151619] p-5 md:p-6 border border-[#202124] rounded-2xl shadow-xl">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 bg-[#151619] p-5 md:p-6 border border-[#202124] rounded-xl shadow-xl">
         
         {/* CANDIDATE A BLOCK */}
         <div className="relative min-h-[270px]">
@@ -509,7 +503,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               {/* Outer card + change trigger info */}
               <div className="flex flex-col items-center shrink-0">
-                <FUTCard player={playerA} />
+                <FUTCard player={playerA} side="green" />
                 <button
                   onClick={() => { setSlotAPickerOpen(!slotAPickerOpen); setSlotBPickerOpen(false); }}
                   className="mt-3 px-4.5 py-1.5 bg-[#171a22] border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition shadow cursor-pointer uppercase select-none"
@@ -521,13 +515,13 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {renderBioGrid(playerA, true)}
             </div>
           ) : (
-            <div className="h-full min-h-[270px] border-2 border-dashed border-slate-900 hover:border-emerald-500/20 bg-slate-950/20 rounded-2xl flex flex-col items-center justify-center text-center p-6 transition">
+            <div className="h-full min-h-[270px] border-2 border-dashed border-slate-900 hover:border-brand-500/20 bg-slate-950/20 rounded-xl flex flex-col items-center justify-center text-center p-6 transition">
               <button
                 onClick={() => { setSlotAPickerOpen((prev) => !prev); setSlotBPickerOpen(false); }}
                 className="flex flex-col items-center cursor-pointer"
               >
-                <div className="w-11 h-11 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 mb-2">
-                  <Plus className="w-4 h-4 text-emerald-400" />
+                <div className="w-11 h-11 rounded-full bg-brand-500/10 flex items-center justify-center border border-brand-500/20 mb-2">
+                  <Plus className="w-4 h-4 text-brand-400" />
                 </div>
                 <span className="text-xs font-bold text-slate-300">Compare Player A</span>
                 <span className="text-[10px] text-slate-500 font-mono mt-1">Click to select player</span>
@@ -545,7 +539,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                   placeholder="Query athlete name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-900 focus:border-emerald-500 rounded-lg pl-8 pr-2.5 py-1.8 text-xs text-white outline-none"
+                  className="w-full bg-slate-950 border border-slate-900 focus:border-brand-500 rounded-lg pl-8 pr-2.5 py-1.8 text-xs text-white outline-none"
                   autoFocus
                 />
               </div>
@@ -557,13 +551,13 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                     <div
                       key={p.id}
                       onClick={() => { onSelectPlayer(p, 'A'); setSlotAPickerOpen(false); setSearchQuery(''); }}
-                      className="p-2 hover:bg-emerald-500/15 rounded-lg text-xs text-slate-100 font-semibold cursor-pointer transition flex items-center justify-between"
+                      className="p-2 hover:bg-brand-500/15 rounded-lg text-xs text-slate-100 font-semibold cursor-pointer transition flex items-center justify-between"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500 text-[9px] font-mono bg-slate-950 border border-slate-900 px-1.5 py-0.5 rounded">{p.position}</span>
                         <span>{p.name}{shortClubName(p.club) ? <span className="text-slate-500 font-normal"> ({shortClubName(p.club)})</span> : null}</span>
                       </div>
-                      <span className="text-emerald-400 font-mono font-bold text-[11px]">{Math.round(p.rating * 10)} OVR</span>
+                      <span className="text-brand-400 font-mono font-bold text-[11px]">{Math.round(p.rating * 10)} OVR</span>
                     </div>
                   ))
                 )}
@@ -590,7 +584,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {renderBioGrid(playerB, false)}
             </div>
           ) : (
-            <div className="h-full min-h-[270px] border-2 border-dashed border-slate-900 hover:border-slate-500/20 bg-slate-950/20 rounded-2xl flex flex-col items-center justify-center text-center p-6 transition">
+            <div className="h-full min-h-[270px] border-2 border-dashed border-slate-900 hover:border-slate-500/20 bg-slate-950/20 rounded-xl flex flex-col items-center justify-center text-center p-6 transition">
               <button
                 onClick={() => { setSlotBPickerOpen((prev) => !prev); setSlotAPickerOpen(false); }}
                 className="flex flex-col items-center cursor-pointer"
@@ -614,7 +608,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                   placeholder="Query athlete name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-900 focus:border-emerald-500 rounded-lg pl-8 pr-2.5 py-1.8 text-xs text-white outline-none"
+                  className="w-full bg-slate-950 border border-slate-900 focus:border-brand-500 rounded-lg pl-8 pr-2.5 py-1.8 text-xs text-white outline-none"
                   autoFocus
                 />
               </div>
@@ -626,7 +620,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                     <div
                       key={p.id}
                       onClick={() => { onSelectPlayer(p, 'B'); setSlotBPickerOpen(false); setSearchQuery(''); }}
-                      className="p-2 hover:bg-emerald-500/15 rounded-lg text-xs text-slate-100 font-semibold cursor-pointer transition flex items-center justify-between"
+                      className="p-2 hover:bg-brand-500/15 rounded-lg text-xs text-slate-100 font-semibold cursor-pointer transition flex items-center justify-between"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500 text-[9px] font-mono bg-slate-950 border border-slate-900 px-1.5 py-0.5 rounded">{p.position}</span>
@@ -645,15 +639,15 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
 
       {/* ML Similarity Score Banner */}
       {compareResult && (
-        <div className="bg-[#151619] border border-emerald-800/40 rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="bg-[#151619] border border-brand-800/40 rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-3">
             <span className="text-slate-400 uppercase tracking-wider font-bold"> Cosine Similarity</span>
-            <span className="font-mono font-black text-emerald-400 text-lg">{compareResult.similarityScore.toFixed(1)}%</span>
+            <span className="font-mono font-black text-brand-400 text-lg">{compareResult.similarityScore.toFixed(1)}%</span>
           </div>
           <div className="flex gap-6">
             <div>
               <span className="text-[9px] uppercase text-slate-500 font-bold block mb-1">{compareResult.playerA.name} strengths</span>
-              <span className="text-emerald-400 font-semibold capitalize">{compareResult.strengths.playerA.join(', ') || '—'}</span>
+              <span className="text-brand-400 font-semibold capitalize">{compareResult.strengths.playerA.join(', ') || '—'}</span>
             </div>
             <div>
               <span className="text-[9px] uppercase text-slate-500 font-bold block mb-1">{compareResult.playerB.name} strengths</span>
@@ -671,14 +665,14 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
           
           {/* COLUMN 1: Match Performance Stats */}
           <div className="bg-[#151619] p-5 md:p-6 border border-[#202124] rounded-xl space-y-5">
-            <h4 className="text-sm font-extrabold text-slate-300 border-b border-slate-905 pb-3 uppercase tracking-wider">
+            <h4 className="text-sm font-extrabold text-slate-300 border-b border-slate-900 pb-3 uppercase tracking-wider">
               Match Performance Stats
             </h4>
             <div className="space-y-4.5">
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.goals : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.goals : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Goals</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.goals : '-'}</span>
                 </div>
@@ -688,7 +682,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.assists : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.assists : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Assists</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.assists : '-'}</span>
                 </div>
@@ -698,7 +692,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">
                     {playerA !== null ? Math.round(playerA.attributes.shooting * 1.2) : '-'}
                   </span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Shots on Target</span>
@@ -712,7 +706,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">
                     {playerA !== null ? Math.round(playerA.attributes.defending * 0.15) : '-'}
                   </span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Blocks</span>
@@ -726,7 +720,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.matchesPlayed : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.matchesPlayed : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Games Played</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.matchesPlayed : '-'}</span>
                 </div>
@@ -736,7 +730,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">
                     {playerA !== null ? Math.round(playerA.attributes.passing * 0.4) : '-'}
                   </span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Big Chances Created</span>
@@ -750,7 +744,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">
                     {playerA !== null ? `${50 + Math.round(playerA.attributes.shooting * 0.4)}%` : '-'}
                   </span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Shot Accuracy</span>
@@ -764,7 +758,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">
                     {playerA !== null ? `${60 + Math.round(playerA.attributes.passing * 0.35)}%` : '-'}
                   </span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Pass Accuracy</span>
@@ -779,14 +773,14 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
 
           {/* COLUMN 2: Core Attributes */}
           <div className="bg-[#151619] p-5 md:p-6 border border-[#202124] rounded-xl space-y-5">
-            <h4 className="text-sm font-extrabold text-slate-300 border-b border-slate-905 pb-3 uppercase tracking-wider">
+            <h4 className="text-sm font-extrabold text-slate-300 border-b border-slate-900 pb-3 uppercase tracking-wider">
               Core Attributes
             </h4>
             <div className="space-y-4.5">
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.pace : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.pace : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Pace</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.attributes.pace : '-'}</span>
                 </div>
@@ -796,7 +790,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.shooting : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.shooting : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Shooting</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.attributes.shooting : '-'}</span>
                 </div>
@@ -806,7 +800,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.passing : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.passing : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Passing</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.attributes.passing : '-'}</span>
                 </div>
@@ -816,7 +810,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.dribbling : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.dribbling : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Dribbling</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.attributes.dribbling : '-'}</span>
                 </div>
@@ -826,7 +820,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.physical : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.physical : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Physical</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.attributes.physical : '-'}</span>
                 </div>
@@ -836,7 +830,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.defending : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? playerA.attributes.defending : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Defending</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? playerB.attributes.defending : '-'}</span>
                 </div>
@@ -847,14 +841,14 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
 
           {/* COLUMN 3: Game Intelligence & Work Rate */}
           <div className="bg-[#151619] p-5 md:p-6 border border-[#202124] rounded-xl space-y-5">
-            <h4 className="text-sm font-extrabold text-slate-300 border-b border-slate-905 pb-3 uppercase tracking-wider">
+            <h4 className="text-sm font-extrabold text-slate-300 border-b border-slate-900 pb-3 uppercase tracking-wider">
               Game Intelligence & Work Rate
             </h4>
             <div className="space-y-4.5">
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? derivedA.attWorkRate : '-'}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{playerA !== null ? derivedA.attWorkRate : '-'}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Attacking Work Rate</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{playerB !== null ? derivedB.attWorkRate : '-'}</span>
                 </div>
@@ -864,7 +858,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{derivedA.defWorkRate}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{derivedA.defWorkRate}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Defensive Work Rate</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{derivedB.defWorkRate}</span>
                 </div>
@@ -874,7 +868,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{derivedA.skillMoves}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{derivedA.skillMoves}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Skill Moves</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{derivedB.skillMoves}</span>
                 </div>
@@ -884,7 +878,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {/* Stat Row */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-emerald-400 font-mono text-xs md:text-sm w-12 text-left">{derivedA.creativity}</span>
+                  <span className="font-extrabold text-brand-400 font-mono text-xs md:text-sm w-12 text-left">{derivedA.creativity}</span>
                   <span className="font-bold text-slate-400 uppercase tracking-widest text-[11px] text-center grow">Creativity</span>
                   <span className="font-extrabold text-slate-300 font-mono text-xs md:text-sm w-12 text-right">{derivedB.creativity}</span>
                 </div>
@@ -904,9 +898,9 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                   Position density indicating on-field activity patterns. Heat-density scales based on attributes (defending, shooting, pace, etc.).
                 </p>
               </div>
-              <div className="mt-2.5 sm:mt-0 flex items-center gap-1.5 bg-[#090a0f] border border-slate-850 px-3 py-1 rounded-full text-[10px] text-slate-400 font-mono font-bold leading-none shrink-0 self-start sm:self-center">
+              <div className="mt-2.5 sm:mt-0 flex items-center gap-1.5 bg-[#090a0f] border border-slate-850 px-3 py-1 rounded-md text-[10px] text-slate-400 font-mono font-bold leading-none shrink-0 self-start sm:self-center">
                 <span>Play Direction</span>
-                <span className="text-emerald-400 font-extrabold">&rarr;</span>
+                <span className="text-brand-400 font-extrabold">&rarr;</span>
               </div>
             </div>
 
@@ -917,7 +911,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                   <span className="text-xs font-black text-slate-100 truncate">
                     {playerA ? playerA.name : 'Slot A Candidate'}
                   </span>
-                  <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/25 rounded">
+                  <span className="text-[10px] font-mono font-bold text-brand-400 uppercase px-2 py-0.5 bg-brand-500/10 border border-brand-500/25 rounded">
                     {playerA ? playerA.position : '—'}
                   </span>
                 </div>
@@ -979,7 +973,7 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
                   <span className="text-xs font-black text-slate-100 truncate">
                     {playerB ? playerB.name : 'Slot B Candidate'}
                   </span>
-                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase px-2 py-0.5 bg-slate-800/50 border border-slate-750 rounded">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase px-2 py-0.5 bg-slate-800/50 border border-slate-800 rounded">
                     {playerB ? playerB.position : '—'}
                   </span>
                 </div>
@@ -1102,8 +1096,8 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
               {playerA && (
                 <polygon
                   points={getRadarPoints(playerA)}
-                  fill="rgba(16, 185, 129, 0.22)"
-                  stroke="#10b981"
+                  fill="rgba(30, 79, 163, 0.22)"
+                  stroke="#1e4fa3"
                   strokeWidth="2.5"
                   className="transition-all duration-300"
                 />
@@ -1149,13 +1143,13 @@ export default function PlayerComparison({ selectedPlayers, onSelectPlayer, onCl
           {/* Clean pills bottom legend */}
           <div className="flex flex-wrap gap-2.5 pt-2 text-[11px] items-center justify-center font-bold">
             {playerA && (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#131422] border border-emerald-500/30 rounded-full text-slate-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#131422] border border-brand-500/30 rounded-md text-slate-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
                 <span>{playerA.name.split(' ').pop()}</span>
               </span>
             )}
             {playerB && (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#1d1f24] border border-slate-700/50 rounded-full text-slate-300">
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#1d1f24] border border-slate-700/50 rounded-md text-slate-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
                 <span>{playerB.name.split(' ').pop()}</span>
               </span>
