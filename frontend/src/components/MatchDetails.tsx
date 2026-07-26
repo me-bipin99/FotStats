@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Match, Player, TeamLineup } from '../types';
 import {
   MapPin, Users, Calendar, AlertCircle, Info,
-  CheckCircle2, Award, Flame, Check, Loader2,
+  CheckCircle2, Flame, Check, Loader2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -218,10 +218,10 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
       <div className="p-4 md:p-6 bg-gradient-to-b from-[#212228] to-[#151619] border-b border-[#202124] relative">
         <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
           <span className="bg-brand-500/10 text-white font-bold px-2 py-0.5 rounded flex items-center gap-1.5 border border-brand-500/15">
-            <Award className="w-3.5 h-3.5" />
+            
             <span className="uppercase tracking-wider">{match.competition}</span>
           </span>
-          <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1">
+          <span className="text-white-400 font-mono text-[11px] flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5 text-slate-500" />
             {match.date} &bull; {match.time}
           </span>
@@ -251,7 +251,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
             <h4 className="mt-3 text-sm md:text-base font-bold text-white leading-tight">
               {match.homeTeam.name}
             </h4>
-            <span className="text-[10px] text-slate-500 font-mono mt-1">H2H Rating: {match.homeTeam.rating}</span>
+           
           </div>
 
           {/* Current Score / V / Live details */}
@@ -283,9 +283,9 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
               </div>
             ) : (
               <div className="flex flex-col items-center bg-[#0d0e10]/80 border border-slate-800/80 px-4 py-2.5 rounded-xl">
-                <p className="text-[11px] text-slate-500 uppercase font-bold tracking-widest font-mono">KICK OFF</p>
-                <p className="text-xl md:text-2xl font-mono font-black text-brand-500 mt-1">{match.time}</p>
-                <span className="text-[10px] text-slate-400 font-mono mt-1.5 px-2 py-0.5 bg-slate-900 rounded-md border border-slate-800/60 font-semibold">Scheduled</span>
+                <p className="text-[11px] text-white-500 uppercase font-bold tracking-widest font-mono">KICK OFF</p>
+                <p className="text-xl md:text-2xl font-mono font-black text-white-500 mt-1">{match.time}</p>
+                <span className="text-[10px] text-white-400 font-mono mt-1.5 px-2 py-0.5 bg-slate-900 rounded-md border border-slate-800/60 font-semibold">Scheduled</span>
               </div>
             )}
           </div>
@@ -319,7 +319,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
         {/* Stadium and Venue info footer */}
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-4 pt-4 border-t border-slate-800/40 text-xs text-slate-400">
           <span className="flex items-center gap-1 truncate">
-            <MapPin className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+            <MapPin className="w-3.5 h-3.5 text-white-200 shrink-0" />
             <span>{match.venue}</span>
           </span>
           {match.homeTeam.id === 'nepal' && (
@@ -714,7 +714,7 @@ export default function MatchDetails({ match, selectedPlayers, onSelectPlayerFor
 
                   {/* Predicted Lineup Indicator centered at the bottom of the pitch container */}
                   {isPredicted && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-brand-500/10 border border-brand-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-brand-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20"> {/* unslop-ignore: status pill, not a decorative default */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-brand-500/10 border border-brand-500/25 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white-400 flex items-center gap-1.5 backdrop-blur-sm shadow-md shadow-black/50 select-none z-20"> {/* unslop-ignore: status pill, not a decorative default */}
                       <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
                       Predicted Lineup by Machine
                     </div>

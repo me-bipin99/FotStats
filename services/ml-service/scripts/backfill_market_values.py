@@ -32,6 +32,7 @@ players = list(db.players.find({"marketValue": 0}, {
     "_id": 1, "age": 1, "position": 1, "eloRating": 1,
     "stats": 1,
     "careerStats": 1,
+    "source": 1,
 }))
 
 print(f"Found {len(players)} players with marketValue=0. Backfilling...")
@@ -54,7 +55,7 @@ for p in players:
         "defending":   stats.get("defending", 50),
         "physical":    stats.get("physical", 50),
     }
-    mv = impute_market_value(features, _mv_model)
+    mv = impute_market_value(features, _mv_model, source=p.get("source"))
     db.players.update_one({"_id": p["_id"]}, {"$set": {"marketValue": mv}})
     updated += 1
 

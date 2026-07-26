@@ -144,7 +144,7 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-sans font-extrabold text-xl tracking-tight text-white">
-                  Fot<span className="text-brand-500 font-normal">nep</span>
+                  Fot<span className="text-brand-500 font-normal">Stats</span>
                 </span>
               </div>
               <p className="font-mono text-[9px] text-slate-500 uppercase tracking-widest leading-none mt-0.5">
@@ -163,10 +163,10 @@ export default function Header({ activeTab, onChangeTab }: HeaderProps) {
                 key={item.id}
                 onClick={() => onChangeTab(item.id)}
                 className={`flex flex-col items-center justify-center gap-1 py-1.5 px-3 md:px-4 rounded-lg transition-all duration-150 cursor-pointer select-none text-center min-w-[64px] sm:min-w-[72px] md:min-w-[80px] ${
-                  isActive ? 'text-brand-400' : 'text-slate-300 hover:text-slate-200 hover:bg-slate-900/40'
+                  isActive ? 'text-white-400' : 'text-white hover:text-slate-200 hover:bg-slate-900/40'
                 }`}
               >
-                <span className={`text-[9.5px] font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-brand-400 font-black' : 'text-slate-500'}`}>
+                <span className={`text-[13px] font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-brand-400 font-black' : 'text-white'}`}>
                   {item.label}
                 </span>
                 {isActive && <span className="w-4 h-0.5 bg-brand-500 rounded-full" />}

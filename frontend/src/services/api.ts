@@ -163,6 +163,7 @@ export function adaptPlayer(p: ApiPlayer): Player {
     redCards: p.careerStats.redCards,
     preferredFoot: p.preferredFoot ?? 'Right',
     club: teamName,
+    gender: p.gender,
     attributes: {
       pace: p.stats.pace,
       shooting: p.stats.shooting,
@@ -216,7 +217,7 @@ function adaptLineup(
 export function adaptMatch(m: ApiMatch): Match {
   const d = new Date(m.date);
   const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const votes = m.voteCounts ?? { home_win: 0, draw: 0, away_win: 0 };
   const hf = m.homeFormation || '4-3-3';
   const af = m.awayFormation || '4-3-3';

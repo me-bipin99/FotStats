@@ -60,7 +60,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | Frontend | `PlayerComparison.tsx` — Algorithm 2 UI | ✅ Done |
 | Frontend | `LineupBuilder.tsx` — Algorithm 3 UI | ✅ Done |
 | Frontend | `mockData.ts` — zero imports confirmed (ready to delete) | ✅ Verified |
-| Database | Seed data in MongoDB | ✅ Done (3086 players, 19 teams, 24 matches — all lineups predicted) |
+| Database | Seed data in MongoDB | ✅ Done (1120 players, 26 teams incl. 7 NSL franchise clubs, 24 matches — all lineups predicted) |
 
 ### ❌ Not Yet Implemented
 
@@ -533,7 +533,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | ML algorithms | All 3 algorithms implemented | ✅ Complete |
 | Frontend integration | api.ts, AuthContext, all components API-connected | ✅ Complete |
 | 1 | `.env` files creation | ✅ Complete |
-| 2 | DB seeding | ✅ Complete (3086 players, 19 teams, 24 matches — all lineups predicted) |
+| 2 | DB seeding | ✅ Complete (745 players — real-players-first (Nepal CSV + curated SAFF internationals + curated world-class pool) with generated fill-in, 26 teams incl. 7 NSL franchise clubs, 24 matches — all lineups predicted) |
 | ML↔DB link | ML service `database.py` reads DB name from URI; `load_dotenv()` in `main.py` | ✅ Fixed |
 | ML↔Backend link | All 3 algorithms flow: Frontend→Backend→ML→MongoDB→Response | ✅ Verified |
 | 3 | Type-check & lint pass | ✅ Complete |
@@ -574,5 +574,43 @@ Bugs found during a full-codebase code review and fixed in session.
 
 ---
 
-**Last Updated:** 2026-06-09
+## Phase 12 — South Asian Market Value Ratio (2026-06-12)
+
+> Design: [docs/superpowers/specs/2026-06-12-south-asian-market-value-ratio-design.md](./docs/superpowers/specs/2026-06-12-south-asian-market-value-ratio-design.md)
+
+- [x] `services/ml-service/models/attribute_imputer.py` — added `SOUTH_ASIAN_SOURCES` (`nepali`, `india`, `bhutan`, `bangladesh`, `pakistan`) and `SOUTH_ASIAN_VALUE_RATIO = 1/3`. `impute_market_value()` now takes a `source` param and multiplies the CatBoost prediction by 1/3 for South Asian sources. `/impute-attributes` endpoint derives `source` from `nationality.strip().lower()`.
+- [x] `scripts/seed_db.py` (3 call sites) + `scripts/seed_missing_players.py` + `scripts/backfill_market_values.py` — all pass `source` through to `impute_market_value()` so future seeds/backfills apply the ratio automatically.
+- [x] `scripts/rescale_south_asian_market_values.py` (new one-time script) — ran once against the dev DB to rescale the 380 already-seeded South Asian players. Avg `marketValue`: nepali €193,831 → €64,610, india €202,093 → €67,364, bhutan €181,014 → €60,338, bangladesh €187,240 → €62,414, pakistan €191,572 → €63,857. European unchanged at €199,927.
+- [x] Verified `impute_market_value()` directly: identical feature vector → european €245,311 vs. nepali €81,770 (exactly 1/3).
+- [x] Docs updated: `ALGORITHMS.md` § 4d, `services/ml-service/ML_SERVICE.md`, `SEEDING_BENCHMARK.md`.
+
+---
+
+## Phase 13 — Bug Fix: Match List Showing Stale Seeded Vote Counts (2026-06-12)
+
+- [x] `backend/src/controllers/matchController.ts` — `listMatches()` previously returned the raw seeded `voteCounts` field from `Match` documents (static fake numbers from `seed_db.py`, e.g. `{home_win: 42, draw: 11, away_win: 18}`), while `getMatch()` correctly overrode it with a live aggregation from the `Vote` collection. The homepage match feed (`MatchFeed.tsx`) showed these stale fake totals while `MatchDetails.tsx` showed real counts via `GET /votes/:matchId`.
+- [x] Fix: `listMatches()` now runs a `Vote.aggregate()` grouped by `matchId` + `outcome` for all returned matches and merges real counts into each match's `voteCounts` before responding — same shape as `getMatch()`.
+- [x] Verified backend: `votes` collection persists correctly (24 docs, unique index `userId+matchId`), and `GET /votes/:matchId` returns `userVote: 'home_win'` with a valid JWT vs. `null` without — confirmed via direct curl test with a generated token for `test2@test.com`.
+- [x] Found + fixed related frontend bug: `MatchDetails.tsx` vote-restore `useEffect` depended only on `[match.id]`, so logging in/out mid-session (without reload or match switch) never re-fetched `userVote` — the "Prediction Registered" state stayed stale. Added `auth.user?.id` to the dependency array.
+- [ ] Note: found 16/24 vote docs in `votes` collection reference `userId`/`matchId` from a previous seed generation (orphaned — no longer match current `users`/`matches`). Harmless (aggregation only counts, doesn't join), but could be cleaned up in a future reseed.
+
+---
+
+## Phase 14 — Bug Fix: Match Kickoff Times + Real-Players-First Seeding (2026-07-26)
+
+- [x] Fixed all-matches-show-"13:22" bug: `frontend/src/services/api.ts` `adaptMatch()` formatted time with `hour12: false`; changed to `hour12: true` (12-hour AM/PM, e.g. `"1:30 PM"`).
+- [x] Fixed root cause in `seed_db.py` `seed_matches()`: every match's `date` reused one `datetime.utcnow()` timestamp for time-of-day (only the day offset varied per fixture) — every match landed on the same clock time. Now cycles each match through `KICKOFF_TIMES = [(11, 0), (13, 30), (16, 30)]`.
+- [x] Found and fixed the actual root cause of "all fake player names": `seed_players()` (real Nepali + European CSV loader) existed in `seed_db.py` but was **never called** from `__main__` — only the fully-synthetic `seed_generated_players()` + `seed_european_generated()` ran, so every player (Nepal clubs, SAFF opponents, and the comparison pool) had a fabricated name.
+- [x] Renamed/trimmed `seed_players()` → `seed_real_nepal_players()`: loads the ~100 real Nepali players from CSV, resolves `team` via nslTeam/currentClub fuzzy match; unresolved players (most of them — only 12 rows have explicit club data) are picked up by the existing `_distribute_unassigned_players()` helper, spread across all 21 Nepal teams.
+- [x] Added `SAFF_REAL_PLAYERS` + `seed_real_saff_players()`: a deliberately conservative hand-curated list of real internationals for India/India Women/Bangladesh/Pakistan/Bhutan (36 total), assigned directly to their national team.
+- [x] `seed_generated_players()` now takes `drop: bool = True` and seeds `used_names` from the DB instead of dropping+starting fresh — called with `drop=False` after the real-player steps so it only tops up each squad to `TARGET_SQUAD` (20) around the real players already inserted.
+- [x] Replaced `seed_european_generated()` (600 fully-fake "European" players) with `seed_world_class_players()` seeding `WORLD_CLASS_PLAYERS` — ~225 real players hand-curated from the Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Saudi Pro League, and MLS (Messi, Haaland, Mbappé, Ronaldo, Bellingham, etc.), verified against current transfers via web search. Old fake-name pools (`_EURO_NATIONS`, `_EURO_CLUB_NAMES`) deleted.
+- [x] Reseeded local DB and verified end-to-end: 745 players (420 nepali incl. 100 real, 225 world-class real, 100 SAFF incl. 36 real), spot-checked real players resolve to correct teams (e.g. Anjan Bista → FC Chitwan via nslTeam match) and world-class players carry correct real data (e.g. Messi → Inter Miami/FW/Argentina).
+- [x] Docs updated: `SEEDING_BENCHMARK.md`, `services/ml-service/ML_SERVICE.md`, `frontend/FRONTEND.md`.
+- [x] Follow-up bug found while spot-checking the reseed: `PlayerStats.tsx` showed the male avatar for Nepal Women players. Root cause: `adaptPlayer()` in `frontend/src/services/api.ts` never copied `gender` from `ApiPlayer` onto the adapted `Player`, so `PlayerStats.tsx`'s `(player as any).gender === 'F'` check was always `undefined`. Added `gender?: 'M' | 'F'` to the `Player` type (`types.ts`), copied it through in `adaptPlayer()`, removed the now-unneeded `as any` casts in `PlayerStats.tsx`.
+- [x] Follow-up bug: international players showed a 🌍 globe instead of a flag. Root cause: `getCountryDisplay()` (`frontend/src/utils/nationality.ts`) only parses the `"xx XXX"` short-code shape; `seed_world_class_players()` wrote the full country name (`"fra FRANCE"`) and the SAFF branches wrote a bare name (`"India"`) — both fell through to the globe fallback. Fixed at the seed source (added `SAFF_NAT_CODE` map, changed `seed_world_class_players()` to emit `"xx XXX"`) rather than patching the frontend parser.
+
+---
+
+**Last Updated:** 2026-07-26
 **Current Blocker:** Phase 8.2 pre-production security checklist. Builds pass clean (`frontend` and `backend`). Remaining work before deploy: CORS lock-down (both Express and FastAPI), rotate JWT_SECRET, remove demo credentials from seed script/database.

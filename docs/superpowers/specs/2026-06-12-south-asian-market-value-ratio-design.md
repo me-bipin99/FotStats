@@ -24,6 +24,7 @@ a region.
 ## Decision: Ratio = 1/3
 
 Given the example (EUR 15g/season ≈ €50M, SA equivalent ≈ €15–25M):
+
 - 1/3 → €50M × 1/3 ≈ €16.7M (close to the middle of the €15–25M range)
 - 1/2 → €50M × 1/2 = €25M (top edge of the range)
 

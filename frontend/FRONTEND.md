@@ -112,6 +112,8 @@ Auth state lives in `src/context/AuthContext.tsx` using real JWT:
 
 **Header nav bar:** `navItems` in `Header.tsx` is plain `{ id, label }` — no `icon` field. Nav buttons render label text only (no `lucide-react` icons). The live UTC clock (`systime` state + `setInterval`) has been removed entirely, including its mobile badge and the desktop badge next to the user avatar. Inactive (unselected) nav tab text is `text-slate-300` (brightened from the original `text-slate-500` for legibility now that there's no icon).
 
+**Brand rename to FoTStats (2026-07-26):** the logo text in `Header.tsx` reads `Fot` + `Stats` (brand-colored second half), renamed from `Fot` + `nep`. The browser tab `<title>` (`index.html`) and the footer copyright line (`App.tsx`) were also updated to `FoTStats`. Remaining "FotNep" mentions (`App.tsx` welcome-banner text/version badge, `MatchDetails.tsx` analytics notice) were intentionally left as-is — not in scope of the header/title/footer rename requests.
+
 ## Types (src/types.ts)
 
 Key interfaces:
@@ -141,7 +143,11 @@ MatchStats  // possession, shots, shotsOnTarget, corners, fouls, cards
 
 **Pitch coordinate utility:** `src/utils/pitchCoords.ts` — `getFormationCoords(formation, players, isHome)` maps GK→DF→MF→FW ordered players to `{x,y}` percentage coordinates. Home team occupies left half (x: 3–47%), away mirrors right (x: 53–97%). Supports `4-3-3`, `4-4-2`, `4-2-3-1`, `3-5-2`; falls back to `4-3-3`.
 
-**`Player.nationality`** is the raw string from the DB — either `"Nepali"` (Nepali players) or `"xx XXX"` format (European dataset, e.g. `"us USA"`, `"eng ENG"`). `adaptPlayer()` in `api.ts` passes it through directly. The `club` field is set to the populated team name, or `'—'` when no team is available (nationality no longer bleeds into the club field).
+**`Player.nationality`** is the raw string from the DB — either `"Nepali"` (Nepali players) or `"xx XXX"` format (European/world-class/SAFF datasets, e.g. `"us USA"`, `"eng ENG"`, `"ind IND"`). `adaptPlayer()` in `api.ts` passes it through directly. The `club` field is set to the populated team name, or `'—'` when no team is available (nationality no longer bleeds into the club field).
+
+**`Player.gender`** (2026-07-26 fix): `adaptPlayer()` previously dropped the `gender` field entirely, so `PlayerStats.tsx`'s `player.gender === 'F'` check (used to pick the pink/female avatar treatment) was always `undefined` — Nepal Women players showed the male avatar. `gender?: 'M' | 'F'` is now on the `Player` type (`types.ts`) and copied through in `adaptPlayer()`; `PlayerStats.tsx`'s `as any` casts were removed since the field is now properly typed.
+
+**Nationality flag fallback (2026-07-26 fix):** `getCountryDisplay()` (below) only recognizes the `"xx XXX"` short-code format — `seed_world_class_players()` in `seed_db.py` was writing the full country name (`"fra FRANCE"`), and the SAFF opponent squads (`seed_generated_players()`/`seed_real_saff_players()`) wrote a bare country name (`"India"`), both of which fell through to the 🌍 globe placeholder instead of a flag. Fixed at the seed source to always emit `"xx XXX"` (e.g. `"fra FRA"`, `"ind IND"`) — see `services/ml-service/ML_SERVICE.md`.
 
 `PlayerComparison.tsx` — the two player slot blocks (`CANDIDATE A` / `CANDIDATE B`) both have `min-h-[270px]` on their outer wrapper. The empty dashed placeholder also uses `h-full min-h-[270px]` so both empty and populated states occupy the same height, preventing layout shift when a player is selected or deselected.
 
@@ -183,6 +189,8 @@ VITE_API_BASE_URL=http://localhost:3001/api/v1
 ### API data flow
 
 All data fetched via `src/services/api.ts`. Raw API shapes (`ApiPlayer`, `ApiMatch`, etc.) are adapted to frontend types (`Player`, `Match`) via `adaptPlayer()` / `adaptMatch()` adapters in `api.ts`.
+
+**Match time formatting:** `adaptMatch()` formats `match.time` via `toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })` — 12-hour clock with AM/PM (e.g. `"1:30 PM"`), not 24-hour.
 
 ### Pitch coordinate system (MatchDetails, LineupBuilder)
 
@@ -266,6 +274,13 @@ Every `emerald-{N}` → `brand-{N}`, matching the men/women blue/pink gender-col
 **Intentionally left unchanged:** the "Base OVR Power" legend dot in the Synergy breakdown stays `bg-emerald-500` — it's one of 4 categorical legend colors (green/blue/pink/amber) and converting it to `brand` would make it visually collide with the adjacent blue "Role-Based Balance" dot, defeating the legend's purpose. Marked `unslop-ignore` with that reasoning inline.
 
 **App-wide `unslop-ignore` sweep:** every genuinely-circular element found during the earlier radius-scale audit (avatars/player-number discs, status pills like LIVE and "Predicted Lineup by Machine", decorative blur orbs, pitch center-circle markings, hover-halo rings, progress-bar tracks/fills, remove-button icon circles) is now marked `unslop-ignore` inline across `LineupBuilder.tsx`, `MatchDetails.tsx`, `PlayerStats.tsx`, `PlayerComparison.tsx`, and `App.tsx`, so the `unslop-ui` scanner (which only respects the marker on the exact same source line as the flagged pattern) stops re-flagging deliberate choices. `LineupBuilder.tsx`'s remaining `hover:scale`/`group-hover:scale` on the pitch player bubble is now `motion-safe:group-hover:scale-105`, matching the `motion-safe:` gating already applied to `MatchDetails.tsx`'s player nodes.
+
+**Bench + sidebar flattened to match the controls-bar look (user-requested consistency pass):** the user approved the controls bar's flat pill style (formation select, All Men/Nep Men/Nep Women filters, Clear Draft — solid `bg-slate-900`/`bg-brand-500/20` fills, no gradients, no glow) and asked for the substitutes bench and right-side analytics cards to match it. Changes in `LineupBuilder.tsx`:
+- Sub-slot cards: dropped the `bg-gradient-to-b from-{brand,pink}-950/20 to-{brand,pink}-950/5` fill and `shadow-md` on filled/selected states in favor of flat `bg-brand-500/10 border-brand-500/30` (`bg-pink-500/10 border-pink-500/30` for women), and the empty-slot state now matches the controls bar's `bg-slate-900 border-slate-800/80 hover:bg-slate-850` pill treatment instead of `bg-slate-950/40 border-slate-850`.
+- Sub-slot avatar circle: dropped its `bg-gradient-to-b from-{brand,pink}-900/40 to-{brand,pink}-950` fill for a flat `bg-brand-950`/`bg-pink-950`.
+- Team Cohesion Analytics card (sidebar): removed the decorative `blur-xl` orb entirely (previously `unslop-ignore`-marked, now just deleted since the user wants no glow at all here) and the now-unneeded `overflow-hidden`/`relative` wrapper classes it required.
+- Synergy Index progress-bar fill: `bg-gradient-to-r from-amber-600 to-amber-400` → flat `bg-amber-500`.
+- The main pitch canvas (formation nodes, jersey-number bubbles) and the "DRAFTING POSITION" player-search list were left unchanged — the user's ask was scoped to the bench and the sidebar's idle-state cards, not the pitch itself or the active drafting view.
 
 ---
 

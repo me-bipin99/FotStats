@@ -101,6 +101,7 @@ def seed_team_players(db, team: dict, used_names: set) -> int:
                 {"age": age, "position": pos, "eloRating": _elo,
                  "appearances": apps, "goals": goals, "assists": assists, **stats},
                 _mv_model,
+                source=source,
             )
 
             generated.append({

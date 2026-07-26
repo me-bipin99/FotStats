@@ -24,7 +24,24 @@ export async function listMatches(req: Request, res: Response): Promise<void> {
     Match.countDocuments(filter),
   ]);
 
-  res.json({ matches, total });
+  const voteAggregates = await Vote.aggregate([
+    { $match: { matchId: { $in: matches.map((m) => m._id) } } },
+    { $group: { _id: { matchId: '$matchId', outcome: '$outcome' }, count: { $sum: 1 } } },
+  ]);
+  const voteCountsByMatch = new Map<string, { home_win: number; draw: number; away_win: number }>();
+  for (const v of voteAggregates) {
+    const matchId = v._id.matchId.toString();
+    const counts = voteCountsByMatch.get(matchId) ?? { home_win: 0, draw: 0, away_win: 0 };
+    counts[v._id.outcome as 'home_win' | 'draw' | 'away_win'] = v.count;
+    voteCountsByMatch.set(matchId, counts);
+  }
+
+  const matchesWithVotes = matches.map((m) => ({
+    ...m,
+    voteCounts: voteCountsByMatch.get(m._id.toString()) ?? { home_win: 0, draw: 0, away_win: 0 },
+  }));
+
+  res.json({ matches: matchesWithVotes, total });
 }
 
 export async function getMatch(req: Request, res: Response): Promise<void> {

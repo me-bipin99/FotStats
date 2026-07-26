@@ -70,7 +70,7 @@ src/
 
 ### matchController.ts
 
-- `listMatches(status?, search?, limit, offset)` — returns `{ matches[], total }`; populates homeTeam, awayTeam, and lineup playerIds; does not include vote counts (votes are fetched separately via `GET /votes/:matchId`)
+- `listMatches(status?, search?, limit, offset)` — returns `{ matches[], total }`; populates homeTeam, awayTeam, and lineup playerIds; each match includes a `voteCounts` field aggregated live from the Vote collection (overrides the static seeded value so the match list shows real vote totals, matching `getMatch`)
 - `getMatch(id)` — returns a single Match with teams, lineups, and a `voteCounts` field appended from the Vote collection
 - `getMatchLineups(id)` — returns `{ homeFormation, awayFormation, homeLineup, awayLineup }`
 - `createMatch(body)` — requires `homeTeam, awayTeam, date, competition`; returns the new Match document

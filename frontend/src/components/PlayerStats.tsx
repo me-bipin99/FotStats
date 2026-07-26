@@ -51,12 +51,12 @@ const DummyPlayerAvatar = ({ className = "w-13 h-13", gender = "male" }: { class
 };
 
 export default function PlayerStats() {
-  const [players, setPlayers] = useState<(Player & { gender?: 'M' | 'F' })[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [genderFilter, setGenderFilter] = useState<'ALL' | 'MEN' | 'WOMEN'>('ALL');
-  const [displayPlayer, setDisplayPlayer] = useState<(Player & { gender?: 'M' | 'F' }) | null>(null);
+  const [displayPlayer, setDisplayPlayer] = useState<Player | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchPlayers = (search: string, gender: 'ALL' | 'MEN' | 'WOMEN') => {
@@ -133,7 +133,7 @@ export default function PlayerStats() {
           ) : (
             players.map((player) => {
               const isSelected = player.id === selectedPlayerId;
-              const isWomen = (player as any).gender === 'F';
+              const isWomen = player.gender === 'F';
               return (
                 <button
                   key={player.id}
@@ -178,11 +178,11 @@ export default function PlayerStats() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
               <div className="flex items-center gap-4">
                 <div className={`w-16 h-16 rounded-2xl border-2 flex items-end justify-center shadow-lg overflow-hidden relative ${
-                  (displayPlayer as any).gender === 'F'
+                  displayPlayer.gender === 'F'
                     ? 'bg-gradient-to-tr from-pink-950 to-pink-900/60 border-pink-500/30'
                     : 'bg-gradient-to-tr from-[#0a1830] to-[#0a0e16] border-brand-500/20'
                 }`}>
-                  <DummyPlayerAvatar className="w-[88%] h-[88%] absolute bottom-0 object-contain drop-shadow" gender={(displayPlayer as any).gender === 'F' ? 'female' : 'male'} />
+                  <DummyPlayerAvatar className="w-[88%] h-[88%] absolute bottom-0 object-contain drop-shadow" gender={displayPlayer.gender === 'F' ? 'female' : 'male'} />
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -199,8 +199,8 @@ export default function PlayerStats() {
                 </div>
               </div>
               <div className="bg-[#0a1424] border border-brand-900/60 px-4 py-2.5 rounded-xl text-center self-start sm:self-auto shadow-md">
-                <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block mb-0.5">Rating</span>
-                <span className="text-xl font-mono font-black text-brand-400 block leading-none">{displayPlayer.rating}</span>
+                <span className="text-[9px] uppercase tracking-widest text-white-500 font-bold block mb-0.5">Rating</span>
+                <span className="text-xl font-mono font-black text-white-400 block leading-none">{displayPlayer.rating}</span>
               </div>
             </div>
 
@@ -265,7 +265,7 @@ export default function PlayerStats() {
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Goals Scored</span>
-                    <span className="text-xs font-mono font-extrabold text-brand-400">{displayPlayer.goals} Goals</span>
+                    <span className="text-xs font-mono font-extrabold text-white-400">{displayPlayer.goals} Goals</span>
                   </div>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800/40">
                     <span className="text-xs text-slate-500">Assists Delivered</span>

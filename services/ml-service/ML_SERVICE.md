@@ -150,6 +150,8 @@ Output:
 { "height": 171, "weight": 66, "preferredFoot": "Right", "marketValue": 193000 }
 ```
 
+`source` for the market-value ratio is derived from `nationality.strip().lower()` (e.g. `"Nepali"` → `"nepali"`). If it matches `SOUTH_ASIAN_SOURCES` (`nepali`, `india`, `bhutan`, `bangladesh`, `pakistan`), the raw CatBoost prediction is multiplied by `1/3` — see [ALGORITHMS.md § 4d](../../ALGORITHMS.md#4d-market-value--catboost-regressor).
+
 ## CORS
 
 The ML service allows requests only from `http://localhost:3000` and `http://localhost:3001`. In production, update `allow_origins` in `main.py` to match the deployed backend domain. The browser never calls this service directly.
@@ -181,9 +183,21 @@ python scripts/seed_missing_players.py
 python scripts/backfill_market_values.py
 ```
 
-After a full seed: 980 players (280 nepali, 100 international, 600 european), 19 teams, 24 matches, 2 demo users.
+After a full seed: 745 players (420 nepali, 100 SAFF opponents across india/bangladesh/pakistan/bhutan, 225 european), 26 teams (includes the 7 NSL — Nepal Super League — franchise clubs: Kathmandu Rayzrs, Pokhara Thunders, FC Chitwan, Butwal Lumbini FC, Dhangadi FC, Jhapa FC, Lalitpur City FC, seeded alongside the existing Martyr's Memorial A-Division clubs), 24 matches, 2 demo users. The NSL clubs use local logo files (`frontend/public/logos/`, copied from `data/logos/`) via a `/logos/<file>` relative path instead of an `media.api-sports.io` URL — no other team's logo was changed.
 
 `seed_generated_players()` sets `source: 'nepali'` for Nepal-country teams and `source: country.lower()` (e.g. `'india'`, `'bhutan'`) for international opponent teams. The Player model's TypeScript enum `['nepali', 'european']` does not cover these values — the seed bypasses Mongoose via direct pymongo insert, so the data stores correctly. The TypeScript enum should be widened to `string` before production to avoid hidden validation issues.
+
+**Real-players-first seeding (2026-07-26):** `__main__` previously called only `seed_generated_players()`, so every player — Nepal clubs, SAFF opponents, and the Algorithm-2 comparison pool — had a fully fabricated name (`seed_players()`, which loaded the real Nepali/European CSVs, existed but was never called; this was the root cause behind "all fake players"). The pipeline is now:
+
+1. `seed_real_nepal_players(db)` — loads the ~100 real Nepali players from `NEPALI_CSV`/`NEPALI_SQUAD_CSV` (renamed/trimmed from the old dead `seed_players()`; the European-CSV branch was dropped, see below). Players without a resolvable club are left without a `team` field.
+2. `_distribute_unassigned_players(db)` — round-robins those unresolved real players across all 21 Nepal teams by position/eloRating.
+3. `seed_real_saff_players(db)` — inserts a small, deliberately conservative hand-curated `SAFF_REAL_PLAYERS` table (13 India, 7 India Women, 8 Bangladesh, 5 Pakistan, 3 Bhutan) of real internationals per SAFF opponent, directly assigned to their national team.
+4. `seed_generated_players(db, drop=False)` — unchanged generation logic, now called with `drop=False` and seeded `used_names` from existing DB names, so it only tops up each team to `TARGET_SQUAD` (20) around the real players already inserted, instead of wiping and regenerating everyone.
+5. `seed_world_class_players(db)` — replaces the old `seed_european_generated()` (deleted, along with its `_EURO_NATIONS`/`_EURO_CLUB_NAMES` fake name pools). Seeds `WORLD_CLASS_PLAYERS`, a hand-curated table of ~225 real players from the Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Saudi Pro League, and MLS (Messi, Haaland, Mbappé, Ronaldo, Bellingham, etc.), each with a `quality` (0–1) tier that drives the generated stat spread — real names/positions/nationalities/clubs, approximated attributes. See `SEEDING_BENCHMARK.md` for the full field-by-field breakdown of both new tables.
+
+**Match kickoff times (`seed_matches()`):** each match's `date` used to be `datetime.utcnow() + timedelta(days=days)`, where `utcnow()` was captured once for the whole run — every match ended up on a different day but at the identical time-of-day (whatever moment the script happened to run), which the frontend then also rendered in 24-hour format (e.g. `"13:22"` for every fixture). Fixed by cycling each match through `KICKOFF_TIMES = [(11, 0), (13, 30), (16, 30)]` (11:00 AM / 1:30 PM / 4:30 PM) and applying `.replace(hour=, minute=)` on top of the day offset, so kickoffs vary. The frontend's `adaptMatch()` (see `frontend/FRONTEND.md`) now also formats with `hour12: true` to render as `"1:30 PM"` rather than `"13:30"`.
+
+**Nationality flag format:** `frontend/src/utils/nationality.ts`'s `getCountryDisplay()` only renders a flag emoji for the `"xx XXX"` short-code pattern (e.g. `"fra FRA"`); anything else falls back to a 🌍 globe. `seed_world_class_players()` initially wrote the full country name (`"fra FRANCE"`), and both `seed_generated_players()`'s SAFF branch and `seed_real_saff_players()` wrote a bare country name (`"India"`) — all three showed the globe instead of a flag. Fixed: `seed_world_class_players()` now writes `f"{nat_code} {nat_code.upper()}"`; the SAFF branches use the new `SAFF_NAT_CODE` map (`India→ind`, `Bhutan→btn`, `Bangladesh→ban`, `Pakistan→pak`) to build the same `"xx XXX"` shape.
 
 ## Testing
 

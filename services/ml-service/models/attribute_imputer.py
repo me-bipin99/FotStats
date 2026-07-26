@@ -98,11 +98,17 @@ def impute_preferred_foot(player_name: str, position: str) -> str:
 POSITION_ENC: dict[str, int] = {"GK": 0, "DF": 1, "MF": 2, "FW": 3}
 STAT_KEYS = ["pace", "shooting", "passing", "dribbling", "defending", "physical"]
 
+# South Asian leagues are weaker than Europe's top-5, so equivalent stat lines
+# command a fraction of the market value. Applied as a post-prediction scale.
+SOUTH_ASIAN_SOURCES: set[str] = {"nepali", "india", "bhutan", "bangladesh", "pakistan"}
+SOUTH_ASIAN_VALUE_RATIO: float = 1 / 3
 
-def impute_market_value(features: dict, model) -> int:
+
+def impute_market_value(features: dict, model, source: str | None = None) -> int:
     """
     Algorithm 4d: CatBoost regression on 12 player features.
     Returns 0 gracefully when model is None (pkl not yet trained).
+    `source` (e.g. "nepali", "european") applies a regional value ratio.
     """
     if model is None:
         return 0
@@ -121,8 +127,10 @@ def impute_market_value(features: dict, model) -> int:
         features.get("defending", 50),
         features.get("physical", 50),
     ]], dtype=np.float32)
-    pred = model.predict(row)[0]
-    return max(0, int(round(float(pred))))
+    pred = float(model.predict(row)[0])
+    if source in SOUTH_ASIAN_SOURCES:
+        pred *= SOUTH_ASIAN_VALUE_RATIO
+    return max(0, int(round(pred)))
 
 
 # ─── FastAPI router ───────────────────────────────────────────────────────────
@@ -157,7 +165,7 @@ def impute_attributes(req: ImputeRequest):
         "goals": req.goals, "assists": req.assists,
         **req.stats,
     }
-    market_value = impute_market_value(features, mv_model)
+    market_value = impute_market_value(features, mv_model, source=req.nationality.strip().lower())
     return {
         "height": height,
         "weight": weight,

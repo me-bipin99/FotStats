@@ -223,7 +223,7 @@ Probability of right foot by position: GK=88%, DF=80%, MF=77%, FW=76%.
 
 ### 4d. Market Value — CatBoost Regressor
 
-**Function:** `impute_market_value(features: dict, model) -> int`
+**Function:** `impute_market_value(features: dict, model, source: str | None = None) -> int`
 
 **Training script:** `scripts/train_imputer.py` — reads both CSV files, generates synthetic labels using the formula below, trains a `CatBoostRegressor`, saves to `trained_models/market_value_catboost.pkl`.
 
@@ -255,6 +255,13 @@ market_value = clamp(0, 15_000_000, base * age_factor * perf_factor)
 Calibration examples:
 - ELO 1600, age 24, no performance data: base €160,000 x 1.0 x 1.0 = **€160,000**
 - ELO 1720, age 22, 0.4 g/game: base €256,000 x 1.0 x 1.12 = **~€287,000**
+
+**Regional value ratio:** South Asian leagues are weaker than Europe's top-5, so an equivalent
+stat line shouldn't command an equivalent transfer fee. After the CatBoost prediction, if
+`source` is one of `SOUTH_ASIAN_SOURCES = {"nepali", "india", "bhutan", "bangladesh", "pakistan"}`,
+the predicted value is multiplied by `SOUTH_ASIAN_VALUE_RATIO = 1/3` before rounding. European
+(`source == "european"`) predictions are unchanged. Example: a Nepali player whose raw CatBoost
+prediction is €580,000 is stored as **€193,333**.
 
 Fallback: returns 0 when `model is None` (pkl not yet trained). The backfill script `scripts/backfill_market_values.py` can fix 0-valued records without re-seeding.
 

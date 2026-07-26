@@ -172,7 +172,7 @@ export default function App() {
 
       <footer className="border-t border-slate-900 bg-[#0c0d10] py-6 px-4 md:px-6 text-center text-xs text-gray-500 mt-12">
         <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>&copy; 2026 FotNep &bull; analytical app. All rights reserved.</p>
+          <p>&copy; 2026 FoTStats &bull; analytical app. All rights reserved.</p>
           <div className="flex gap-4.5 font-medium text-slate-500">
             <span className="hover:text-red-400 cursor-pointer text-slate-400 hover:text-brand-500">Privacy Policy</span>
             <span>&middot;</span>

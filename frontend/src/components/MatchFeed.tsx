@@ -47,7 +47,7 @@ export default function MatchFeed({
       
       {/* Categories Row */}
       <div className="p-4 bg-slate-950 border-b border-slate-850">
-        <h4 className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-3 text-center">
+        <h4 className="text-[10px] font-extrabold text-white-500 uppercase tracking-widest mb-3 text-center">
           Filter by Category
         </h4>
         <div className="grid grid-cols-3 gap-3">
@@ -201,7 +201,7 @@ export default function MatchFeed({
                   {/* Score or Kickoff Time */}
                   <div className="px-2 py-1 text-center font-mono text-[11px] text-white min-w-[45px]">
                     {match.status === 'UPCOMING' ? (
-                      <span className="text-[9px] text-slate-400 font-sans tracking-tight">{match.time}</span>
+                      <span className="text-[9px] text-white-400 font-sans tracking-tight">{match.time}</span>
                     ) : (
                       <span className="font-bold flex justify-center gap-1">
                         <span className={match.homeScore! > match.awayScore! ? 'text-brand-400' : 'text-slate-300'}>

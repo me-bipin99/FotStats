@@ -45,6 +45,7 @@ export interface Player {
   preferredFoot: 'Right' | 'Left' | 'Both';
   club: string;
   photoUrl?: string;
+  gender?: 'M' | 'F';
   attributes: PlayerAttributes;
 }
 

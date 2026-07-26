@@ -509,7 +509,7 @@ export default function LineupBuilder() {
         <div className="bg-[#151619] border border-[#202124] rounded-xl p-4 md:p-6 shadow-2xl relative overflow-hidden flex flex-col items-center">
           
           {/* Controls Bar */}
-          <div className="w-full flex justify-between items-center bg-slate-950 border border-slate-850 p-3 rounded-xl mb-6 z-10 gap-3 flex-wrap">
+          <div className="w-full flex justify-between items-center text-brand-500 p-3 rounded-xl mb-6 z-10 gap-3 flex-wrap">
             <div className="flex items-center gap-2.5">
               <span className="text-xs text-slate-400 font-extrabold uppercase tracking-wider">Formation:</span>
               <div className="relative">
@@ -542,7 +542,7 @@ export default function LineupBuilder() {
                     className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                       playerFilter === f
                         ? 'bg-brand-500/20 text-brand-400 border-brand-500/50'
-                        : 'bg-slate-900 hover:bg-slate-850 text-slate-400 border-slate-800/80 hover:text-slate-200'
+                        : 'bg-slate-900 hover:bg-slate-850 text-slate-200 border-slate-800/80 hover:text-slate-200'
                     }`}
                   >
                     {loadingFilter === f && <Sparkles className="w-3 h-3 animate-spin" />}
@@ -647,10 +647,10 @@ export default function LineupBuilder() {
           </div>
 
           {/* Substitutes Bench section */}
-          <div className="w-full mt-6 bg-slate-950/60 border border-slate-900 rounded-xl p-4 md:p-5 shadow-lg relative z-10">
+          <div className="w-full mt-6 rounded-xl p-4 md:p-5 shadow-lg relative z-10">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 text-[10px] bg-brand-500/10 text-brand-400 font-mono font-black rounded border border-brand-500/20 uppercase tracking-wider">Bench</span>
+                <span className="px-2 py-0.5 text-[10px] bg-brand-500/10 text-white-400 font-mono font-black rounded border border-brand-500/20 uppercase tracking-wider">Bench</span>
                 <h4 className="text-xs font-extrabold text-slate-100 uppercase tracking-widest font-sans">Substitutes (Max 5)</h4>
               </div>
               <span className="text-[9.5px] text-slate-500 font-mono">Click slots below to select subs</span>
@@ -669,13 +669,13 @@ export default function LineupBuilder() {
                     className={`group relative rounded-xl p-3 flex flex-col items-center justify-between min-h-[96px] cursor-pointer transition border select-none ${
                       assignedPlayer
                         ? isSelected
-                          ? 'bg-brand-950/40 border-brand-400 shadow-md scale-[1.02]'
+                          ? 'bg-brand-500/20 border-brand-400 scale-[1.02]'
                           : isWomen
-                          ? 'bg-gradient-to-b from-pink-950/20 to-pink-950/5 border-pink-500/20 hover:border-pink-500/40'
-                          : 'bg-gradient-to-b from-brand-950/20 to-brand-950/5 border-brand-500/20 hover:border-brand-500/40'
+                          ? 'bg-pink-500/10 border-pink-500/30 hover:border-pink-500/50'
+                          : 'bg-brand-500/10 border-brand-500/30 hover:border-brand-500/50'
                         : isSelected
                         ? 'bg-brand-500/10 border-brand-400 scale-[1.02]'
-                        : 'bg-slate-950/40 border-slate-850 hover:bg-slate-900 hover:border-slate-800'
+                        : 'bg-slate-900 border-slate-800/80 hover:bg-slate-850 hover:border-slate-800'
                     }`}
                   >
                     {assignedPlayer ? (
@@ -683,8 +683,8 @@ export default function LineupBuilder() {
                         {/* Little avatar elements matching male/female design */}
                         <div /* unslop-ignore: circular avatar, not a decorative pill default */ className={`w-9 h-9 rounded-full border flex items-end justify-center overflow-hidden mb-1 relative ${
                           isWomen
-                            ? 'bg-gradient-to-b from-pink-900/40 to-pink-950 border-pink-500/20'
-                            : 'bg-gradient-to-b from-brand-900/40 to-brand-950 border-brand-500/20'
+                            ? 'bg-pink-950 border-pink-500/20'
+                            : 'bg-brand-950 border-brand-500/20'
                         }`}>
                           <DummyPlayerAvatar
                             className="w-[90%] h-[90%] absolute bottom-0 object-contain drop-shadow"
@@ -821,20 +821,18 @@ export default function LineupBuilder() {
                 <span className="text-[10px] font-mono tracking-widest text-white font-bold uppercase block text-center">Team Cohesion Analytics</span>
                 
                 {/* Team Synergy rating */}
-                <div className="bg-slate-950/85 border border-slate-900 rounded-xl p-4 shadow-inner relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 blur-xl rounded-full" /> {/* unslop-ignore: decorative blur orb, meant to be circular */}
-
-                  <div className="flex justify-between items-center z-10 relative">
+                <div className=" rounded-xl p-4">
+                  <div className="flex justify-between items-center">
                     <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-mono text-brand-400 font-bold">TACTICAL CALIBRATION</span>
-                      <span className="text-xs font-bold text-slate-400">Synergy Index</span>
+                      
+                      <span className="text-xs font-bold text-white-400">Synergy Index</span>
                     </div>
                     <span className="text-xl font-black text-brand-400 font-mono tracking-tight">{synergyRating}%</span>
                   </div>
 
                   <div className="w-full bg-slate-900 h-2 rounded-full mt-2.5 overflow-hidden border border-slate-800">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-500" // unslop-ignore: progress-bar fill, conventional fully-rounded caps
+                      className="h-full bg-amber-500 rounded-full transition-all duration-500" // unslop-ignore: progress-bar fill, conventional fully-rounded caps
                       style={{ width: `${synergyRating}%` }}
                     />
                   </div>
@@ -886,7 +884,7 @@ export default function LineupBuilder() {
 
                 {/* Assigned players and Value synergy counters */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-950/85 border border-slate-900 p-3 rounded-xl text-center shadow-inner flex flex-col justify-center">
+                  <div className=" p-3 rounded-xl text-center shadow-inner flex flex-col justify-center">
                     <span className="text-[9.5px] uppercase font-bold text-slate-400 block mb-1 tracking-wider leading-none">Roster Depth</span>
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-sm font-extrabold text-slate-200 font-mono">{synergyBreakdown.startersCount}</span>
@@ -895,7 +893,7 @@ export default function LineupBuilder() {
                     <span className="text-[8.5px] text-slate-500 block font-sans mt-0.5">+{synergyBreakdown.subsCount}/5 Subs</span>
                   </div>
 
-                  <div className="bg-slate-950/85 border border-slate-900 p-3 rounded-xl text-center shadow-inner flex flex-col justify-center">
+                  <div className=" p-3 rounded-xl text-center shadow-inner flex flex-col justify-center">
                     <span className="text-[9.5px] uppercase font-bold text-slate-400 block mb-1 tracking-wider leading-none">Squad Worth</span>
                     <span className="text-sm font-extrabold text-amber-500 font-mono">{squadValue}</span>
                     <span className="text-[8.5px] text-slate-500 block font-sans mt-1">Starters + Subs</span>
