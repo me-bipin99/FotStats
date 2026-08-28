@@ -4,13 +4,10 @@
   "scripts": {
     "dev": "concurrently --names \"backend,ml,frontend\" --prefix-colors \"cyan,magenta,green\" \"npm run dev:backend\" \"npm run dev:ml\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && PORT=3001 npm run dev",
-    "dev:ml": "cd services/ml-service && venv/bin/python -m uvicorn main:app --reload --port 8000",
+    "dev:ml": "cd services/ml-service && ../../.venv/bin/python -m uvicorn main:app --reload --port 8000",
     "dev:frontend": "cd frontend && npm run dev"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
-  },
-  "dependencies": {
-    "react-native-country-flag": "^2.0.2"
   }
 }

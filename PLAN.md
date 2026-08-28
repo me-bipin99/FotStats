@@ -60,7 +60,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 | Frontend | `PlayerComparison.tsx` — Algorithm 2 UI | ✅ Done |
 | Frontend | `LineupBuilder.tsx` — Algorithm 3 UI | ✅ Done |
 | Frontend | `mockData.ts` — zero imports confirmed (ready to delete) | ✅ Verified |
-| Database | Seed data in MongoDB | ✅ Done (1120 players, 26 teams incl. 7 NSL franchise clubs, 24 matches — all lineups predicted) |
+| Database | Seed data in MongoDB | ✅ Done (745 players, 26 teams incl. 7 NSL franchise clubs, 24 matches — all lineups seeded) |
 
 ### ❌ Not Yet Implemented
 
@@ -106,7 +106,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
   ML_SERVICE_URL=http://localhost:8000
   ```
 
-- [ ] **Step 3: Verify backend starts**
+- [x] **Step 3: Verify backend starts** — `MongoDB connected` and `Backend running on http://localhost:3001` confirmed.
 
   ```bash
   cd backend && PORT=3001 npm run dev
@@ -134,10 +134,10 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 
   ```
 
-- [ ] **Step 3: Verify ML service starts**
+- [x] **Step 3: Verify ML service starts** — `Application startup complete.` confirmed on port 8000 using the root `.venv`.
 
   ```bash
-  cd services/ml-service && source venv/bin/activate
+  cd services/ml-service && source ../../.venv/bin/activate
   python -m uvicorn main:app --reload --port 8000
 
   ```
@@ -156,13 +156,13 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
 - [x] **Step 1: Activate venv and seed**
 
   ```bash
-  cd services/ml-service && source venv/bin/activate
+  cd services/ml-service && source ../../.venv/bin/activate
   python scripts/seed_db.py
 
   ```
-  Seeded: 2879 players (100 Nepali + 2779 European), 8 teams, 8 matches, 2 users.
+  Seeded: 745 players (420 Nepali, 225 European, and 100 SAFF players), 26 teams, 24 matches, 2 users.
 
-- [ ] **Step 2: Verify data via curl** (backend must be running)
+- [x] **Step 2: Verify data via curl** (backend must be running) — 24 matches returned; seeded matches include home and away lineups.
 
   ```bash
   curl -s http://localhost:3001/api/v1/matches | python3 -m json.tool | head -30
@@ -170,7 +170,7 @@ npm run dev   # starts backend :3001 + ML :8000 + frontend :3000
   ```
   Expected: JSON with `matches` array containing seeded match data.
 
-- [ ] **Step 3: Verify players**
+- [x] **Step 3: Verify players** — 745 players returned; records include `eloRating`, `stats`, and `source`.
 
   ```bash
   curl -s "http://localhost:3001/api/v1/players?limit=5" | python3 -m json.tool
