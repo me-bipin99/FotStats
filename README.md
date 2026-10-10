@@ -1,4 +1,4 @@
-# FotNep
+# FotStats
 
 A full-stack analytics platform for Nepali football. It combines community-driven match prediction, player performance comparison, and machine-learning-based lineup generation — all connected through a single MongoDB database shared across three services.
 
